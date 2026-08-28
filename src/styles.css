@@ -296,6 +296,7 @@ body,
  * fondu qui traine sur une forme deja immobile.
  */
 .avatar {
+  view-transition-name: bloub-avatar;
   transition:
     transform var(--bascule),
     opacity 0.8s ease-out;

@@ -26,7 +26,7 @@
     <div class="nav-links">
       <a class="active" href="#start">Dokumentation</a>
       <a href="https://github.com/alois-reinstadler/bloub-svelte">GitHub <span aria-hidden="true">↗</span></a>
-      <a class="studio-link" href={`${base}/`}>Studio öffnen</a>
+      <a class="studio-link" href={`${base}/studio/`}>Studio öffnen</a>
     </div>
   </nav>
 </header>
@@ -103,7 +103,7 @@
 
   <section class="closing">
     <div><p class="eyebrow"><span></span>Bereit?</p><h2>Bring etwas<br/>Leben in dein UI.</h2></div>
-    <div><div class="install-row dark"><span class="prompt">$</span><code>{install}</code><button onclick={() => copy(install, 'end')}>{copied === 'end' ? 'Kopiert' : 'Kopieren'}</button></div><p>Oder zuerst im <a href={`${base}/`}>Studio ausprobieren →</a></p></div>
+    <div><div class="install-row dark"><span class="prompt">$</span><code>{install}</code><button onclick={() => copy(install, 'end')}>{copied === 'end' ? 'Kopiert' : 'Kopieren'}</button></div><p>Oder zuerst im <a href={`${base}/studio/`}>Studio ausprobieren →</a></p></div>
   </section>
 </main>
 

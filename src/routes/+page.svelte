@@ -1,11 +1,11 @@
 <script lang="ts">
-  import App from '../App.svelte'
-  import '../styles.css'
+  import Landing from '../landing/Landing.svelte'
+  import '../landing/landing.css'
 </script>
 
 <svelte:head>
-  <title>bloub – animierter SVG-Avatar</title>
-  <meta name="description" content="bloub bildet den Bot-Avatar von x.ai als animiertes SVG mit 14 Zuständen nach." />
+  <title>bloub — der animierte Avatar für Svelte</title>
+  <meta name="description" content="Ein ausdrucksstarker SVG-Avatar für Svelte 5: acht Formen, 14 animierte Zustände und ein vollständiges Studio." />
 </svelte:head>
 
-<App />
+<Landing />
