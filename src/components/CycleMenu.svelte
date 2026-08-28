@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Cycle } from '@/bot/cycles'
+  import type { Cycle } from '@/lib/internal/core/cycles'
   import { nomDeCycle, t } from '@/i18n'
   let { cycles, current, activeId = $bindable(), oncreate, onremove, onrename }: {
     cycles: Cycle[]; current: Cycle; activeId: string; oncreate: () => void; onremove: (id: string) => void; onrename: (id: string) => void

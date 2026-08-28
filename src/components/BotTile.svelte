@@ -1,8 +1,8 @@
 <script lang="ts">
-  import BloubBot from './BloubBot.svelte'
-  import { DEFAULT_EXPRESSION } from '@/bot/expressions'
-  import { DEFAULT_COLOR, DEFAULT_SHAPE } from '@/bot/skins'
-  import type { StateId } from '@/bot/states'
+  import BloubBot from '@/lib/internal/BloubRenderer.svelte'
+  import { DEFAULT_EXPRESSION } from '@/lib/internal/core/expressions'
+  import { DEFAULT_COLOR, DEFAULT_SHAPE } from '@/lib/internal/core/skins'
+  import type { StateId } from '@/lib/internal/core/states'
 
   interface Props {
     label: string

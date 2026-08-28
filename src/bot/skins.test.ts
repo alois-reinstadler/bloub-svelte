@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { BotEngine, type RenderedEye } from './engine'
-import { decalageDesYeux, POUR_TESTS } from './eyefit'
-import { EXPRESSIONS } from './expressions'
-import { DEFAULT_SHAPE, SHAPES, SHAPE_BY_ID } from './skins'
-import { STATES, type StateId } from './states'
+import { BotEngine, type RenderedEye } from '@/lib/internal/core/engine'
+import { decalageDesYeux, POUR_TESTS } from '@/lib/internal/core/eyefit'
+import { EXPRESSIONS } from '@/lib/internal/core/expressions'
+import { DEFAULT_SHAPE, SHAPES, SHAPE_BY_ID } from '@/lib/internal/core/skins'
+import { STATES, type StateId } from '@/lib/internal/core/states'
 
 /**
  * Les formes du personnalisateur, mesurees contre le corps qu'elles remplacent.

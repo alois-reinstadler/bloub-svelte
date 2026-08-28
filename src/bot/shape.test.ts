@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { TAU } from './math'
-import { PROFILE_SAMPLES } from './profiles'
-import { radiusAtAngle, silhouette } from './shape'
-import { SHAPES } from './skins'
+import { TAU } from '@/lib/internal/core/math'
+import { PROFILE_SAMPLES } from '@/lib/internal/core/profiles'
+import { radiusAtAngle, silhouette } from '@/lib/internal/core/shape'
+import { SHAPES } from '@/lib/internal/core/skins'
 
 /**
  * `radiusAtAngle`, la fonction qui recolle sur le contour reel tout ce qui est pose « sur »

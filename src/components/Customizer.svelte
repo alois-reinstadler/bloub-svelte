@@ -1,7 +1,7 @@
 <script lang="ts">
   import BotTile from './BotTile.svelte'
-  import { EXPRESSIONS } from '@/bot/expressions'
-  import { COLORS, SHAPES } from '@/bot/skins'
+  import { EXPRESSIONS } from '@/lib/internal/core/expressions'
+  import { COLORS, SHAPES } from '@/lib/internal/core/skins'
   import { t } from '@/i18n'
 
   let { shape = $bindable(), color = $bindable(), expression = $bindable() }: {

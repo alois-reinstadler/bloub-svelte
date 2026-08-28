@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount, tick, untrack } from 'svelte'
+  import { base } from '$app/paths'
   import BotTile from '@/components/BotTile.svelte'
   import Customizer from '@/components/Customizer.svelte'
-  import BloubBot from '@/components/BloubBot.svelte'
+  import BloubBot from '@/lib/internal/BloubRenderer.svelte'
   import ExportBar from '@/components/ExportBar.svelte'
   import CycleDialog from '@/components/CycleDialog.svelte'
   import GifDialog from '@/components/GifDialog.svelte'
@@ -12,13 +13,13 @@
   import { nomDeCycle, t } from '@/i18n'
   import { copie, copieTexte, cycleVersGif, cycleVersMp4, svgAutonome, telecharge, versGifAnime, versPng, versSvgAnime } from '@/ui/capture'
   import { ACTION_BY_ID, ANIM_IMAGES, ANIM_PAS, CYCLE_TAILLE, FOND_GIF_DEFAUT, FORMAT_CYCLE_DEFAUT, GIF_IMAGES, GIF_PAS, BLANC, Abandon, couleurDeFond, cycleImages, cyclePas, nomFichier, type ActionId, type EtatExport, type FondGif, type FormatCycle } from '@/ui/export'
-  import { HUMEURS } from '@/ui/gaze'
+  import { HUMEURS } from '@/lib/internal/gaze'
   import { INTRO, INTRO_GAZE, POSE_AT, introDue } from '@/ui/intro'
   import { ecris, lis, type NomStocke } from '@/ui/stockage'
-  import { blockAt, blocksWith, defaultCycle, makeBlock, parseCycles, totalDuration, type Cycle } from '@/bot/cycles'
-  import { DEFAULT_EXPRESSION, EXPRESSION_BY_ID } from '@/bot/expressions'
-  import { COLOR_BY_ID, DEFAULT_COLOR, DEFAULT_SHAPE, SHAPE_BY_ID } from '@/bot/skins'
-  import { POSES, SEQUENCE, STATES, type StateId } from '@/bot/states'
+  import { blockAt, blocksWith, defaultCycle, makeBlock, parseCycles, totalDuration, type Cycle } from '@/lib/internal/core/cycles'
+  import { DEFAULT_EXPRESSION, EXPRESSION_BY_ID } from '@/lib/internal/core/expressions'
+  import { COLOR_BY_ID, DEFAULT_COLOR, DEFAULT_SHAPE, SHAPE_BY_ID } from '@/lib/internal/core/skins'
+  import { POSES, SEQUENCE, STATES, type StateId } from '@/lib/internal/core/states'
 
   function readHash() {
     const params = new URLSearchParams(location.hash.slice(1))
@@ -151,6 +152,7 @@
   <div class="p-5"><a class="text-xs text-[var(--muted)] underline underline-offset-2" href="./">{t('gallery.back')}</a><div class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">{#each order as item (item.id)}<figure class="flex flex-col items-center"><BloubBot state={item.id} size={210} {shape} {color} {expression} frozenAt={POSES[item.id]}/><figcaption class="text-xs text-[var(--muted)]">{t(`states.${item.id}`)}</figcaption></figure>{/each}</div></div>
 {:else}
   <h1 class="sr-only">{t('app.name')}</h1>
+  <a class="fixed top-5 right-5 z-20 rounded-lg border border-black/10 bg-white/80 px-3 py-2 text-xs font-semibold text-[var(--ink)] shadow-sm backdrop-blur transition hover:bg-white" href={`${base}/docs/`}>Docs</a>
   {#if !preview}<SideRail bind:view class="rail" inert={bare || undefined}/>{:else}<button type="button" class="fixed top-5 right-5 z-30 flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1.5 text-xs text-[var(--muted)] shadow-sm backdrop-blur transition hover:text-[var(--ink)]" onclick={() => (preview = false)}>{t('preview.exit')} <kbd class="rounded bg-black/5 px-1 py-0.5 text-[10px]">{t('preview.key')}</kbd></button>{/if}
   <div class="scene min-h-full items-stretch justify-center p-8 max-lg:flex max-lg:flex-col max-lg:gap-10 max-lg:px-5 {!preview && view === 'animations' ? 'pb-[calc(var(--timeline)_+_1rem)]' : ''} {!preview ? 'max-lg:pt-20' : ''} {bare || preview ? 'scene--seule' : view === 'reglages' ? 'scene--gauche' : ''}">
     {#if !preview}<aside class="panneau scene__gauche w-full lg:flex lg:h-[calc(100dvh_-_3rem_-_var(--timeline))] lg:w-80 lg:shrink-0 lg:flex-col lg:justify-center lg:self-start lg:-translate-y-12 lg:pl-14 {leftOpen ? 'panneau--ouvert max-lg:order-2' : 'max-lg:hidden'}"><Settings/></aside>{/if}

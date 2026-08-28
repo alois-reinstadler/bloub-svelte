@@ -11,8 +11,8 @@
  */
 
 import { flushSync, mount, unmount } from 'svelte'
-import BloubBot from '@/components/BloubBot.svelte'
-import type { Block } from '@/bot/cycles'
+import BloubBot from '@/lib/internal/BloubRenderer.svelte'
+import type { Block } from '@/lib/internal/core/cycles'
 import { gifAnime, gifIndexe, indexe, nouvellePalette, recense, svgAnime } from './anime'
 import { arrete, DEMI_ECRAN, sansCommentaires, viewBoxExport } from './export'
 

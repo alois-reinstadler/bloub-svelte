@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest'
-import { BotEngine } from '@/bot/engine'
-import { blockAt, defaultCycle, offsetOf, type Block } from '@/bot/cycles'
-import { RAYON } from '@/bot/repere'
-import { SHAPE_BY_ID } from '@/bot/skins'
-import { EXPRESSION_BY_ID } from '@/bot/expressions'
+import { BotEngine } from '@/lib/internal/core/engine'
+import { blockAt, defaultCycle, offsetOf, type Block } from '@/lib/internal/core/cycles'
+import { RAYON } from '@/lib/internal/core/repere'
+import { SHAPE_BY_ID } from '@/lib/internal/core/skins'
+import { EXPRESSION_BY_ID } from '@/lib/internal/core/expressions'
 import { ouvreCycle } from './capture'
 import { DEMI_ECRAN, viewBoxExport } from './export'
 

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { BotEngine } from '@/bot/engine'
-import { EXPRESSIONS, EXPRESSION_BY_ID, type ExpressionId } from '@/bot/expressions'
-import { SHAPE_BY_ID } from '@/bot/skins'
-import { STATE_BY_ID } from '@/bot/states'
+import { BotEngine } from '@/lib/internal/core/engine'
+import { EXPRESSIONS, EXPRESSION_BY_ID, type ExpressionId } from '@/lib/internal/core/expressions'
+import { SHAPE_BY_ID } from '@/lib/internal/core/skins'
+import { STATE_BY_ID } from '@/lib/internal/core/states'
 import {
   HUMEURS,
   lookTarget,
@@ -13,7 +13,7 @@ import {
   TURN,
   YAW_MAX,
   type Aim
-} from './gaze'
+} from '@/lib/internal/gaze'
 
 const cercle = () => SHAPE_BY_ID.get('cercle')!.radii
 

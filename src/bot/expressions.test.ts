@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { BotEngine } from './engine'
-import { EXPRESSIONS, EXPRESSION_BY_ID, blendExpression } from './expressions'
-import { radiusAtAngle } from './shape'
-import { SHAPE_BY_ID } from './skins'
+import { BotEngine } from '@/lib/internal/core/engine'
+import { EXPRESSIONS, EXPRESSION_BY_ID, blendExpression } from '@/lib/internal/core/expressions'
+import { radiusAtAngle } from '@/lib/internal/core/shape'
+import { SHAPE_BY_ID } from '@/lib/internal/core/skins'
 
 const cercle = () => SHAPE_BY_ID.get('cercle')!.radii
 

@@ -1,6 +1,6 @@
-import type { Look } from '@/bot/engine'
-import type { ExpressionId } from '@/bot/expressions'
-import { clamp, easings } from '@/bot/math'
+import type { Look } from './core/engine'
+import type { ExpressionId } from './core/expressions'
+import { clamp, easings } from './core/math'
 
 /**
  * Ou le bot regarde quand il suit le curseur. Pur, comme `src/ui/timeline.ts` :

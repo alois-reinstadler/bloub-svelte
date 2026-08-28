@@ -1,5 +1,5 @@
-import { clampDuration, makeBlock, type Block } from '@/bot/cycles'
-import { TOUR_TIME, tourLook } from './gaze'
+import { clampDuration, makeBlock, type Block } from '@/lib/internal/core/cycles'
+import { TOUR_TIME, tourLook } from '@/lib/internal/gaze'
 
 /**
  * L'arrivee sur le site : la boule parait seule au centre de la page, les yeux

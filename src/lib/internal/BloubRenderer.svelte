@@ -1,21 +1,20 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte'
-  import { NOTIF_BLUE } from '@/bot/decor'
-  import { BotEngine, type BotFrame } from '@/bot/engine'
-  import { clamp, easings } from '@/bot/math'
-  import { t } from '@/i18n'
-  import { lookTarget, TURN_TIME, type GazeScript } from '@/ui/gaze'
-  import { DEFAULT_EXPRESSION, EXPRESSION_BY_ID } from '@/bot/expressions'
+  import { NOTIF_BLUE } from './core/decor'
+  import { BotEngine, type BotFrame } from './core/engine'
+  import { clamp, easings } from './core/math'
+  import { lookTarget, TURN_TIME, type GazeScript } from './gaze'
+  import { DEFAULT_EXPRESSION, EXPRESSION_BY_ID } from './core/expressions'
   import {
     COLOR_BY_ID,
     DEFAULT_COLOR,
     DEFAULT_SHAPE,
     SHAPE_BY_ID,
     mixHex
-  } from '@/bot/skins'
-  import { blockAt, defaultCycle, offsetOf, type Block } from '@/bot/cycles'
-  import { DEMI_VIEWBOX, RAYON } from '@/bot/repere'
-  import { STATE_BY_ID, type StateId } from '@/bot/states'
+  } from './core/skins'
+  import { blockAt, defaultCycle, offsetOf, type Block } from './core/cycles'
+  import { DEMI_VIEWBOX, RAYON } from './core/repere'
+  import { STATE_BY_ID, type StateId } from './core/states'
 
   interface Props {
     size?: number
@@ -31,6 +30,7 @@
     state?: StateId
     playing?: boolean
     elapsed?: number
+    label?: string
     class?: string
   }
 
@@ -48,6 +48,7 @@
     state: currentState = $bindable<StateId>('idle'),
     playing = $bindable(false),
     elapsed = $bindable(0),
+    label = 'Animierter bloub-Avatar',
     class: className = ''
   }: Props = $props()
 
@@ -59,7 +60,7 @@
 
   const engine = untrack(() => new BotEngine(R, currentState, shapeRadii, expression))
   let frame = $state<BotFrame>(untrack(() => engine.sample(frozenAt ?? 0)))
-  const uid = Math.random().toString(36).slice(2, 8)
+  const uid = $props.id()
   const maskId = `bot-mask-${uid}`
 
   let svg: SVGSVGElement
@@ -318,7 +319,7 @@
   height={size}
   viewBox={`${-VB} ${-VB} ${VB * 2} ${VB * 2}`}
   role="img"
-  aria-label={t('app.botAria')}
+  aria-label={label}
 >
   <defs>
     <mask id={maskId} maskUnits="userSpaceOnUse" x={-VB} y={-VB} width={VB * 2} height={VB * 2}>

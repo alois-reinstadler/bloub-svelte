@@ -1,9 +1,9 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte'
   import BlockPicker from './BlockPicker.svelte'
-  import BloubBot from './BloubBot.svelte'
-  import { clampDuration, moveBlock, offsetOf, STEP, totalDuration, type Block } from '@/bot/cycles'
-  import { POSES, type StateId } from '@/bot/states'
+  import BloubBot from '@/lib/internal/BloubRenderer.svelte'
+  import { clampDuration, moveBlock, offsetOf, STEP, totalDuration, type Block } from '@/lib/internal/core/cycles'
+  import { POSES, type StateId } from '@/lib/internal/core/states'
   import { BASE_SCALE, clampZoom, ticksFor } from '@/ui/timeline'
   import { secondes, secondesCourtes, t } from '@/i18n'
 

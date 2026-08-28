@@ -16,8 +16,8 @@ import {
   totalDuration,
   type Cycle,
   uniqueName
-} from './cycles'
-import { SEQUENCE, STATES, STATE_BY_ID } from './states'
+} from '@/lib/internal/core/cycles'
+import { SEQUENCE, STATES, STATE_BY_ID } from '@/lib/internal/core/states'
 
 describe('cycle par defaut', () => {
   it('reprend la sequence relevee sur la video, dans l ordre', () => {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { blockAt, minDurationOf, offsetOf } from '@/bot/cycles'
-import { BotEngine } from '@/bot/engine'
-import { EXPRESSION_BY_ID } from '@/bot/expressions'
-import { SHAPE_BY_ID } from '@/bot/skins'
-import { STATE_BY_ID } from '@/bot/states'
-import { TOUR_TIME, type GazeScript } from './gaze'
+import { blockAt, minDurationOf, offsetOf } from '@/lib/internal/core/cycles'
+import { BotEngine } from '@/lib/internal/core/engine'
+import { EXPRESSION_BY_ID } from '@/lib/internal/core/expressions'
+import { SHAPE_BY_ID } from '@/lib/internal/core/skins'
+import { STATE_BY_ID } from '@/lib/internal/core/states'
+import { TOUR_TIME, type GazeScript } from '@/lib/internal/gaze'
 import { INTRO, INTRO_GAZE, POSE_AT, introDue, type Arrivee } from './intro'
 
 /** Arrivee ordinaire : URL nue, venue directe, aucune preference de calme. */

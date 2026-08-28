@@ -35,22 +35,30 @@ Zwei URL-Fragmente sind für die visuelle Prüfung praktisch:
 - `#planche` zeigt alle 14 Zustände eingefroren nebeneinander.
 - `#etat=orbit&stop` öffnet einen bestimmten Zustand und pausiert die Wiedergabe.
 
+## Installation
+
+```bash
+pnpm add bloub-svelte
+```
+
+Die gestaltete Installationsanleitung und interaktive API-Übersicht ist als SvelteKit-Route unter `/docs/` verfügbar.
+
 ## Komponente
 
 ```svelte
 <script lang="ts">
-  import BloubBot from './components/BloubBot.svelte'
+  import { Bloub } from 'bloub-svelte'
 
   let block = $state(0)
   let state = $state<'idle' | 'orbit'>('idle')
   let playing = $state(true)
 </script>
 
-<BloubBot bind:block bind:state bind:playing />
-<BloubBot state="orbit" size={120} frozenAt={1.2} />
+<Bloub bind:block bind:state bind:playing />
+<Bloub state="orbit" size={120} frozenAt={1.2} />
 ```
 
-Props: `size`, `shape`, `color`, `expression`, `paper`, `frozenAt`, `cycle`, `follow` und `gaze`. Bindbare Werte: `block`, `state`, `playing` und `elapsed`. Die Details stehen in [`src/components/BloubBot.svelte`](src/components/BloubBot.svelte).
+Props: `size`, `shape`, `color`, `expression`, `paper`, `frozenAt`, `cycle`, `follow` und `gaze`. Bindbare Werte: `block`, `state`, `playing` und `elapsed`. Alle öffentlichen Typen und Optionslisten werden vom Paket exportiert.
 
 ## Architektur und Messwerte
 

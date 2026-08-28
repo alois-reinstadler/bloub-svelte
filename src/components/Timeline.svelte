@@ -4,8 +4,8 @@
   import NameDialog from './NameDialog.svelte'
   import TimelineTrack from './TimelineTrack.svelte'
   import ZoomSlider from './ZoomSlider.svelte'
-  import { blocksWith, makeBlock, nextCycleId, offsetOf, totalDuration, uniqueName, type Block, type Cycle } from '@/bot/cycles'
-  import type { StateId } from '@/bot/states'
+  import { blocksWith, makeBlock, nextCycleId, offsetOf, totalDuration, uniqueName, type Block, type Cycle } from '@/lib/internal/core/cycles'
+  import type { StateId } from '@/lib/internal/core/states'
   import { MAX_ZOOM, MIN_ZOOM, mmss } from '@/ui/timeline'
   import { nomDeCycle, pluriel, t } from '@/i18n'
 

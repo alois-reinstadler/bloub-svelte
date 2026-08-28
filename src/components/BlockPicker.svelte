@@ -1,6 +1,6 @@
 <script lang="ts">
   import BotTile from './BotTile.svelte'
-  import { POSES, SEQUENCE, STATE_BY_ID, type StateId } from '@/bot/states'
+  import { POSES, SEQUENCE, STATE_BY_ID, type StateId } from '@/lib/internal/core/states'
   import { t } from '@/i18n'
   let { shape, color, expression, onpick }: { shape: string; color: string; expression: string; onpick: (state: StateId) => void } = $props()
   const PALETTE = SEQUENCE.map((id) => STATE_BY_ID.get(id)!)

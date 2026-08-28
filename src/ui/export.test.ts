@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { RAYON } from '@/bot/repere'
-import { SHAPES } from '@/bot/skins'
+import { RAYON } from '@/lib/internal/core/repere'
+import { SHAPES } from '@/lib/internal/core/skins'
 import {
   ACTIONS,
   BLANC,
