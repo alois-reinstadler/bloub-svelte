@@ -1,6 +1,6 @@
 /**
  * Locale de reference. Les deux autres sont typees `typeof fr`, donc c'est ce
- * fichier qui definit le contrat : y ajouter une cle fait echouer `vue-tsc` sur
+ * fichier qui definit le contrat : y ajouter une cle fait echouer `svelte-check` sur
  * `en.ts` et `zh.ts` jusqu'a ce qu'elles soient traduites.
  *
  * Surtout PAS de `as const` : chaque valeur deviendrait son propre type
@@ -14,8 +14,8 @@
 export default {
   app: {
     /**
-     * Nom du produit. En minuscules dans les trois langues, ce n'est pas une
-     * coquille : les capitales de `NOM` (App.vue) sont un logotype, pas le nom.
+     * Nom du produit. En minuscules dans les quatre langues, ce n'est pas une
+     * coquille : les capitales de `NOM` (App.svelte) sont un logotype, pas le nom.
      * Un nom propre ne se traduit pas non plus. `title` sert de `document.title`.
      * Voir aussi le <title> de index.html, qui est statique.
      */
@@ -97,6 +97,7 @@ export default {
     preview: 'Aperçu',
     export: 'Exporter le montage',
     zoom: 'Zoom de la piste',
+    playhead: 'Tête de lecture',
     blockAria: '{state}, {duration}',
     blockDurationAria: 'Durée de {state}, {duration}',
     blockRemoveAria: 'Retirer {state}'

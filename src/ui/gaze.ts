@@ -120,7 +120,7 @@ export type GazeScript = (t: number) => Look
  *
  * Corollaire indispensable : ce tour ne se joue que sur un CERCLE. Les yeux sont
  * recolles au contour reel (`radiusAtAngle`), donc sur une forme non circulaire
- * ils suivent le profil en tournant et sautillent. Voir `forme` dans `App.vue`.
+ * ils suivent le profil en tournant et sautillent. Voir `forme` dans `App.svelte`.
  */
 export const TOUR_TIME = 1.5
 

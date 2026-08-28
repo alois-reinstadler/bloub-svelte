@@ -10,8 +10,8 @@
  * forme porte son `fill` en hex.
  */
 
-import { createApp, h, nextTick, ref } from 'vue'
-import BloubBot from '@/components/BloubBot.vue'
+import { flushSync, mount, unmount } from 'svelte'
+import BloubBot from '@/components/BloubBot.svelte'
 import type { Block } from '@/bot/cycles'
 import { gifAnime, gifIndexe, indexe, nouvellePalette, recense, svgAnime } from './anime'
 import { arrete, DEMI_ECRAN, sansCommentaires, viewBoxExport } from './export'
@@ -280,25 +280,24 @@ export async function sequenceDuBot<T>(
   hote.style.cssText = 'position:fixed;left:-99999px;top:0;width:0;height:0;overflow:hidden'
   document.body.appendChild(hote)
 
-  const date = ref(0)
-  const app = createApp({
-    render: () =>
-      h(BloubBot, { ...reglages, size: taille, frozenAt: date.value, ...(paper ? { paper } : {}) })
+  const bot = mount(BloubBot, {
+    target: hote,
+    props: { ...reglages, size: taille, frozenAt: 0, ...(paper ? { paper } : {}) }
   })
-  app.mount(hote)
+  flushSync()
 
   try {
     const out: T[] = []
     for (let i = 0; i < nombre; i++) {
-      date.value = i * pas
-      await nextTick()
+      bot.redrawAt(i * pas)
+      flushSync()
       const svg = hote.querySelector('svg')
       if (!svg) throw new Error('bot hors ecran non rendu')
       out.push(await lis(svg, i))
     }
     return out
   } finally {
-    app.unmount()
+    void unmount(bot)
     hote.remove()
   }
 }
@@ -313,7 +312,7 @@ export async function sequenceDuBot<T>(
  * Le rendu passe par `rendAt` et non par `frozenAt` : seul `rendAt` parcourt les
  * blocs en datant chaque changement d'etat a son offset absolu, ce qui donne les
  * memes fondus aux jointures que la lecture temps reel. Voir sa doc dans
- * `BloubBot.vue`.
+ * `BloubBot.svelte`.
  */
 export interface LecteurHorsEcran {
   /** Rend l'instant `t` du cycle et renvoie le SVG a lire. */
@@ -331,10 +330,9 @@ export async function ouvreCycle(
   hote.style.cssText = 'position:fixed;left:-99999px;top:0;width:0;height:0;overflow:hidden'
   document.body.appendChild(hote)
 
-  const bot = ref<{ rendAt: (t: number) => void } | null>(null)
-  const app = createApp({
-    render: () =>
-      h(BloubBot, {
+  const bot = mount(BloubBot, {
+    target: hote,
+    props: {
         ...reglages,
         size: taille,
         cycle: blocs,
@@ -345,32 +343,30 @@ export async function ouvreCycle(
          * boule au repos qui morphait vers le triangle pendant 0,6 s. C'est la
          * meme precaution qu'a l'ecran, ou `state` est amorce sur le bloc courant
          * « pour ne pas entrer en morphant depuis un etat qui n'a jamais ete
-         * affiche » (cf. `App.vue`).
+         * affiche » (cf. `App.svelte`).
          */
         state: blocs[0]?.state ?? 'idle',
         frozenAt: 0,
-        ref: bot,
         ...(paper ? { paper } : {})
-      })
+    }
   })
-  app.mount(hote)
-  await nextTick()
+  flushSync()
 
   const svg = hote.querySelector('svg')
-  if (!svg || !bot.value) {
-    app.unmount()
+  if (!svg) {
+    void unmount(bot)
     hote.remove()
     throw new Error('bot hors ecran non rendu')
   }
 
   return {
     rendre: async (t: number) => {
-      bot.value!.rendAt(t)
-      await nextTick()
+      bot.rendAt(t)
+      flushSync()
       return svg
     },
     ferme: () => {
-      app.unmount()
+      void unmount(bot)
       hote.remove()
     }
   }

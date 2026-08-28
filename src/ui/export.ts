@@ -194,7 +194,7 @@ export const couleurDeFond = (fond: FondGif) => (fond === 'blanc' ? BLANC : null
  *
  * Le catalogue ne porte que des **ids** : les libelles sont resolus par
  * `t('export.<id>')`, et l'union litterale au-dessus fait verifier a la
- * compilation que chacun a sa traduction dans les trois langues.
+ * compilation que chacun a sa traduction dans les quatre langues.
  */
 export const ACTIONS: ActionExport[] = [
   { id: 'png', mode: 'telecharge', taille: 1024, extension: 'png' },
@@ -233,7 +233,7 @@ export function sansCommentaires(markup: string) {
  * ne doit pas changer avec la langue de l'interface.
  *
  * Les ids sont filtres alors qu'ils viennent d'unions litterales, parce que
- * `App.vue` les relit du `localStorage` sans les valider : une valeur trafiquee
+ * `App.svelte` les relit du `localStorage` sans les valider : une valeur trafiquee
  * n'a pas a pouvoir composer le nom du fichier telecharge.
  */
 export function nomFichier(

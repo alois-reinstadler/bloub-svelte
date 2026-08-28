@@ -5,14 +5,14 @@
 ```bash
 pnpm dev       # 5190 (set in vite.config.ts, mirrored in .claude/launch.json)
 pnpm test      # vitest
-pnpm build     # vue-tsc --noEmit && vite build
+pnpm build     # svelte-check && vite build
 ```
 
-Vue 3.5 + Vite 8 + TS strict + Tailwind 4 (`@tailwindcss/vite` plugin, no
+Svelte 5.56 + Vite 8 + TS strict + Tailwind 4 (`@tailwindcss/vite` plugin, no
 `tailwind.config.js`), pnpm.
 
 Style: 2 spaces, single quotes, **no semicolons**, comments in French. No ESLint
-and no Prettier: `vue-tsc` is the only gate, so run `pnpm build` before
+and no Prettier: `svelte-check` is the only gate, so run `pnpm build` before
 concluding.
 
 ## The most important rule
@@ -37,9 +37,9 @@ Details and the reasoning behind each are in [docs/](docs/):
 
 - **`src/bot/` has no framework and no clock.** `engine.sample(t)` is a pure
   function of time. That's what makes `frozenAt`, the state board and the
-  DOM-less tests work. No real-time state, no `Date.now()`, no Vue import. And
+  DOM-less tests work. No real-time state, no `Date.now()`, no Svelte import. And
   **`sample()` must not mutate**: purging a stale previous state during playback
-  makes the engine non-replayable (there's a dedicated test). Shared Vue code goes
+  makes the engine non-replayable (there's a dedicated test). Shared Svelte code goes
   in `src/ui/`.
 - **The montage holds or cuts, it never scales time** (`cycles.ts`). Hence
   `MIN_BLOCK` (0.6 s) and `StateDef.minDuration`, which is read off the state's
@@ -51,7 +51,7 @@ Details and the reasoning behind each are in [docs/](docs/):
   them clip against the silhouette on their own.
 - **The render frame lives in `src/bot/repere.ts`**: `RAYON` (100) and `DEMI_VIEWBOX`
   (158) define what `sample()` returns, so they can't sit in a `<script setup>` where
-  nothing can import them — `export.ts` used to redeclare one by hand. The Vue component
+  nothing can import them — `export.ts` used to redeclare one by hand. The Svelte component
   is a client of the engine, not its definition.
 - **Anything sitting "on" the body must follow its real radius**: `radiusAtAngle`
   (defined in `shape.ts`, applied by `engine.ts`) for the eyes and the notification
@@ -92,12 +92,12 @@ Details and the reasoning behind each are in [docs/](docs/):
   Already went wrong once.
 - **Labels don't live in `src/bot/`.** The catalogues carry ids and the display
   resolves `t('states.orbit')`. Their ids are **literal unions** so the compiler
-  checks that every entry has a label in all three languages. Adding a shape
+  checks that every entry has a label in all four languages. Adding a shape
   without its label doesn't compile.
 - **One state isn't measured: `swirl`**, the settings view's entry transition. It's
   deliberately outside `SEQUENCE` (a test locks that) and carries both `baseBody`
   and `baseFace`.
-- **`mediabunny` is the only dependency besides Vue, and it must stay a DYNAMIC import.**
+- **`mediabunny` is the only dependency besides Svelte, and it must stay a DYNAMIC import.**
   It encodes the cycle's MP4 (`src/ui/video.ts`). Imported statically it adds **43 kB gzip**
   to the initial bundle, more than the 34 kB that got `vue-i18n` rejected in favour of the
   in-house layer. Behind `await import(...)` it costs 0.7 kB and only arrives when someone
@@ -106,7 +106,7 @@ Details and the reasoning behind each are in [docs/](docs/):
   arrow-key navigation and focus moved into the menu on open, and they stop exposing the
   children as ordinary buttons. Three popups declared them and implemented none of it, so
   the Tab order didn't match what was announced — they are plain button lists now, with
-  `aria-haspopup="true"` and `aria-expanded`. `Settings.vue` shows the other route: a real
+  `aria-haspopup="true"` and `aria-expanded`. `Settings.svelte` shows the other route: a real
   `radiogroup` with a moving `tabindex`. Pick one, never the label alone.
 - **64rem is the only breakpoint, and it separates two different layouts, not two sizes.**
   Above it the scene is the three-column grid and the page never scrolls (`#app { overflow:
@@ -147,9 +147,9 @@ run it, the component's API. Don't duplicate it here.
 ## Tests
 
 `pnpm test` runs in `node` by default. **One file asks for a DOM** and says so on its first
-line (`// @vitest-environment happy-dom`): `ui/capture.test.ts`, which mounts `BloubBot.vue`
+line (`// @vitest-environment happy-dom`): `ui/capture.test.ts`, which mounts `BloubBot.svelte`
 to check the off-screen player — the exported render must be the component's own, not a
-second drawing built beside it. That is also why `vitest.config.ts` carries the Vue plugin.
+second drawing built beside it. That is also why `vitest.config.ts` carries the Svelte plugin.
 Keep the DOM per-file: a global DOM environment would slow the whole suite for one test.
 
 `capture.test.ts` is the one that catches what nothing else can — the export defects are
@@ -166,7 +166,7 @@ are what `engine.sample(1)` returns for `idle`, byte for byte. `favicon.ico` and
 `apple-touch-icon.png` are rasterised from it.
 
 `docs/demo.gif` and `docs/states.png` are the same idea: rendered by walking
-`engine.sample(t)` and writing the SVG layers in `BloubBot.vue`'s order, then
+`engine.sample(t)` and writing the SVG layers in `BloubBot.svelte`'s order, then
 `rsvg-convert` + `ffmpeg`. They are **not** browser captures: the browser pane
 suspends `requestAnimationFrame` when hidden, so an animation can't be captured
 there at all. To redo them, drive the engine, don't reach for a screenshot.

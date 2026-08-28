@@ -1,5 +1,5 @@
 /**
- * Langues proposees et regle de choix. Volontairement sans DOM ni Vue : le
+ * Langues proposees et regle de choix. Volontairement sans DOM ni Svelte : le
  * navigateur ne rentre que par les arguments, donc la regle se teste sans
  * simuler `navigator` ni `localStorage`.
  */
@@ -14,6 +14,7 @@
  * pas la langue affichee.
  */
 export const LANGUES = [
+  { id: 'de', tag: 'de-AT', emoji: '🇦🇹', nom: 'Deutsch' },
   { id: 'fr', tag: 'fr', emoji: '🇫🇷', nom: 'Français' },
   { id: 'en', tag: 'en', emoji: '🇬🇧', nom: 'English' },
   { id: 'zh', tag: 'zh-Hans', emoji: '🇨🇳', nom: '简体中文' }
@@ -21,7 +22,7 @@ export const LANGUES = [
 
 export type Langue = (typeof LANGUES)[number]['id']
 
-export const LANGUE_PAR_DEFAUT: Langue = 'fr'
+export const LANGUE_PAR_DEFAUT: Langue = 'de'
 
 export function estLangue(valeur: string | null | undefined): valeur is Langue {
   return LANGUES.some((l) => l.id === valeur)
@@ -35,25 +36,14 @@ export function tagDe(langue: Langue): string {
  * Langue a afficher au demarrage.
  *
  * Un choix explicite gagne toujours : quelqu'un qui a mis l'interface en
- * anglais ne veut pas la retrouver en francais parce qu'il a change de reseau.
- * Sinon on parcourt les preferences du navigateur DANS L'ORDRE — c'est un
- * classement, pas un ensemble — et on retient la premiere qu'on sait parler.
- *
- * Le decoupage passe par `Intl.Locale` plutot que par `tag.split('-')[0]` :
- * `zh-Hans-CN` doit donner `zh`, et les etiquettes exotiques ne se coupent pas
- * toutes au premier tiret.
+ * anglais doit la retrouver en anglais. Sans choix memorise, cette portation
+ * s'ouvre en allemand autrichien, quelle que soit la langue du navigateur.
  */
 export function choisirLangue(memorisee: string | null, preferences: readonly string[]): Langue {
   if (estLangue(memorisee)) return memorisee
-  for (const tag of preferences) {
-    let base: string
-    try {
-      base = new Intl.Locale(tag).language
-    } catch {
-      // une etiquette invalide dans navigator.languages n'a pas a tout casser
-      continue
-    }
-    if (estLangue(base)) return base
-  }
+  // L'interface de cette portation est allemande par defaut. Les preferences
+  // sont conservees dans la signature pour que les anciennes integrations ne
+  // cassent pas ; un choix explicite dans l'application gagne toujours.
+  void preferences
   return LANGUE_PAR_DEFAUT
 }

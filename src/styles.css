@@ -314,7 +314,7 @@ body,
  * D'ou aussi le fait que la barre soit montee PENDANT l'arrivee, juste masquee :
  * sans etat de depart present a l'ecran, il n'y aurait rien a interpoler.
  *
- * Le RETARD, lui, n'est pas ici mais dans `App.vue` (`RETARD_ARRIVEE`), et il ne
+ * Le RETARD, lui, n'est pas ici mais dans `App.svelte` (`RETARD_ARRIVEE`), et il ne
  * sert QU'A la fin de l'arrivee : le temps que l'avatar rejoigne sa place. En
  * venant d'une autre vue il n'y a rien a attendre, la barre etant posee sur la
  * fenetre elle nait deja a sa place. En CSS il aurait fallu une valeur unique
@@ -525,7 +525,7 @@ body,
  * doit pas jaillir : elle doit PARAITRE, et ce qu'on regarde ensuite est le tour
  * du regard puis le clignement qui pose l'interface, pas l'echelle.
  *
- * Ecrit en `@starting-style` plutot qu'en `@keyframes` : Vue monte toute la page
+ * Ecrit en `@starting-style` plutot qu'en `@keyframes` : Svelte monte toute la page
  * en JavaScript, donc l'element est bel et bien INSERE, et une transition part
  * alors de l'etat declare ici. Meme mecanisme que le grand mot du pied de page,
  * et il a l'avantage de ne rien laisser tourner apres coup.

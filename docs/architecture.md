@@ -6,7 +6,7 @@
 prop, the frozen state board and the DOM-less tests possible.
 
 So `src/bot/` must not gain internal state that depends on real time, nor
-`Date.now()`, nor a Vue import. Vue code shared between components (composables,
+`Date.now()`, nor a Svelte import. Svelte code shared between components (composables,
 display settings) goes in `src/ui/` instead.
 
 **A state change landing inside a fade blends from the frozen frame.** The engine keeps
@@ -208,7 +208,7 @@ The catalogues (`states.ts`, `skins.ts`, `expressions.ts`) carry **ids**, and th
 display resolves `t('states.orbit')`. The corollary is that their ids are
 **literal unions** (`ShapeId`, `ColorId`, `ExpressionId`, `StateId`), not for
 neatness, but because that is what makes the compiler check that every entry has
-its label in all three languages. Adding a shape without its label doesn't
+its label in all four languages. Adding a shape without its label doesn't
 compile.
 
 There used to be one exception, `StateDef.hint`: a hardcoded French string per state that

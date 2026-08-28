@@ -77,6 +77,7 @@ const zh: typeof fr = {
     preview: '预览',
     export: '导出动画序列',
     zoom: '轨道缩放',
+    playhead: '播放头',
     blockAria: '{state}，{duration}',
     blockDurationAria: '{state} 的时长，{duration}',
     blockRemoveAria: '移除 {state}'

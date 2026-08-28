@@ -3,7 +3,7 @@ import { SEQUENCE, STATES, STATE_BY_ID, type StateId } from './states'
 /**
  * Un cycle est un montage : une suite de blocs, chacun un etat tenu pendant une
  * duree choisie. C'est la partie "editeur" du dossier, et elle en garde les
- * regles — donnees pures, aucune horloge, aucun import Vue : le meme cycle doit
+ * regles — donnees pures, aucune horloge, aucun import Svelte : le meme cycle doit
  * pouvoir etre relu par les tests, par le lecteur et par la timeline.
  *
  * Un bloc n'a pas d'identifiant : c'est une position dans une liste, la cle de
@@ -140,7 +140,7 @@ export function blocksWith(blocks: Block[], state: StateId): Block[] {
   return [...blocks, makeBlock(state)]
 }
 
-/** Deplace un bloc, en rendant une nouvelle liste (les etats Vue sont remplaces). */
+/** Deplace un bloc, en rendant une nouvelle liste (les etats Svelte sont remplaces). */
 export function moveBlock(blocks: Block[], from: number, to: number): Block[] {
   const next = blocks.slice()
   const [moved] = next.splice(from, 1)

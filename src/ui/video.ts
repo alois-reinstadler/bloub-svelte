@@ -1,7 +1,7 @@
 /**
  * Encodage video de l'animation, en MP4.
  *
- * Seul module du projet a dependre d'autre chose que Vue, et il le fait en import
+ * Seul module du projet a dependre d'autre chose que Svelte, et il le fait en import
  * DYNAMIQUE : mediabunny pese 43 ko gzip en import statique, soit plus que les
  * 34 ko qui avaient fait ecarter `vue-i18n` au profit d'une couche maison. Charge
  * a la demande, il ne coute que 0,7 ko au chargement du site et n'arrive que le

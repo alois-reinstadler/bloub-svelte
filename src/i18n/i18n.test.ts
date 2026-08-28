@@ -5,6 +5,7 @@ import { STATES } from '@/bot/states'
 import { formePlurielle, interpoler } from './format'
 import { choisirLangue, LANGUES, tagDe } from './langues'
 import fr from './locales/fr'
+import de from './locales/de'
 import en from './locales/en'
 import zh from './locales/zh'
 
@@ -14,7 +15,7 @@ import zh from './locales/zh'
  * navigateur. C'est precisement pour ca que la regle de choix de langue et la
  * mecanique de texte vivent dans des fichiers separes.
  */
-const DICTIONNAIRES = { fr, en, zh }
+const DICTIONNAIRES = { de, fr, en, zh }
 
 describe('choix de la langue au demarrage', () => {
   it('respecte le choix memorise, quelles que soient les preferences du navigateur', () => {
@@ -24,29 +25,28 @@ describe('choix de la langue au demarrage', () => {
 
   it('ignore un choix memorise qui n est pas une langue connue', () => {
     // le localStorage se modifie a la main : on ne lui fait pas confiance
-    expect(choisirLangue('de', ['en-GB'])).toBe('en')
-    expect(choisirLangue('', ['en-GB'])).toBe('en')
+    expect(choisirLangue('xx', ['en-GB'])).toBe('de')
+    expect(choisirLangue('', ['en-GB'])).toBe('de')
   })
 
-  it('suit l ordre des preferences du navigateur, pas leur simple presence', () => {
-    expect(choisirLangue(null, ['zh-CN', 'en-US', 'fr'])).toBe('zh')
-    expect(choisirLangue(null, ['en-US', 'zh-CN', 'fr'])).toBe('en')
+  it('ouvre en allemand quelles que soient les preferences du navigateur', () => {
+    expect(choisirLangue(null, ['zh-CN', 'en-US', 'fr'])).toBe('de')
+    expect(choisirLangue(null, ['en-US', 'zh-CN', 'fr'])).toBe('de')
   })
 
-  it('reduit une etiquette complete a sa langue', () => {
-    // le piege : `zh-Hans-CN` ne se coupe pas au premier tiret par hasard
-    expect(choisirLangue(null, ['zh-Hans-CN'])).toBe('zh')
-    expect(choisirLangue(null, ['en-GB-oxendict'])).toBe('en')
+  it('ne laisse pas une preference systeme remplacer la locale du projet', () => {
+    expect(choisirLangue(null, ['zh-Hans-CN'])).toBe('de')
+    expect(choisirLangue(null, ['en-GB-oxendict'])).toBe('de')
   })
 
-  it('saute les langues qu on ne parle pas et les etiquettes invalides', () => {
-    expect(choisirLangue(null, ['de-DE', 'ja', 'en'])).toBe('en')
-    expect(choisirLangue(null, ['pas une etiquette', 'zh'])).toBe('zh')
+  it('tolere les etiquettes invalides', () => {
+    expect(choisirLangue(null, ['it-IT', 'ja', 'en'])).toBe('de')
+    expect(choisirLangue(null, ['pas une etiquette', 'zh'])).toBe('de')
   })
 
-  it('retombe sur le francais quand rien ne correspond', () => {
-    expect(choisirLangue(null, ['de-DE', 'ja-JP'])).toBe('fr')
-    expect(choisirLangue(null, [])).toBe('fr')
+  it('retombe sur l allemand autrichien quand rien ne correspond', () => {
+    expect(choisirLangue(null, ['it-IT', 'ja-JP'])).toBe('de')
+    expect(choisirLangue(null, [])).toBe('de')
   })
 })
 
@@ -139,8 +139,8 @@ describe('pluriel', () => {
 })
 
 describe('catalogue des langues', () => {
-  it('propose les trois langues, avec un drapeau et un endonyme', () => {
-    expect(LANGUES.map((l) => l.id)).toEqual(['fr', 'en', 'zh'])
+  it('propose les quatre langues, avec un drapeau et un endonyme', () => {
+    expect(LANGUES.map((l) => l.id)).toEqual(['de', 'fr', 'en', 'zh'])
     for (const l of LANGUES) {
       expect(l.emoji.length, l.id).toBeGreaterThan(0)
       expect(l.nom.trim(), l.id).not.toBe('')
@@ -158,5 +158,9 @@ describe('catalogue des langues', () => {
 
   it('precise l ecriture du chinois, que `zh` seul laisse indeterminee', () => {
     expect(tagDe('zh')).toBe('zh-Hans')
+  })
+
+  it('utilise la locale autrichienne pour l allemand', () => {
+    expect(tagDe('de')).toBe('de-AT')
   })
 })

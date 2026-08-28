@@ -6,13 +6,13 @@
   n'executent pas de JavaScript, donc l'apercu partage est toujours celui du
   HTML servi. Une seule langue a choisir, autant que ce soit celle de l'auteur.
 -->
-<html lang="fr">
+<html lang="de-AT">
   <head>
     <!-- doit tenir dans les 1024 premiers octets, donc en premier -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>bloub, avatar SVG animé</title>
+    <title>bloub – animierter SVG-Avatar</title>
     <!--
       « bloub » est le nom du produit ; « l'avatar du bot de x.ai » est la
       matiere reproduite. Les deux doivent rester distincts : le projet n'est
@@ -20,7 +20,7 @@
     -->
     <meta
       name="description"
-      content="bloub recrée en SVG animé l'avatar du bot de x.ai : une forme noire qui morphe entre 14 états, relevés au pixel sur la vidéo. Sans librairie d'animation."
+      content="bloub bildet den Bot-Avatar von x.ai als animiertes SVG nach: eine schwarze Form, die durch 14 pixelgenau gemessene Zustände morpht. Ohne Animationsbibliothek."
     />
 
     <!--
@@ -31,13 +31,14 @@
 
     <!-- Open Graph : attribut `property`, alors que les balises X prennent `name` -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="bloub, avatar SVG animé" />
+    <meta property="og:title" content="bloub – animierter SVG-Avatar" />
     <meta
       property="og:description"
-      content="D'après l'avatar du bot de x.ai : une forme noire qui morphe entre 14 états, relevés au pixel sur la vidéo de référence."
+      content="Nach dem Bot-Avatar von x.ai: eine schwarze Form, die durch 14 pixelgenau am Referenzvideo gemessene Zustände morpht."
     />
     <meta property="og:site_name" content="bloub" />
-    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale" content="de_AT" />
+    <meta property="og:locale:alternate" content="fr_FR" />
     <meta property="og:locale:alternate" content="en_US" />
     <meta property="og:locale:alternate" content="zh_CN" />
 
@@ -53,15 +54,18 @@
       Les trois URL ci-dessous sont donc a reprendre si le domaine change, elles
       ne se deduisent de rien.
     -->
-    <link rel="canonical" href="https://bloub.vercel.app/" />
-    <meta property="og:url" content="https://bloub.vercel.app/" />
-    <meta property="og:image" content="https://bloub.vercel.app/og.png" />
+    <link rel="canonical" href="https://alois-reinstadler.github.io/bloub-svelte/" />
+    <meta property="og:url" content="https://alois-reinstadler.github.io/bloub-svelte/" />
+    <meta
+      property="og:image"
+      content="https://alois-reinstadler.github.io/bloub-svelte/og.png"
+    />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="L'avatar noir du bot et le logotype BLOUB, sur fond clair"
+      content="Der schwarze Bot-Avatar und das BLOUB-Logo auf hellem Hintergrund"
     />
 
     <!--
@@ -78,10 +82,10 @@
       `prefers-color-scheme`, il porte la seule variante claire (corps #0a0a0c,
       yeux troues), d'ou le SVG juste apres, qui lui s'inverse.
     -->
-    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="./favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <!-- iOS aplatit la transparence en noir : celui-la est opaque, fond #f9f9f9 -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
 
     <!-- pas de site.webmanifest : il ne sert qu'a l'installation PWA, et
          couterait trois icones de plus pour aucun gain de referencement -->
@@ -91,6 +95,6 @@
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

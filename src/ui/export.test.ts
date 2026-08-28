@@ -23,10 +23,10 @@ import {
   viewBoxExport
 } from './export'
 
-/** Rayon de la boule au repos, cf. le `R` de BloubBot.vue. */
+/** Rayon de la boule au repos, cf. le `R` de BloubBot.svelte. */
 
 
-/** Demi-cote du viewBox affiche a l'ecran, cf. le `VB` de BloubBot.vue. */
+/** Demi-cote du viewBox affiche a l'ecran, cf. le `VB` de BloubBot.svelte. */
 const VB_ECRAN = 158
 
 describe('cadre d export', () => {
@@ -210,7 +210,7 @@ describe('nom de fichier', () => {
   })
 
   /*
-   * `App.vue` relit forme / expression / couleur du localStorage sans les
+   * `App.svelte` relit forme / expression / couleur du localStorage sans les
    * valider : une valeur trafiquee ne doit pas pouvoir composer un chemin.
    */
   it('ne laisse pas passer de separateur de chemin', () => {

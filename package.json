@@ -3,41 +3,43 @@
   "private": true,
   "version": "0.1.1",
   "type": "module",
-  "description": "SVG recreation of the x.ai bot avatar. One shape morphing through 14 states, measured off the reference video frame by frame.",
+  "description": "Svelte 5 port of the SVG recreation of the x.ai bot avatar.",
   "license": "MIT",
   "author": "Jérémy Perret",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeremy-prt/bloub.git"
+    "url": "git+https://github.com/alois-reinstadler/bloub-svelte.git"
   },
+  "homepage": "https://alois-reinstadler.github.io/bloub-svelte/",
   "keywords": [
     "svg",
     "animation",
     "avatar",
-    "vue",
+    "svelte",
     "morphing"
   ],
   "packageManager": "pnpm@11.17.0",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "build": "svelte-check --tsconfig ./tsconfig.json && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "mediabunny": "^1.54.0",
-    "vue": "^3.5.41"
+    "mediabunny": "^1.54.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@types/node": "^26.0.0",
-    "@vitejs/plugin-vue": "^6.0.8",
     "happy-dom": "^20.11.2",
     "tailwindcss": "^4.3.3",
+    "svelte": "^5.56.10",
+    "svelte-check": "^4.3.2",
     "typescript": "^5.9.3",
     "vite": "^8.2.1",
-    "vitest": "^4.1.10",
-    "vue-tsc": "^3.3.9"
+    "vitest": "^4.1.11"
   }
 }

@@ -73,6 +73,7 @@ const en: typeof fr = {
     preview: 'Preview',
     export: 'Export the montage',
     zoom: 'Track zoom',
+    playhead: 'Playhead',
     blockAria: '{state}, {duration}',
     blockDurationAria: 'Duration of {state}, {duration}',
     blockRemoveAria: 'Remove {state}'

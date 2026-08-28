@@ -20,7 +20,7 @@ import {
 /**
  * Les identifiants sont enumeres plutot que deduits du tableau : c'est ce qui
  * permet a la couche i18n de verifier A LA COMPILATION que chaque forme a bien
- * sa traduction dans les trois langues (`t(\`shapes.${id}\`)` ne compile que si
+ * sa traduction dans les quatre langues (`t(\`shapes.${id}\`)` ne compile que si
  * la cle existe). Un `as const` sur le tableau aurait le meme effet mais
  * rendrait `radii` en lecture seule, alors que le moteur le passe tel quel.
  */

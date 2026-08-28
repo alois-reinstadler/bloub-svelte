@@ -1,5 +1,8 @@
-import { createApp } from 'vue'
-import App from './App.vue'
+import { mount } from 'svelte'
+import App from './App.svelte'
 import './styles.css'
 
-createApp(App).mount('#app')
+const target = document.getElementById('app')
+if (!target) throw new Error('Application mount point not found')
+
+mount(App, { target })
