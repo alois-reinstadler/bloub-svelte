@@ -1,6 +1,6 @@
 {
   "name": "bloub-svelte",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "description": "Svelte 5 port of the SVG recreation of the x.ai bot avatar.",
   "license": "MIT",

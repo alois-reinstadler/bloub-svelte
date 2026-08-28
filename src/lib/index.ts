@@ -6,7 +6,7 @@ export type {
   ColorId,
   ExpressionId,
   GazeScript,
+  LookAtTarget,
   ShapeId,
   StateId
 } from './types'
-

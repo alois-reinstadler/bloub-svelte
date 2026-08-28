@@ -59,6 +59,7 @@
     frozenAt = undefined,
     cycle = [{ state: 'idle', duration: 2.4 }],
     follow = false,
+    lookAt = undefined,
     gaze = null,
     block = $bindable(0),
     state = $bindable<StateId>('idle'),
@@ -97,6 +98,7 @@
   {frozenAt}
   {cycle}
   {follow}
+  {lookAt}
   {gaze}
   bind:block
   bind:state
@@ -104,4 +106,3 @@
   bind:elapsed
   class={className}
 />
-

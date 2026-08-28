@@ -15,6 +15,7 @@
   import { blockAt, defaultCycle, offsetOf, type Block } from './core/cycles'
   import { DEMI_VIEWBOX, RAYON } from './core/repere'
   import { STATE_BY_ID, type StateId } from './core/states'
+  import type { LookAtTarget } from '../types'
 
   interface Props {
     size?: number
@@ -25,6 +26,7 @@
     frozenAt?: number
     cycle?: Block[]
     follow?: boolean
+    lookAt?: LookAtTarget | null
     gaze?: GazeScript | null
     block?: number
     state?: StateId
@@ -43,6 +45,7 @@
     frozenAt = undefined,
     cycle = defaultCycle().blocks,
     follow = false,
+    lookAt = undefined,
     gaze = null,
     block = $bindable(0),
     state: currentState = $bindable<StateId>('idle'),
@@ -123,6 +126,9 @@
   let pointer: { x: number; y: number } | null = null
   let aiming = false
   let turnSince = 0
+  let activeLookAt = $derived<LookAtTarget | null>(
+    lookAt === undefined ? (follow ? 'cursor' : null) : lookAt
+  )
 
   function onPointerMove(event: PointerEvent) {
     if (event.pointerType !== 'touch') pointer = { x: event.clientX, y: event.clientY }
@@ -138,22 +144,38 @@
     aiming = false
   }
 
-  function aim() {
+  function aim(target: LookAtTarget) {
     if (!STATE_BY_ID.get(currentState)?.baseFace) {
       release()
       return
     }
     const box = svg?.getBoundingClientRect()
     if (!box || box.width === 0 || box.height === 0) return
+    let point = pointer
+    if (target !== 'cursor') {
+      if (!target.isConnected) {
+        release()
+        return
+      }
+      const targetBox = target.getBoundingClientRect()
+      if (targetBox.width === 0 && targetBox.height === 0) {
+        release()
+        return
+      }
+      point = {
+        x: targetBox.left + targetBox.width / 2,
+        y: targetBox.top + targetBox.height / 2
+      }
+    }
     if (!aiming) turnSince = clock
     const halfWidth = Math.max(1, window.innerWidth / 2)
     const halfHeight = Math.max(1, window.innerHeight / 2)
     engine.setLook(
       lookTarget({
-        nx: pointer ? clamp((pointer.x - (box.left + box.width / 2)) / halfWidth, -1, 1) : 0,
-        ny: pointer ? clamp((pointer.y - (box.top + box.height / 2)) / halfHeight, -1, 1) : 0,
+        nx: point ? clamp((point.x - (box.left + box.width / 2)) / halfWidth, -1, 1) : 0,
+        ny: point ? clamp((point.y - (box.top + box.height / 2)) / halfHeight, -1, 1) : 0,
         tour: easings.easeOutQuint(clamp((clock - turnSince) / TURN_TIME)),
-        pointer: pointer !== null
+        pointer: point !== null
       }),
       clock
     )
@@ -194,7 +216,7 @@
       else elapsed = clock - blockStart
     }
 
-    if (follow) aim()
+    if (activeLookAt) aim(activeLookAt)
     else if (gaze) scriptedGaze(gaze)
     frame = engine.sample(clock)
   }
@@ -275,20 +297,23 @@
 
   let following = false
   $effect(() => {
-    const on = follow && frozenAt === undefined
-    if (on === following) return
-    following = on
-    if (on) {
-      window.addEventListener('pointermove', onPointerMove)
-      document.addEventListener('pointerleave', onPointerLeave)
-    } else {
-      detach()
-      release()
+    const target = activeLookAt
+    const on = target === 'cursor' && frozenAt === undefined
+    if (on !== following) {
+      following = on
+      if (on) {
+        window.addEventListener('pointermove', onPointerMove)
+        document.addEventListener('pointerleave', onPointerLeave)
+      } else {
+        detach()
+        pointer = null
+      }
     }
+    if (target === null || frozenAt !== undefined) release()
   })
 
   onMount(() => {
-    if (follow && frozenAt === undefined && !following) {
+    if (activeLookAt === 'cursor' && frozenAt === undefined && !following) {
       following = true
       window.addEventListener('pointermove', onPointerMove)
       document.addEventListener('pointerleave', onPointerLeave)

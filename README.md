@@ -15,7 +15,7 @@ Vite läuft standardmäßig auf <http://localhost:5190>.
 
 ```bash
 pnpm check   # Svelte- und TypeScript-Diagnosen
-pnpm test    # 212 Vitest-Tests
+pnpm test    # 215 Vitest-Tests
 pnpm build   # Prüfung plus Produktions-Build
 ```
 
@@ -47,18 +47,23 @@ Die Startseite verbindet Landingpage, Installationsanleitung und Studio als durc
 
 ```svelte
 <script lang="ts">
-  import { Bloub } from 'bloub-svelte'
+  import { Bloub, type LookAtTarget } from 'bloub-svelte'
 
   let block = $state(0)
   let state = $state<'idle' | 'orbit'>('idle')
   let playing = $state(true)
+  let target: HTMLElement
+  let lookAt = $state<LookAtTarget>('cursor')
 </script>
 
-<Bloub bind:block bind:state bind:playing />
-<Bloub state="orbit" size={120} frozenAt={1.2} />
+<Bloub bind:block bind:state bind:playing {lookAt} />
+<button bind:this={target} onclick={() => (lookAt = target)}>Hierher schauen</button>
+<button onclick={() => (lookAt = 'cursor')}>Cursor folgen</button>
 ```
 
-Props: `size`, `shape`, `color`, `expression`, `paper`, `frozenAt`, `cycle`, `follow` und `gaze`. Bindbare Werte: `block`, `state`, `playing` und `elapsed`. Alle öffentlichen Typen und Optionslisten werden vom Paket exportiert.
+`lookAt="cursor"` folgt dem Zeiger. Mit `lookAt={element}` schaut Bloub auf die sichtbare Mitte eines DOM-Elements; `lookAt={null}` gibt den Blick wieder an den aktuellen Zustand oder die Animation zurück. Zielwechsel und Rückgaben werden interpoliert. `follow` bleibt als veralteter Alias für `lookAt="cursor"` kompatibel.
+
+Props: `size`, `shape`, `color`, `expression`, `paper`, `frozenAt`, `cycle`, `lookAt` und `gaze`. Bindbare Werte: `block`, `state`, `playing` und `elapsed`. Alle öffentlichen Typen und Optionslisten werden vom Paket exportiert.
 
 ## Architektur und Messwerte
 

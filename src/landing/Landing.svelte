@@ -4,7 +4,7 @@
   import App from '../App.svelte'
 
   const install = 'pnpm add bloub-svelte'
-  const usage = `<script lang="ts">\n  import { Bloub } from 'bloub-svelte'\n<\/script>\n\n<Bloub expression="curious" playing />`
+  const usage = `<script lang="ts">\n  import { Bloub } from 'bloub-svelte'\n<\/script>\n\n<Bloub expression="curious" lookAt="cursor" playing />`
 
   let docsSection: HTMLElement
   let studioSection: HTMLElement
@@ -75,7 +75,7 @@
   <strong>import</strong> {'{'} Bloub {'}'} <strong>from</strong> <q>'bloub-svelte'</q>
 <b>&lt;/script&gt;</b>
 
-<b>&lt;Bloub</b> <i>expression</i>=<q>"curious"</q> <i>playing</i> <b>/&gt;</b></code></pre>
+<b>&lt;Bloub</b> <i>expression</i>=<q>"curious"</q> <i>lookAt</i>=<q>"cursor"</q> <i>playing</i> <b>/&gt;</b></code></pre>
           </div>
         </article>
 

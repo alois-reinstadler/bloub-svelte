@@ -57,6 +57,30 @@ describe('cible de regard', () => {
     expect(lookTarget(vise({ tour: 0.5 })).spin).toBe(SPIN / 2)
     expect(lookTarget(vise({ tour: 1 })).spin).toBe(0)
   })
+
+  it('change de cible depuis la pose interpolee sans saut', () => {
+    const moteur = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get('neutre')!)
+    const gauche = lookTarget(vise({ nx: -1 }))
+    const droite = lookTarget(vise({ nx: 1 }))
+    moteur.setLook(gauche, 0, 0.6)
+
+    const avant = moteur.sample(0.24).eyes.map((eye) => eye.matrix)
+    moteur.setLook(droite, 0.24, 0.6)
+    const auChangement = moteur.sample(0.24).eyes.map((eye) => eye.matrix)
+
+    // setLook repart de la pose effectivement affichee, pas de l'ancienne cible.
+    expect(auChangement).toEqual(avant)
+    expect(moteur.sample(0.54).eyes.map((eye) => eye.matrix)).not.toEqual(avant)
+  })
+
+  it('rend la main a l animation depuis la pose courante sans saut', () => {
+    const moteur = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get('neutre')!)
+    moteur.setLook(lookTarget(vise({ nx: 0.8, ny: -0.6 })), 0, 0.3)
+    const avant = moteur.sample(1).eyes.map((eye) => eye.matrix)
+
+    moteur.setLook(null, 1, 0.6)
+    expect(moteur.sample(1).eyes.map((eye) => eye.matrix)).toEqual(avant)
+  })
 })
 
 describe('les deux yeux restent visibles', () => {

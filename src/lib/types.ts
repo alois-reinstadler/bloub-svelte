@@ -67,6 +67,8 @@ export type ColorId = (typeof COLORS)[number]['id']
 export type ExpressionId = (typeof EXPRESSIONS)[number]['id']
 export type StateId = (typeof STATES)[number]
 export type GazeScript = InternalGazeScript
+/** A live gaze target. Element targets are followed by their visual centre. */
+export type LookAtTarget = 'cursor' | Element
 
 export interface AnimationBlock {
   state: StateId
@@ -82,7 +84,10 @@ export interface BloubProps {
   label?: string
   frozenAt?: number
   cycle?: AnimationBlock[]
+  /** @deprecated Use `lookAt="cursor"` instead. */
   follow?: boolean
+  /** Follow the cursor or the visual centre of a DOM element. `null` releases the gaze. */
+  lookAt?: LookAtTarget | null
   gaze?: GazeScript | null
   block?: number
   state?: StateId
@@ -90,4 +95,3 @@ export interface BloubProps {
   elapsed?: number
   class?: string
 }
-
