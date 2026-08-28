@@ -44,17 +44,6 @@ button { font: inherit; }
   margin-inline: auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid #000;
-}
-
-.hero-section::after,
-.docs-section::after {
-  content: '';
-  position: absolute;
-  inset: 0 50% 0 auto;
-  width: 1px;
-  background: #000;
-  pointer-events: none;
 }
 
 .section-copy { width: 100%; max-width: 720px; padding-inline: clamp(36px, 5vw, 82px); }
@@ -63,10 +52,11 @@ button { font: inherit; }
 .eyebrow span { width: 34px; height: 1px; background: #000; }
 .hero-copy h1,
 .docs-copy h2,
-.studio-label h2 { margin: 0; font-weight: 850; letter-spacing: -.075em; }
-.hero-copy h1 { font-size: clamp(63px, 7.25vw, 108px); line-height: .86; }
+.studio-label h2 { margin: 0; font-weight: 850; }
+.hero-copy h1 { font-size: clamp(63px, 7.25vw, 108px); line-height: .9; letter-spacing: -.045em; }
+.docs-copy h2 { letter-spacing: -.025em; }
 .hero-copy h1 em,
-.docs-copy h2 em { color: #fff; font-style: normal; font-weight: inherit; -webkit-text-stroke: 1.5px #000; }
+.docs-copy h2 em { color: #fff; font-style: normal; font-weight: inherit; -webkit-text-stroke: 1px #000; }
 .lede { max-width: 570px; margin: 34px 0; font-size: clamp(16px, 1.35vw, 19px); line-height: 1.62; }
 .hero-actions { display: flex; align-items: center; gap: 27px; }
 .primary-action { padding: 16px 20px; color: #fff; background: #000; border: 1px solid #000; font-size: 12px; font-weight: 800; transition: color .2s ease, background .2s ease; }
@@ -104,7 +94,7 @@ button { font: inherit; }
 .studio-label { position: absolute; z-index: 10; top: 22px; left: max(90px, calc((100vw - 1440px) / 2 + 36px)); display: flex; align-items: flex-start; gap: 14px; pointer-events: none; }
 .studio-label > span { font: 800 9px monospace; }
 .studio-label p { margin: 0 0 2px; font-size: 9px; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
-.studio-label h2 { font-size: 25px; letter-spacing: -.05em; }
+.studio-label h2 { font-size: 25px; letter-spacing: -.04em; }
 .studio-section .studio-shell { height: 100dvh; }
 
 /* The studio owns the only full-size Bloub. It travels above the earlier sections
@@ -133,8 +123,6 @@ button { font: inherit; }
   .site-nav nav > a:first-child { display: none; }
   .hero-section,
   .docs-section { width: 100%; display: block; min-height: auto; }
-  .hero-section::after,
-  .docs-section::after { display: none; }
   .section-copy { max-width: none; padding-inline: 20px; }
   .hero-copy { min-height: calc(100svh - 78px); padding-top: 62px; padding-bottom: 190px; }
   .hero-copy h1 { font-size: clamp(60px, 18vw, 88px); }
