@@ -5,9 +5,10 @@
 <script lang="ts">
   import { t } from '@/i18n'
 
-  let { view = $bindable('personnaliser'), inert = undefined, class: className = '' }: {
+  let { view = $bindable('personnaliser'), inert = undefined, embedded = false, class: className = '' }: {
     view?: ViewId
     inert?: boolean
+    embedded?: boolean
     class?: string
   } = $props()
   let muted = $state<ViewId | null>(null)
@@ -19,7 +20,7 @@
 </script>
 
 <nav
-  class="fixed top-3 left-1/2 z-20 -translate-x-1/2 rounded-2xl border border-[var(--line)] bg-white/85 p-1.5 shadow-sm backdrop-blur lg:top-1/2 lg:left-4 lg:translate-x-0 lg:-translate-y-1/2 {className}"
+  class="{embedded ? 'absolute' : 'fixed'} top-3 left-1/2 z-20 -translate-x-1/2 rounded-2xl border border-[var(--line)] bg-white/85 p-1.5 shadow-sm backdrop-blur lg:top-1/2 lg:left-4 lg:translate-x-0 lg:-translate-y-1/2 {className}"
   aria-label={t('rail.nav')}
   {inert}
 >

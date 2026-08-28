@@ -21,6 +21,8 @@
   import { COLOR_BY_ID, DEFAULT_COLOR, DEFAULT_SHAPE, SHAPE_BY_ID } from '@/lib/internal/core/skins'
   import { POSES, SEQUENCE, STATES, type StateId } from '@/lib/internal/core/states'
 
+  let { embedded = false }: { embedded?: boolean } = $props()
+
   function readHash() {
     const params = new URLSearchParams(location.hash.slice(1))
     const asked = params.get('etat') as StateId | null
@@ -35,7 +37,7 @@
   let calm = $state(calmQuery.matches)
   const [navigationEntry] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[]
   const navigation = navigationEntry?.type ?? 'navigate'
-  let intro = $state(initial.arrivee || introDue({ named: initial.named, gallery: initial.gallery, rechargement: navigation !== 'navigate', calme: untrack(() => calm) }))
+  let intro = $state(untrack(() => !embedded && (initial.arrivee || introDue({ named: initial.named, gallery: initial.gallery, rechargement: navigation !== 'navigate', calme: calm }))))
 
   const restored = parseCycles(lis('cycles'))
   let cycles = $state<Cycle[]>(restored.length ? restored : [defaultCycle()])
@@ -151,9 +153,10 @@
 {#if gallery}
   <div class="p-5"><a class="text-xs text-[var(--muted)] underline underline-offset-2" href="./">{t('gallery.back')}</a><div class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">{#each order as item (item.id)}<figure class="flex flex-col items-center"><BloubBot state={item.id} size={210} {shape} {color} {expression} frozenAt={POSES[item.id]}/><figcaption class="text-xs text-[var(--muted)]">{t(`states.${item.id}`)}</figcaption></figure>{/each}</div></div>
 {:else}
+  <div class="studio-shell" class:studio-shell--embedded={embedded}>
   <h1 class="sr-only">{t('app.name')}</h1>
-  <a class="fixed top-5 right-5 z-20 rounded-lg border border-black/10 bg-white/80 px-3 py-2 text-xs font-semibold text-[var(--ink)] shadow-sm backdrop-blur transition hover:bg-white" href={`${base}/docs/`}>Docs</a>
-  {#if !preview}<SideRail bind:view class="rail" inert={bare || undefined}/>{:else}<button type="button" class="fixed top-5 right-5 z-30 flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1.5 text-xs text-[var(--muted)] shadow-sm backdrop-blur transition hover:text-[var(--ink)]" onclick={() => (preview = false)}>{t('preview.exit')} <kbd class="rounded bg-black/5 px-1 py-0.5 text-[10px]">{t('preview.key')}</kbd></button>{/if}
+  {#if !embedded}<a class="fixed top-5 right-5 z-20 rounded-lg border border-black/10 bg-white/80 px-3 py-2 text-xs font-semibold text-[var(--ink)] shadow-sm backdrop-blur transition hover:bg-white" href={`${base}/#docs`}>Docs</a>{/if}
+  {#if !preview}<SideRail bind:view {embedded} class="rail" inert={bare || undefined}/>{:else}<button type="button" class="{embedded ? 'absolute' : 'fixed'} top-5 right-5 z-30 flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1.5 text-xs text-[var(--muted)] shadow-sm backdrop-blur transition hover:text-[var(--ink)]" onclick={() => (preview = false)}>{t('preview.exit')} <kbd class="rounded bg-black/5 px-1 py-0.5 text-[10px]">{t('preview.key')}</kbd></button>{/if}
   <div class="scene min-h-full items-stretch justify-center p-8 max-lg:flex max-lg:flex-col max-lg:gap-10 max-lg:px-5 {!preview && view === 'animations' ? 'pb-[calc(var(--timeline)_+_1rem)]' : ''} {!preview ? 'max-lg:pt-20' : ''} {bare || preview ? 'scene--seule' : view === 'reglages' ? 'scene--gauche' : ''}">
     {#if !preview}<aside class="panneau scene__gauche w-full lg:flex lg:h-[calc(100dvh_-_3rem_-_var(--timeline))] lg:w-80 lg:shrink-0 lg:flex-col lg:justify-center lg:self-start lg:-translate-y-12 lg:pl-14 {leftOpen ? 'panneau--ouvert max-lg:order-2' : 'max-lg:hidden'}"><Settings/></aside>{/if}
     <main class="scene__avatar relative flex flex-1 items-center justify-center max-lg:order-1 max-lg:flex-col max-lg:gap-4 lg:self-start {preview ? 'lg:min-h-[calc(100dvh_-_4rem)]' : 'lg:min-h-[calc(100dvh_-_3rem_-_var(--timeline))]'}">
@@ -167,5 +170,6 @@
     {#if !preview}<aside class="panneau scene__droite w-full lg:w-80 lg:shrink-0 {rightOpen ? 'panneau--ouvert max-lg:order-2' : 'max-lg:hidden'}">{#if view === 'animations'}<h2 class="text-sm font-semibold">{t('panel.animations')}</h2><div class="mt-2 grid grid-cols-4 gap-1.5">{#each order as item (item.id)}<BotTile label={t(`states.${item.id}`)} selected={item.id === botState} state={item.id} {shape} {color} {expression} frozenAt={POSES[item.id]} onclick={() => addBlock(item.id)}/>{/each}</div>{:else}<Customizer bind:shape bind:color bind:expression/>{/if}</aside>{/if}
   </div>
   {#if view === 'reglages' && !preview}<p class="wordmark" aria-hidden="true">{NOM}</p>{/if}
-  {#if view === 'animations' && !preview}<Timeline bind:cycles bind:activeId bind:block bind:playing {elapsed} {shape} {color} {expression} onseek={onSeek} onpreview={() => (preview = true)} onexporter={() => (cycleDialog = true)}/>{/if}
+  {#if view === 'animations' && !preview}<Timeline bind:cycles bind:activeId bind:block bind:playing {elapsed} {shape} {color} {expression} {embedded} onseek={onSeek} onpreview={() => (preview = true)} onexporter={() => (cycleDialog = true)}/>{/if}
+  </div>
 {/if}

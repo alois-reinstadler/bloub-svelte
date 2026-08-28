@@ -56,6 +56,18 @@ body,
   height: 100%;
 }
 
+.studio-shell {
+  position: relative;
+  height: 100dvh;
+  min-height: 640px;
+  overflow: clip;
+  background: var(--paper);
+}
+
+.studio-shell--embedded .scene {
+  height: 100%;
+}
+
 /*
  * La boule des reglages sort volontairement par la droite. Sans ce rognage, son
  * debordement deviendrait une zone defilable et la page partirait en largeur —
@@ -510,6 +522,10 @@ body,
       2rem + (100dvh - 3rem - var(--timeline)) / 2 +
         min(460px, 100dvh - var(--timeline) - 7rem) / 2 - 0.5rem
     );
+  }
+
+  .studio-shell--embedded .barre-export {
+    position: absolute;
   }
 }
 

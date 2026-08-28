@@ -9,8 +9,9 @@
   import { MAX_ZOOM, MIN_ZOOM, mmss } from '@/ui/timeline'
   import { nomDeCycle, pluriel, t } from '@/i18n'
 
-  let { elapsed, shape, color, expression, cycles = $bindable(), activeId = $bindable(), block = $bindable(), playing = $bindable(), onseek, onpreview, onexporter }: {
+  let { elapsed, shape, color, expression, embedded = false, cycles = $bindable(), activeId = $bindable(), block = $bindable(), playing = $bindable(), onseek, onpreview, onexporter }: {
     elapsed: number; shape: string; color: string; expression: string; cycles: Cycle[]; activeId: string; block: number; playing: boolean
+    embedded?: boolean
     onseek: (seconds: number) => void; onpreview: () => void; onexporter: () => void
   } = $props()
   let zoom = $state(1)
@@ -38,7 +39,7 @@
   function onRemove() { const target = removing; removing = null; if (!target) return; const rest = cycles.filter((item) => item.id !== target.id); cycles = rest; if (target.id === activeId) select(rest[0]!.id) }
 </script>
 
-<div class="fixed inset-x-0 bottom-0 z-30 h-[var(--timeline)] px-6 pt-3 pb-5 max-lg:border-t max-lg:border-[var(--line)] max-lg:bg-[var(--paper)] max-lg:px-5 lg:right-[24.5rem] lg:left-[4.5rem]">
+<div class="{embedded ? 'absolute' : 'fixed'} inset-x-0 bottom-0 z-30 h-[var(--timeline)] px-6 pt-3 pb-5 max-lg:border-t max-lg:border-[var(--line)] max-lg:bg-[var(--paper)] max-lg:px-5 lg:right-[24.5rem] lg:left-[4.5rem]">
   <div class="absolute -top-5 left-1/2 flex -translate-x-1/2 items-center gap-3">
     <span class="text-sm font-medium tabular-nums max-lg:hidden">{mmss(at)}</span>
     <button type="button" class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[var(--ink)] text-[var(--paper)] shadow-sm transition hover:scale-105 active:scale-95" aria-label={playing ? t('timeline.pause') : t('timeline.play')} onclick={() => (playing = !playing)}>

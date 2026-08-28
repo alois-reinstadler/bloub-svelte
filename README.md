@@ -41,7 +41,7 @@ Zwei URL-Fragmente sind für die visuelle Prüfung praktisch:
 pnpm add bloub-svelte
 ```
 
-Die gestaltete Installationsanleitung und interaktive API-Übersicht ist als SvelteKit-Route unter `/docs/` verfügbar.
+Die Startseite verbindet Landingpage, Installationsanleitung und Studio als durchgehende SvelteKit-Seite. `#docs` springt zur Installation, `#studio` direkt zum Editor.
 
 ## Komponente
 

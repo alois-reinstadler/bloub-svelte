@@ -1,6 +1,7 @@
 <script lang="ts">
   import Landing from '../landing/Landing.svelte'
   import '../landing/landing.css'
+  import '../styles.css'
 </script>
 
 <svelte:head>
