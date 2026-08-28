@@ -2,18 +2,18 @@
 
 :root {
   /* Fond releve au pixel sur la video de reference. */
-  --paper: #f9f9f9;
+  --paper: #ffffff;
   /*
    * Couleur principale de l'INTERFACE : un bleu nuit choisi, pas releve. Le
    * noir de la video, lui, n'a pas bouge — c'est celui du bot, dans skins.ts
    * (`encre`, #0a0a0c). Les deux ne doivent pas etre confondus : changer
    * celle-ci retouche le decor, changer l'autre casse la ressemblance.
    */
-  --ink: #17203a;
-  --line: #e3e5ea;
-  --muted: #6e7382;
+  --ink: #050505;
+  --line: #dedede;
+  --muted: #555555;
   /* Rouge d'interface pour les actions destructrices — choisi, comme --ink. */
-  --danger: #d63c34;
+  --danger: #050505;
 
   /**
    * Hauteur de la barre de montage. Elle est fixee en bas, donc c'est la scene

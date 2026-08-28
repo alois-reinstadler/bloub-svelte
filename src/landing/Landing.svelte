@@ -2,8 +2,6 @@
   import { onMount } from 'svelte'
   import { base } from '$app/paths'
   import App from '../App.svelte'
-  import Bloub from '../lib/Bloub.svelte'
-  import type { ExpressionId } from '../lib'
 
   const install = 'pnpm add bloub-svelte'
   const usage = `<script lang="ts">\n  import { Bloub } from 'bloub-svelte'\n<\/script>\n\n<Bloub expression="curious" playing />`
@@ -12,7 +10,6 @@
   let studioSection: HTMLElement
   let section = $state<'hero' | 'docs' | 'studio'>('hero')
   let copied = $state<string | null>(null)
-  let expression = $derived<ExpressionId>(section === 'docs' ? 'attentive' : section === 'studio' ? 'happy' : 'curious')
 
   async function copy(value: string, id: string) {
     await navigator.clipboard.writeText(value)
@@ -44,13 +41,6 @@
       <a class="nav-studio" href="#studio">Studio öffnen <span aria-hidden="true">↓</span></a>
     </nav>
   </header>
-
-  <div class="scroll-companion" aria-hidden="true">
-    <div class="companion-grid"></div>
-    <p>{section === 'docs' ? 'BEREIT FÜR DEIN PROJEKT' : 'REAGIERT AUF DICH'}</p>
-    <div class="companion-avatar"><Bloub size={520} {expression} playing follow={section === 'hero'} /></div>
-    <span>{section === 'docs' ? 'AUFMERKSAM' : 'NEUGIERIG'}</span>
-  </div>
 
   <main>
     <section class="hero-section" id="top">
@@ -95,7 +85,7 @@
 
     <section class="studio-section" id="studio" bind:this={studioSection}>
       <div class="studio-label"><span>03</span><div><p>Dein bloub</p><h2>Jetzt bist du dran.</h2></div></div>
-      <App embedded />
+      <App embedded journey journeySection={section} />
     </section>
   </main>
 </div>

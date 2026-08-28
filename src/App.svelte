@@ -21,7 +21,15 @@
   import { COLOR_BY_ID, DEFAULT_COLOR, DEFAULT_SHAPE, SHAPE_BY_ID } from '@/lib/internal/core/skins'
   import { POSES, SEQUENCE, STATES, type StateId } from '@/lib/internal/core/states'
 
-  let { embedded = false }: { embedded?: boolean } = $props()
+  let {
+    embedded = false,
+    journey = false,
+    journeySection = 'studio'
+  }: {
+    embedded?: boolean
+    journey?: boolean
+    journeySection?: 'hero' | 'docs' | 'studio'
+  } = $props()
 
   function readHash() {
     const params = new URLSearchParams(location.hash.slice(1))
@@ -65,6 +73,11 @@
   let expression = $state(stored('expression', DEFAULT_EXPRESSION, (value) => EXPRESSION_BY_ID.has(value)))
   let shownShape = $derived(view === 'reglages' || bare ? DEFAULT_SHAPE : shape)
   let mood = $state<string | null>(null)
+  let shownExpression = $derived(
+    journey && journeySection !== 'studio'
+      ? journeySection === 'hero' ? 'curieux' : 'attentif'
+      : (mood ?? expression)
+  )
   let order = $derived(SEQUENCE.map((id) => STATES.find((item) => item.id === id)!))
   let bot = $state<{ seek: (index: number, offset?: number) => void; getSvg: () => SVGSVGElement } | undefined>()
   const NOM = 'BLOUB'
@@ -160,8 +173,8 @@
   <div class="scene min-h-full items-stretch justify-center p-8 max-lg:flex max-lg:flex-col max-lg:gap-10 max-lg:px-5 {!preview && view === 'animations' ? 'pb-[calc(var(--timeline)_+_1rem)]' : ''} {!preview ? 'max-lg:pt-20' : ''} {bare || preview ? 'scene--seule' : view === 'reglages' ? 'scene--gauche' : ''}">
     {#if !preview}<aside class="panneau scene__gauche w-full lg:flex lg:h-[calc(100dvh_-_3rem_-_var(--timeline))] lg:w-80 lg:shrink-0 lg:flex-col lg:justify-center lg:self-start lg:-translate-y-12 lg:pl-14 {leftOpen ? 'panneau--ouvert max-lg:order-2' : 'max-lg:hidden'}"><Settings/></aside>{/if}
     <main class="scene__avatar relative flex flex-1 items-center justify-center max-lg:order-1 max-lg:flex-col max-lg:gap-4 lg:self-start {preview ? 'lg:min-h-[calc(100dvh_-_4rem)]' : 'lg:min-h-[calc(100dvh_-_3rem_-_var(--timeline))]'}">
-      <div class="avatar flex aspect-square w-full items-center justify-center {preview ? 'max-w-[min(560px,calc(100dvh_-_6rem))]' : 'max-w-[min(460px,calc(100dvh_-_var(--timeline)_-_7rem))]'} {bare ? 'avatar--intro' : ''} {view === 'reglages' && !preview ? 'avatar--geant' : ''}">
-        <BloubBot bind:this={bot} class="h-auto max-w-full" bind:state={botState} bind:block bind:elapsed bind:playing cycle={played} size={preview ? 560 : 440} shape={shownShape} {color} expression={mood ?? expression} follow={view === 'reglages'} gaze={intro ? INTRO_GAZE : null}/>
+      <div class="avatar flex aspect-square w-full items-center justify-center {preview ? 'max-w-[min(560px,calc(100dvh_-_6rem))]' : 'max-w-[min(460px,calc(100dvh_-_var(--timeline)_-_7rem))]'} {bare ? 'avatar--intro' : ''} {view === 'reglages' && !preview ? 'avatar--geant' : ''} {journey ? `avatar--journey avatar--journey-${journeySection}` : ''}">
+        <BloubBot bind:this={bot} class="h-auto max-w-full" bind:state={botState} bind:block bind:elapsed bind:playing cycle={played} size={preview ? 560 : 440} shape={shownShape} {color} expression={shownExpression} follow={journey ? journeySection === 'hero' : view === 'reglages'} gaze={intro ? INTRO_GAZE : null}/>
       </div>
       {#if view === 'personnaliser' && !preview}<div class="barre-export {bare || exportBarHidden ? 'barre-export--cachee' : ''}" inert={bare || exportBarHidden}><ExportBar etat={exportState} onexporter={exportAvatar}/></div>{/if}
       {#if view === 'animations' && !preview}<CycleDialog bind:open={cycleDialog} bind:format={cycleFormat} bind:fond={cycleBackground} avancement={cycleProgress} erreur={cycleError} onconfirm={exportCycle} onannuler={cancelCycle}/>{/if}
