@@ -256,6 +256,7 @@ callers being careful.
 
 ## Colours: two blacks that don't move together
 
-`--ink` (`styles.css`) is the **interface** colour, a night blue, chosen, not
-measured. The video's black is the bot's, in `skins.ts` (`encre`, `#0a0a0c`).
-Retouching one doesn't touch the other.
+`--ink` (`styles.css` and `landing.css`) is the **interface** colour, an ink
+black (`#0a0a0a`), chosen, not measured — the site is strictly black and white.
+The video's black is the bot's, in `skins.ts` (`encre`, `#0a0a0c`). Retouching
+one doesn't touch the other.

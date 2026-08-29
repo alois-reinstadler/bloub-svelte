@@ -139,10 +139,10 @@ describe('pluriel', () => {
 })
 
 describe('catalogue des langues', () => {
-  it('propose les quatre langues, avec un drapeau et un endonyme', () => {
+  it('propose les quatre langues, avec une pastille et un endonyme', () => {
     expect(LANGUES.map((l) => l.id)).toEqual(['de', 'fr', 'en', 'zh'])
     for (const l of LANGUES) {
-      expect(l.emoji.length, l.id).toBeGreaterThan(0)
+      expect(l.code.length, l.id).toBeGreaterThan(0)
       expect(l.nom.trim(), l.id).not.toBe('')
     }
   })

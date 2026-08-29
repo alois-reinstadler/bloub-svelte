@@ -109,7 +109,7 @@ const en: typeof fr = {
     title: 'Settings',
     language: 'Language',
     about: 'About',
-    credits: 'Made with ❤️ by {name}',
+    credits: 'Made with ♥︎ by {name}',
     creditsAria: 'Jérémy on X, in a new tab',
     github: 'View the project on GitHub',
     githubAria: 'The project repository on GitHub, in a new tab'

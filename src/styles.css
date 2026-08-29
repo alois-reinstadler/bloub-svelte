@@ -4,16 +4,17 @@
   /* Fond releve au pixel sur la video de reference. */
   --paper: #ffffff;
   /*
-   * Couleur principale de l'INTERFACE : un bleu nuit choisi, pas releve. Le
-   * noir de la video, lui, n'a pas bouge — c'est celui du bot, dans skins.ts
-   * (`encre`, #0a0a0c). Les deux ne doivent pas etre confondus : changer
-   * celle-ci retouche le decor, changer l'autre casse la ressemblance.
+   * Couleur principale de l'INTERFACE : choisie, pas relevee — un noir d'encre,
+   * theme noir et blanc oblige. Le noir de la video, lui, n'a pas bouge — c'est
+   * celui du bot, dans skins.ts (`encre`, #0a0a0c). Les deux ne doivent pas etre
+   * confondus : changer celle-ci retouche le decor, changer l'autre casse la
+   * ressemblance. Memes valeurs que `landing.css`, qui charge en second.
    */
-  --ink: #050505;
-  --line: #dedede;
-  --muted: #555555;
-  /* Rouge d'interface pour les actions destructrices — choisi, comme --ink. */
-  --danger: #050505;
+  --ink: #0a0a0a;
+  --line: #e4e4e4;
+  --muted: #6b6b6b;
+  /* Meme encre pour les actions destructrices : le theme n'a pas de rouge. */
+  --danger: #0a0a0a;
 
   /**
    * Hauteur de la barre de montage. Elle est fixee en bas, donc c'est la scene
@@ -51,8 +52,7 @@
 }
 
 html,
-body,
-#app {
+body {
   height: 100%;
 }
 
@@ -69,25 +69,18 @@ body,
 }
 
 /*
- * La boule des reglages sort volontairement par la droite. Sans ce rognage, son
+ * La boule des reglages sort volontairement par la droite. Sans rognage, son
  * debordement deviendrait une zone defilable et la page partirait en largeur —
  * y compris pendant l'animation de RETOUR, ou la boule redescend alors que la
- * vue a deja change. D'ou un rognage permanent, et pas seulement sur cette vue.
+ * vue a deja change.
  *
- * Sur `#app` et non sur `body` : l'`overflow` du corps est PROPAGE a la fenetre
- * quand la racine est en `visible`, donc l'y poser ne rogne rien du tout. `#app`
- * est un conteneur ordinaire, lui rogne pour de bon.
- *
- * `clip` et pas `hidden` : `hidden` en ferait un conteneur de defilement, donc
- * rendrait le debordement navigable au lieu de le supprimer. Ici sur le seul axe
- * x, parce que sous 64rem la mise en page s'empile et doit defiler ; sur grand
- * ecran une seconde regle rogne aussi la hauteur (voir plus bas).
+ * Depuis la migration SvelteKit il n'y a plus de `#app` : le conteneur de
+ * l'application est `.studio-shell` (deja `overflow: clip` et `position:
+ * relative` — le grand mot du pied de page s'y cale en `absolute`), et la page
+ * unique est rognee par `.one-page` dans `landing.css`. `clip` et pas `hidden` :
+ * `hidden` en ferait un conteneur de defilement, donc rendrait le debordement
+ * navigable au lieu de le supprimer.
  */
-#app {
-  overflow-x: clip;
-  /* repere du grand mot du pied de page, qui s'y cale en `absolute` */
-  position: relative;
-}
 
 /*
  * Troncature d'une ligne. Volontairement pas `truncate` (text-overflow) : celui
@@ -185,12 +178,14 @@ body,
   /*
    * Dimensionne d'apres la place REELLEMENT disponible, et non en `vw` seul : le
    * mot part a 6rem du bord gauche, donc une taille proportionnelle a la fenetre
-   * finissait par pousser le dernier B au-dela du bord droit. 3,05 est la largeur
-   * de « BLOUB » en cadratins a ce poids et cet interlettrage — mesuree, pas
-   * estimee — et le reste est la marge qu'on lui laisse a droite.
+   * finissait par pousser le dernier B au-dela du bord droit. 3,35 est la largeur
+   * de « BLOUB » en cadratins pour Bricolage Grotesque a ce poids et cet
+   * interlettrage — mesuree au `scrollWidth`, pas estimee — et le reste est la
+   * marge qu'on lui laisse a droite.
    */
-  font-size: clamp(80px, calc((100vw - 7rem) / 3.05), 268px);
-  font-weight: 900;
+  font-size: clamp(80px, calc((100vw - 7rem) / 3.35), 268px);
+  font-family: var(--display, inherit);
+  font-weight: 800;
   letter-spacing: -0.045em;
   /*
    * Marge a droite DANS la boite, et non un espacement autour.
@@ -204,11 +199,12 @@ body,
    * padding qui elargit la boite du degrade, pas la taille du texte.
    */
   padding-right: 0.1em;
+  /* En encre pure, pas en bleu : le theme est strictement noir et blanc. */
   background: linear-gradient(
     180deg,
-    rgb(23 32 58 / 0.22) 0%,
-    rgb(23 32 58 / 0.1) 48%,
-    rgb(23 32 58 / 0) 88%
+    rgb(10 10 10 / 0.2) 0%,
+    rgb(10 10 10 / 0.09) 48%,
+    rgb(10 10 10 / 0) 88%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -252,7 +248,7 @@ body,
     position: static;
     text-align: center;
     padding-right: 0;
-    font-size: clamp(80px, calc((100vw - 2.5rem) / 3.05), 200px);
+    font-size: clamp(80px, calc((100vw - 2.5rem) / 3.35), 200px);
     /*
      * Les lettres touchent le bord bas de la page.
      *
@@ -307,10 +303,19 @@ body,
  * entierement opaque avant d'avoir fini de s'installer — l'inverse donnerait un
  * fondu qui traine sur une forme deja immobile.
  */
+/*
+ * Les deplacements PROPRES au studio (boule geante des reglages, apparition)
+ * passent par les proprietes individuelles `translate`/`scale`, PAS par
+ * `transform` : `transform` appartient au voyage de la page unique
+ * (`landing.css`), qui le pose et le retire avec ses classes. S'ils partageaient
+ * la propriete, la retirer a l'atterrissage ferait rejouer l'interpolation de
+ * base — la boule posee repartait en glissade de 230 px.
+ */
 .avatar {
   view-transition-name: bloub-avatar;
   transition:
-    transform var(--bascule),
+    translate var(--bascule),
+    scale var(--bascule),
     opacity 0.8s ease-out;
 }
 
@@ -349,21 +354,6 @@ body,
 }
 
 @media (width >= 64rem) {
-  /*
-   * Sur grand ecran la mise en page est calee sur la fenetre : rien ne doit faire
-   * defiler la PAGE. Le seul debordement vertical vient de la boule geante, dont
-   * la boite grandit avec elle (2,5 fois 460 px) alors que seule la boule est
-   * peinte — du vide qui allongeait la page de deux cents pixels.
-   *
-   * `clip` sur les deux axes ici, et non `hidden` : `hidden` ferait de `#app` un
-   * conteneur de defilement, donc rendrait ce debordement navigable au lieu de le
-   * supprimer. En dessous de 64rem la regle ne s'applique pas — la mise en page
-   * s'y empile et doit defiler pour de vrai.
-   */
-  #app {
-    overflow: clip;
-  }
-
   .scene {
     display: grid;
     grid-template-columns: 0 minmax(0, 1fr) 20rem;
@@ -424,15 +414,12 @@ body,
    * aurait couche les yeux en `//` au lieu de `\\` et aplati la boule au passage
    * par zero — deux choses que le projet refuse.
    *
-   * Les deux etats declarent la meme suite de fonctions, sinon le navigateur n'a
-   * rien a interpoler et le changement se ferait d'un coup.
+   * En proprietes individuelles (`translate`/`scale`), voir `.avatar` plus haut :
+   * leur valeur initiale interpole d'elle-meme, pas besoin d'etat de depart.
    */
-  .avatar {
-    transform: translate(0, 0) scale(1);
-  }
-
   .avatar--geant {
-    transform: translate(30vw, 14vh) scale(2.5);
+    translate: 30vw 14vh;
+    scale: 2.5;
   }
 
   .scene__gauche {
@@ -553,14 +540,13 @@ body,
  * meme.
  */
 .avatar--intro {
-  transform: translate(0, 0) scale(1.06);
+  scale: 1.06;
 }
 
 @starting-style {
   .avatar--intro {
     opacity: 0;
-    /* meme suite de fonctions que l'etat d'arrivee, sinon rien a interpoler */
-    transform: translate(0, 0) scale(0.9);
+    scale: 0.9;
   }
 }
 

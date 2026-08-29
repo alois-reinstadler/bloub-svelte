@@ -27,8 +27,9 @@ The verified traps that must not be "corrected" are listed in
 [docs/measurements.md](docs/measurements.md). Read it before touching a number in
 `src/bot/`.
 
-One deliberate exception: **`--ink` (`styles.css`) is the interface colour, chosen,
-not measured**, a night blue. The video's black is the bot's, in `skins.ts`
+One deliberate exception: **`--ink` (`styles.css` and `landing.css`) is the
+interface colour, chosen, not measured** — an ink black (`#0a0a0a`), the site
+being strictly black and white. The video's black is the bot's, in `skins.ts`
 (`encre`, `#0a0a0c`). Retouching one doesn't touch the other.
 
 ## Invariants worth knowing before editing
@@ -109,12 +110,13 @@ Details and the reasoning behind each are in [docs/](docs/):
   `aria-haspopup="true"` and `aria-expanded`. `Settings.svelte` shows the other route: a real
   `radiogroup` with a moving `tabindex`. Pick one, never the label alone.
 - **64rem is the only breakpoint, and it separates two different layouts, not two sizes.**
-  Above it the scene is the three-column grid and the page never scrolls (`#app { overflow:
-  clip }`): things can float in the margins and be anchored to the window. Below it
+  Above it the scene is the three-column grid and the studio shell never scrolls
+  (`.studio-shell { overflow: clip }` — there is no `#app` since the SvelteKit
+  migration): things can float in the margins and be anchored to the window. Below it
   everything stacks and the page scrolls for real, which breaks exactly those three
   assumptions — so the rail becomes a top bar, the montage bar gets an opaque background
   (without one, content scrolls visibly through it), and the wordmark returns to the flow.
-  Anything new that is `fixed`, or anchored to the bottom of `#app`, needs its own answer
+  Anything new that is `fixed`, or anchored to the bottom of the shell, needs its own answer
   below 64rem. `--timeline` also changes there (236 → 200 px); the fine positioning that
   reads it lives inside the `>= 64rem` query and never sees the other value.
 - **`prefers-reduced-motion` is followed at runtime, not read once**, and it draws a line:

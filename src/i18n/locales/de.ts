@@ -31,7 +31,7 @@ const de: typeof fr = {
   cycles: { defaultName: 'Standardablauf', newName: 'Mein Ablauf', menuNew: 'Neuer Ablauf', menuRenameAria: '{name} umbenennen', menuRemoveAria: '{name} löschen' },
   units: { seconds: '{n} s', secondsShort: '{n}s' },
   settings: {
-    title: 'Einstellungen', language: 'Sprache', about: 'Über das Projekt', credits: 'Mit ❤️ von {name} gemacht',
+    title: 'Einstellungen', language: 'Sprache', about: 'Über das Projekt', credits: 'Mit ♥︎ von {name} gemacht',
     creditsAria: 'Jérémy auf X, öffnet einen neuen Tab', github: 'Projekt auf GitHub ansehen', githubAria: 'Projekt-Repository auf GitHub, öffnet einen neuen Tab'
   },
   states: {

@@ -26,7 +26,7 @@
         onkeydown={(event) => onKey(event, index)} onclick={() => (langue.value = language.id)}
         class="flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-sm transition {language.id === langue.value ? 'border-[var(--ink)] bg-white font-medium' : 'border-[var(--line)] text-[var(--muted)] hover:border-[var(--muted)] hover:text-[var(--ink)]'}"
       >
-        <span class="text-base leading-none" aria-hidden="true">{language.emoji}</span><span class="flex-1">{language.nom}</span>
+        <span class="w-6 text-center font-mono text-[10px] font-bold tracking-wide" aria-hidden="true">{language.code}</span><span class="flex-1">{language.nom}</span>
         {#if language.id === langue.value}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.4 4.8 8.7 9.5 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>{/if}
       </button>
     {/each}

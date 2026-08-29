@@ -65,16 +65,18 @@ applies at every size, and, more importantly, a `transition` redeclared in the
 block below **evicts opacity**. A property absent from the list stops transitioning
 altogether, so the ball would appear all at once.
 
-## Horizontal clipping is on `#app`, not on `body`
+## Clipping is on `.studio-shell`, not on `body`
 
 The body's `overflow` is **propagated to the viewport** when the root is `visible`,
-so putting it there clips nothing. And `clip` rather than `hidden`, on the x axis
-only: `hidden` would make it a scroll container, which would force `overflow-y` to
-follow and cut off the bottom of the customiser in a short window.
+so putting it there clips nothing. Since the SvelteKit migration there is no `#app`
+either — the SvelteKit body wrapper is `display: contents` and boxes nothing. The
+shell clips with `clip` rather than `hidden`: `hidden` would make it a scroll
+container, which would render the giant ball's overflow navigable instead of
+removing it.
 
-## On a large screen the page doesn't scroll, the panels do
+## On a large screen the studio doesn't scroll, the panels do
 
-`#app` clips both axes past 64rem and the panels take `overflow-y: auto`. The trap
+`.studio-shell` clips past 64rem and the panels take `overflow-y: auto`. The trap
 that cost an iteration: an **automatic** grid track takes its content's height and
 ignores the container's ceiling, so the panel got clipped without having anything to
 scroll. Hence `grid-template-rows: minmax(0, 1fr)` on the scene. that's what makes
@@ -95,13 +97,15 @@ the bottom.
 
 ## The big footer word is `absolute`, not `fixed`
 
-`#app` is exactly the window's height, so the bottom is the same, but a fixed
-element is *out* of the document and doesn't follow the rubber-band when you try to
-scroll a page that doesn't scroll. As `absolute` it goes along with the gesture.
+`.studio-shell` is exactly the window's height, so the bottom is the same, but a
+fixed element is *out* of the document and doesn't follow the rubber-band when you
+try to scroll a page that doesn't scroll. As `absolute` it goes along with the
+gesture.
 
 Its size is computed on the space actually available
-(`calc((100vw - 7rem) / 3.05)`, 3.05 being the measured width of the word in ems):
-in `vw` alone its last character ended up off screen.
+(`calc((100vw - 7rem) / 3.35)`, 3.35 being the measured width of the word in ems
+for Bricolage Grotesque at weight 800): in `vw` alone its last character ended up
+off screen.
 
 ## The URL describes the player, not the views
 

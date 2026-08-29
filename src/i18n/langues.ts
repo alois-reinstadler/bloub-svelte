@@ -12,12 +12,16 @@
  * `nom` est l'endonyme — le nom de la langue DANS cette langue. Une liste de
  * langues traduite serait absurde : on la lit justement quand on ne comprend
  * pas la langue affichee.
+ *
+ * `code` est la pastille affichee devant le nom. Un CODE et pas un drapeau
+ * emoji : le theme est strictement noir et blanc, et un drapeau designe un pays
+ * la ou l'entree designe une langue.
  */
 export const LANGUES = [
-  { id: 'de', tag: 'de-AT', emoji: '🇦🇹', nom: 'Deutsch' },
-  { id: 'fr', tag: 'fr', emoji: '🇫🇷', nom: 'Français' },
-  { id: 'en', tag: 'en', emoji: '🇬🇧', nom: 'English' },
-  { id: 'zh', tag: 'zh-Hans', emoji: '🇨🇳', nom: '简体中文' }
+  { id: 'de', tag: 'de-AT', code: 'DE', nom: 'Deutsch' },
+  { id: 'fr', tag: 'fr', code: 'FR', nom: 'Français' },
+  { id: 'en', tag: 'en', code: 'EN', nom: 'English' },
+  { id: 'zh', tag: 'zh-Hans', code: 'ZH', nom: '简体中文' }
 ] as const
 
 export type Langue = (typeof LANGUES)[number]['id']

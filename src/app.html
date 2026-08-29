@@ -3,7 +3,26 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f9f9f9" />
+    <meta name="theme-color" content="#ffffff" />
+    <link
+      rel="preload"
+      href="%sveltekit.assets%/fonts/bricolage-grotesque-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <style>
+      /* Police d'affichage, auto-hebergee (pas de requete vers Google Fonts).
+         Declaree ici et non dans le CSS bundle : seul `%sveltekit.assets%`
+         connait le prefixe de deploiement. */
+      @font-face {
+        font-family: 'Bricolage Grotesque';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('%sveltekit.assets%/fonts/bricolage-grotesque-latin.woff2') format('woff2');
+      }
+    </style>
     <link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="%sveltekit.assets%/favicon.ico" sizes="16x16 32x32 48x48" />
     <link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
