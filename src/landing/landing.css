@@ -197,7 +197,9 @@ button { font: inherit; }
 .docs-section {
   position: relative;
   width: min(1400px, 100%);
-  min-height: 100svh;
+  /* la bande ENTRE la barre et le pli, pas la fenetre entiere : en 100svh la
+     carte de code passait sous le pli et la section se lisait tronquee */
+  min-height: calc(100svh - var(--nav-h));
   margin-inline: auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -205,12 +207,36 @@ button { font: inherit; }
   scroll-margin-top: var(--nav-h);
 }
 
+/*
+ * La scene de la boule : un anneau fantome au point exact ou elle se gare —
+ * le meme motif que le o creux du titre. FIXE comme la boule, et non pose dans
+ * la section : ils restent concentriques a n'importe quelle position de
+ * defilement. Il ne parait que pendant la section Installation.
+ */
+.docs-section::after {
+  content: '';
+  position: fixed;
+  z-index: 5;
+  top: 53%;
+  left: 74%;
+  width: calc(min(32vw, 440px) * 0.76);
+  aspect-ratio: 1;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  scale: 0.9;
+  transition: opacity 0.4s ease, scale var(--envol);
+  pointer-events: none;
+}
+.one-page[data-section='docs'] .docs-section::after { opacity: 1; scale: 1; }
+
 .section-copy { width: 100%; max-width: 700px; padding-inline: clamp(32px, 5vw, 80px); }
-.docs-copy { padding-block: 120px; }
+.docs-copy { padding-block: 52px; }
 .docs-copy h2 {
   margin: 0;
   font-family: var(--display);
-  font-size: clamp(44px, 4.6vw, 68px);
+  font-size: clamp(42px, 4.4vw, 64px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -218,9 +244,9 @@ button { font: inherit; }
 .docs-copy h2 em { font-style: normal; font-weight: 260; }
 .docs-copy .eyebrow { justify-content: flex-start; }
 .docs-copy .eyebrow::after { content: none; }
-.docs-intro { max-width: 36em; margin: 24px 0 44px; font-size: 15px; line-height: 1.65; color: var(--muted); }
+.docs-intro { max-width: 36em; margin: 20px 0 36px; font-size: 15px; line-height: 1.65; color: var(--muted); }
 
-.doc-step + .doc-step { margin-top: 36px; }
+.doc-step + .doc-step { margin-top: 28px; }
 .step-title { margin-bottom: 14px; display: flex; align-items: center; gap: 12px; }
 .step-title > span {
   width: 28px;
@@ -279,14 +305,14 @@ button { font: inherit; }
   color: rgb(255 255 255 / 0.6);
 }
 .usage-code button { color: var(--ink); background: var(--paper); }
-.usage-code pre { margin: 0; padding: 24px; overflow: auto; font: 13px/1.9 ui-monospace, SFMono-Regular, monospace; }
+.usage-code pre { margin: 0; padding: 20px 24px; overflow: auto; font: 13px/1.75 ui-monospace, SFMono-Regular, monospace; }
 /* La syntaxe se colore en GRIS : hierarchie sans une seule teinte. */
 .usage-code b { color: #ffffff; font-weight: 700; }
 .usage-code strong { color: #ffffff; font-weight: 700; }
 .usage-code i { color: rgb(255 255 255 / 0.55); font-style: normal; }
 .usage-code q { color: rgb(255 255 255 / 0.78); quotes: none; }
 
-.api-link { display: inline-block; margin-top: 34px; padding-bottom: 3px; border-bottom: 1.5px solid var(--ink); font-size: 13px; font-weight: 600; }
+.api-link { display: inline-block; margin-top: 28px; padding-bottom: 3px; border-bottom: 1.5px solid var(--ink); font-size: 13px; font-weight: 600; }
 .api-link span { margin-left: 8px; }
 
 /* -------------------------------------------------------------------- studio */
@@ -295,11 +321,11 @@ button { font: inherit; }
 .studio-label {
   position: absolute;
   z-index: 10;
-  top: 24px;
+  top: 30px;
   left: max(90px, calc((100vw - 1400px) / 2 + 32px));
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 16px;
   pointer-events: none;
 }
 .studio-label > span {
@@ -312,15 +338,25 @@ button { font: inherit; }
   font: 700 10px ui-monospace, SFMono-Regular, monospace;
 }
 .studio-label p {
-  margin: 2px 0 3px;
+  margin: 2px 0 4px;
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--muted);
 }
-.studio-label h2 { margin: 0; font-family: var(--display); font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+.studio-label h2 { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+
+/*
+ * De l'air en haut du panneau de droite (>= 64rem) : son contenu partait du
+ * bord de la fenetre, dans la meme bande que l'etiquette « 03 » — les deux se
+ * lisaient comme une collision. Sur le panneau et pas sur la scene : decaler la
+ * scene deplacerait la colonne de l'avatar, donc le point d'atterrissage.
+ */
+@media (width >= 64rem) {
+  .studio-section .scene__droite { padding-top: 3.5rem; }
+}
 .studio-section .studio-shell { height: 100dvh; }
 /* La planche (`#planche`) remplace le studio et pose son propre lien de retour
    en haut a gauche : l'etiquette « 03 » n'a plus rien a titrer. */
@@ -362,7 +398,9 @@ button { font: inherit; }
   pointer-events: none;
 }
 .studio-section .avatar--journey-docs {
-  top: 50%;
+  /* 53 % et pas 50 : le centre visuel de la bande sous la barre. Les memes
+     coordonnees que l'anneau de `.docs-section::after`, qui l'attend. */
+  top: 53%;
   left: 74%;
   max-width: min(32vw, 440px);
   transform: translate(-50%, -50%) rotate(4deg);
@@ -394,6 +432,8 @@ button { font: inherit; }
   .facts span + span { padding-left: 12px; }
 
   .docs-section { display: block; min-height: auto; }
+  /* la boule est en guetteur au bord bas : pas d'anneau a viser */
+  .docs-section::after { content: none; }
   .section-copy { max-width: none; }
   .docs-copy { padding-block: 96px 140px; }
 
@@ -446,5 +486,6 @@ button { font: inherit; }
   html { scroll-behavior: auto; }
   .site-nav { transition: none; }
   .studio-section .avatar--journey { transition: none; }
+  .docs-section::after { transition: none; }
   .primary-action span { transition: none; }
 }
