@@ -58,9 +58,30 @@ body {
 
 .studio-shell {
   position: relative;
-  height: 100dvh;
-  min-height: 640px;
-  overflow: clip;
+  /*
+   * Le meme GABARIT que le reste de la page unique (1400 px centres) : le
+   * studio en bord a bord se lisait comme une autre application collee sous la
+   * page. Le rail, la barre d'export et le montage sont ancres sur la coquille,
+   * donc ils suivent le gabarit sans rien changer — et le centre de la colonne
+   * de l'avatar reste a `50vw - 10rem`, le centrage se compensant exactement.
+   */
+  width: min(1400px, 100%);
+  margin-inline: auto;
+  /*
+   * Hauteur AU CONTENU, bornee a l'ecran vers le bas : quand le personnalisateur
+   * depasse une petite fenetre, c'est la PAGE qui defile — comme partout
+   * ailleurs — et non un panneau a l'interieur d'une coquille figee a 100dvh.
+   */
+  height: auto;
+  min-height: max(100svh, 640px);
+  /*
+   * `clip` en vertical seulement : la boule geante des reglages doit pouvoir
+   * SORTIR du gabarit de 1400 px par la droite (c'est `.one-page` qui rogne au
+   * bord de la fenetre), mais pas allonger la page vers le bas. `visible` +
+   * `clip` est la seule paire mixte qui ne cree pas de conteneur de defilement.
+   */
+  overflow-x: visible;
+  overflow-y: clip;
   background: var(--paper);
 }
 

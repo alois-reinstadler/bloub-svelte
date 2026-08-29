@@ -98,7 +98,10 @@ Details and the reasoning behind each are in [docs/](docs/):
 - **One state isn't measured: `swirl`**, the settings view's entry transition. It's
   deliberately outside `SEQUENCE` (a test locks that) and carries both `baseBody`
   and `baseFace`.
-- **`mediabunny` is the only dependency besides Svelte, and it must stay a DYNAMIC import.**
+- **The published LIBRARY has zero dependencies besides Svelte.** `gsap` is a
+  devDependency of the SITE only — it drives the landing's scroll-scrubbed
+  journey (`src/landing/journey.ts`) and must never be imported from `src/lib`.
+- **`mediabunny` is the only runtime dependency besides Svelte, and it must stay a DYNAMIC import.**
   It encodes the cycle's MP4 (`src/ui/video.ts`). Imported statically it adds **43 kB gzip**
   to the initial bundle, more than the 34 kB that got `vue-i18n` rejected in favour of the
   in-house layer. Behind `await import(...)` it costs 0.7 kB and only arrives when someone

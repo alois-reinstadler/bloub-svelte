@@ -2,18 +2,18 @@
   import { onMount, tick } from 'svelte'
   import { base } from '$app/paths'
   import App from '../App.svelte'
+  import { creerVoyage, type Voyage } from './journey'
 
   const install = 'pnpm add bloub-svelte'
 
-  let pageEl: HTMLElement
   let heroPin: HTMLElement
   let oSlot: HTMLElement
+  let anneau: HTMLElement
   let docsSection: HTMLElement
   let studioSection: HTMLElement
   let section = $state<'hero' | 'docs' | 'studio'>('hero')
-  // Une fois pose dans le studio, l'avatar quitte le voyage et REVIENT dans la
-  // grille : c'est ce qui rend a la vue Reglages sa boule geante et a l'apercu
-  // son centrage — un element fixe ignorerait les deux.
+  // Posee dans la grille du studio : le voyage (journey.ts) le decide, seul a
+  // savoir ou finit la timeline de defilement.
   let arrived = $state(false)
   let copied = $state<string | null>(null)
 
@@ -24,62 +24,38 @@
   }
 
   onMount(() => {
-    const calm = window.matchMedia('(prefers-reduced-motion: reduce)')
     let frame = 0
-    let landing: ReturnType<typeof setTimeout> | undefined
+    // La section courante ne pilote plus que le DECOR : barre qui s'efface,
+    // anneau qui parait, halo du guetteur, expression de la boule. Le
+    // mouvement, lui, est au defilement pres dans journey.ts.
     const update = () => {
       frame = 0
       const studioTop = studioSection.getBoundingClientRect().top
       const docsTop = docsSection.getBoundingClientRect().top
-      // Le heros bascule des que l'installation ENTRE dans la fenetre : c'est
-      // l'instant exact ou le titre epingle se remet a defiler, donc la boule
-      // quitte le mot pendant qu'il est encore entierement visible — sinon le o
-      // fantome ne se revele jamais qu'hors champ.
-      const next: typeof section = studioTop < innerHeight * 0.62 ? 'studio' : docsTop < innerHeight ? 'docs' : 'hero'
-      if (next === section) return
-      clearTimeout(landing)
-      if (arrived && next !== 'studio') {
-        // Redecollage en deux temps : reprendre d'abord la position fixe du
-        // studio (identique au pixel, donc invisible), laisser le navigateur la
-        // PEINDRE, et seulement ensuite viser la nouvelle section. En un seul
-        // temps, `top`/`left` partent de `auto` — non interpolable — et la
-        // boule saute au lieu de voler.
-        arrived = false
-        tick().then(() => requestAnimationFrame(() => requestAnimationFrame(() => { section = next })))
-        return
-      }
-      section = next
-      // Le retour a la grille attend la fin du vol (0,9 s) ; sans mouvement il
-      // n'y a rien a attendre.
-      if (next === 'studio') landing = setTimeout(() => (arrived = true), calm.matches ? 0 : 950)
+      section = studioTop < innerHeight * 0.62 ? 'studio' : docsTop < innerHeight ? 'docs' : 'hero'
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
-
-    /*
-     * La lettre vivante : l'avatar du voyage est un element fixe, la lettre o un
-     * trou dans le titre. On mesure donc le trou et on publie ses coordonnees en
-     * variables CSS — par rapport au bloc EPINGLE (sticky), dont la position a
-     * l'ecran est connue, pour que la mesure ne depende pas du defilement.
-     */
-    const measure = () => {
-      const pin = heroPin.getBoundingClientRect()
-      const o = oSlot.getBoundingClientRect()
-      pageEl.style.setProperty('--o-x', `${o.left + o.width / 2 - pin.left}px`)
-      pageEl.style.setProperty('--o-y', `${o.top + o.height / 2 - pin.top}px`)
-      pageEl.style.setProperty('--o-w', `${o.width}px`)
-    }
-    measure()
-    // La police d'affichage arrive apres coup et change la metrique du titre.
-    document.fonts?.ready.then(measure)
-    const onResize = () => { onScroll(); measure() }
     update()
+
+    let voyage: Voyage | null = creerVoyage({
+      heroPin,
+      oSlot,
+      anneau,
+      studio: studioSection,
+      onArrive: (posee) => {
+        arrived = posee
+        // Au redecollage, la classe fixe doit etre PEINTE avec la pose
+        // d'atterrissage avant que le scrub reprenne la main.
+        if (!posee) tick().then(() => voyage?.reposer())
+      }
+    })
+
     addEventListener('scroll', onScroll, { passive: true })
-    addEventListener('resize', onResize)
-    return () => { removeEventListener('scroll', onScroll); removeEventListener('resize', onResize); cancelAnimationFrame(frame); clearTimeout(landing) }
+    return () => { removeEventListener('scroll', onScroll); cancelAnimationFrame(frame); voyage?.detruire(); voyage = null }
   })
 </script>
 
-<div class="one-page" data-section={section} bind:this={pageEl}>
+<div class="one-page" data-section={section}>
   <header class="site-nav">
     <a class="site-brand" href={`${base}/`} aria-label="bloub Startseite"><img src={`${base}/favicon.svg`} alt="" /><span>bloub</span></a>
     <nav aria-label="Seitennavigation">
@@ -106,6 +82,7 @@
     </section>
 
     <section class="docs-section" id="docs" bind:this={docsSection}>
+      <div class="docs-ring" aria-hidden="true" bind:this={anneau}></div>
       <div class="section-copy docs-copy">
         <p class="eyebrow">Installation</p>
         <h2>In zwei Minuten<br /><em>zum Leben erweckt.</em></h2>

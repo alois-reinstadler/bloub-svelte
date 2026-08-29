@@ -211,10 +211,10 @@ button { font: inherit; }
  * La scene de la boule : un anneau fantome au point exact ou elle se gare —
  * le meme motif que le o creux du titre. FIXE comme la boule, et non pose dans
  * la section : ils restent concentriques a n'importe quelle position de
- * defilement. Il ne parait que pendant la section Installation.
+ * defilement. Un vrai element (et pas un ::after) parce que `journey.ts` le
+ * MESURE pour y viser la boule. Il ne parait que pendant l'installation.
  */
-.docs-section::after {
-  content: '';
+.docs-ring {
   position: fixed;
   z-index: 5;
   top: 53%;
@@ -229,7 +229,7 @@ button { font: inherit; }
   transition: opacity 0.4s ease, scale var(--envol);
   pointer-events: none;
 }
-.one-page[data-section='docs'] .docs-section::after { opacity: 1; scale: 1; }
+.one-page[data-section='docs'] .docs-ring { opacity: 1; scale: 1; }
 
 .section-copy { width: 100%; max-width: 700px; padding-inline: clamp(32px, 5vw, 80px); }
 .docs-copy { padding-block: 52px; }
@@ -357,7 +357,8 @@ button { font: inherit; }
 @media (width >= 64rem) {
   .studio-section .scene__droite { padding-top: 3.5rem; }
 }
-.studio-section .studio-shell { height: 100dvh; }
+/* La hauteur et le conteneur du studio sont dans `styles.css` (`.studio-shell`) :
+   meme gabarit de 1400 px que le reste de la page, hauteur au contenu. */
 /* La planche (`#planche`) remplace le studio et pose son propre lien de retour
    en haut a gauche : l'etiquette « 03 » n'a plus rien a titrer. */
 .studio-section:not(:has(.studio-shell)) .studio-label { display: none; }
@@ -366,56 +367,20 @@ button { font: inherit; }
 
 /*
  * Le studio possede la seule boule en taille reelle. Tant que `journey` est
- * vrai elle est FIXE et survole les sections ; une fois posee, `Landing.svelte`
- * retire la classe et elle reprend sa place dans la grille du studio — d'ou
- * l'exigence que la position d'atterrissage ci-dessous reproduise, au pixel,
- * le centrage que la grille lui donnerait.
+ * vrai elle est FIXE et survole les sections ; son mouvement n'est PAS ici :
+ * `journey.ts` (GSAP ScrollTrigger, scrub) pose x/y/largeur en fonction du
+ * defilement, sur des ancres mesurees. Aucune transition CSS sur ces
+ * proprietes — deux moteurs sur le meme element se voleraient les images.
+ * Le `max-width` de la boite (classe utilitaire) reste actif : c'est lui que
+ * le vol et la grille partagent comme plafond.
  */
 .studio-section .avatar--journey {
   position: fixed;
   z-index: 20;
-  /* assis dans la lettre o, mesuree par `Landing.svelte` */
-  top: var(--o-y, 42%);
-  left: var(--o-x, 50%);
-  /*
-   * La taille passe par `max-width`, PAS par `width` : en `fixed`, le `w-full`
-   * de la boite vaut 100 vw, et une transition sur `width` partirait de la —
-   * au redecollage la boule gonflait a 1440 px. `max-width`, lui, est une
-   * longueur stable des deux cotes (la grille du studio en pose deja un), donc
-   * l'interpolation ne voit jamais le 100 %.
-   *
-   * 1,62 fois l'anneau : la silhouette n'occupe que 200/316 de sa boite, ce
-   * facteur la fait recouvrir le o avec une petite marge.
-   */
-  max-width: calc(var(--o-w, 160px) * 1.62);
-  transform: translate(-50%, -50%);
-  transition:
-    top var(--envol),
-    left var(--envol),
-    max-width var(--envol),
-    transform var(--envol),
-    opacity 0.35s ease;
+  top: 0;
+  left: 0;
+  will-change: transform, width;
   pointer-events: none;
-}
-.studio-section .avatar--journey-docs {
-  /* 53 % et pas 50 : le centre visuel de la bande sous la barre. Les memes
-     coordonnees que l'anneau de `.docs-section::after`, qui l'attend. */
-  top: 53%;
-  left: 74%;
-  max-width: min(32vw, 440px);
-  transform: translate(-50%, -50%) rotate(4deg);
-}
-/*
- * L'atterrissage : le centre de la colonne de l'avatar, tel que la grille du
- * studio le calcule (marge 2rem + demi-hauteur de colonne ; 50% moins la
- * demi-difference des gouttieres). Verifie contre la position statique — c'est
- * elle qui prend le relais sans transition possible.
- */
-.studio-section .avatar--journey-studio {
-  top: calc(2rem + (100dvh - 3rem - var(--timeline)) / 2);
-  left: calc(50% - 10rem);
-  max-width: min(460px, calc(100dvh - var(--timeline) - 7rem));
-  transform: translate(-50%, -50%);
 }
 
 /* ------------------------------------------------------------ petits ecrans */
@@ -433,23 +398,15 @@ button { font: inherit; }
 
   .docs-section { display: block; min-height: auto; }
   /* la boule est en guetteur au bord bas : pas d'anneau a viser */
-  .docs-section::after { content: none; }
-  .section-copy { max-width: none; }
-  .docs-copy { padding-block: 96px 140px; }
-
-  /* Pendant l'installation, la boule GUETTE depuis le bord bas — a moitie hors
-     champ, elle ne recouvre plus le code comme le faisait un flottant. */
-  .studio-section .avatar--journey-docs {
-    top: auto;
-    bottom: -3.2rem;
-    left: 50%;
-    max-width: 120px;
-    transform: translate(-50%, 0) rotate(4deg);
-    /* halo autocollant : la silhouette occupe 63 % de la boite, le disque blanc
-       s'arrete a 67 % — un lisere qui la detache du bloc de code noir dessous */
+  .docs-ring { display: none; }
+  /* halo autocollant du guetteur : la silhouette occupe 63 % de la boite, le
+     disque blanc s'arrete a 67 % — un lisere qui la detache du bloc de code */
+  .one-page[data-section='docs'] .studio-section .avatar--journey {
     background: radial-gradient(circle closest-side, var(--paper) 0 67%, rgb(255 255 255 / 0) 67.5%);
     border-radius: 50%;
   }
+  .section-copy { max-width: none; }
+  .docs-copy { padding-block: 96px 140px; }
 
   .studio-label { top: 84px; left: 20px; }
   .studio-label h2 { font-size: 20px; }
@@ -459,18 +416,6 @@ button { font: inherit; }
      ni le rail ni l'etiquette « Jetzt bist du dran. » */
   .studio-section .studio-shell--embedded .scene { padding-top: 10rem; }
   .studio-section .scene__avatar { min-height: 400px; }
-  /* le meme centre que la pile ci-dessus : padding + demi-boite */
-  .studio-section .avatar--journey-studio {
-    /* le meme centre que la pile : padding haut + demi-hauteur de la boite,
-       elle-meme jamais plus basse que le `min-height` de la colonne (400 px) */
-    top: calc(10rem + max(400px, min(460px, 100vw - 2.5rem)) / 2);
-    bottom: auto;
-    left: 50%;
-    /* `100 %` et non `100vw` : le vw compte la barre de defilement, la grille
-       non — 15 px d'ecart a l'atterrissage */
-    max-width: min(460px, calc(100% - 2.5rem));
-    transform: translate(-50%, -50%);
-  }
 }
 
 @media (width < 30rem) {
@@ -485,7 +430,6 @@ button { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .site-nav { transition: none; }
-  .studio-section .avatar--journey { transition: none; }
-  .docs-section::after { transition: none; }
+  .docs-ring { transition: none; }
   .primary-action span { transition: none; }
 }
