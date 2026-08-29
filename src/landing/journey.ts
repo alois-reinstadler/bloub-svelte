@@ -78,8 +78,8 @@ export function creerVoyage(options: {
 
   // L'atterrissage : le centre REEL de la colonne de l'avatar, mesure sur la
   // grille — la colonne garde sa hauteur meme quand la boule n'y est pas (elle
-  // a un min-height), donc la mesure vaut pendant le vol. Convertie en
-  // coordonnees d'ecran AU defilement de fin (le haut du studio a 0).
+  // a un min-height), donc la mesure vaut pendant le vol. Coordonnees d'ecran
+  // AU defilement de fin (le haut du studio a 0).
   const poseStudio = (finDefilement: number) => {
     const colonne = studio.querySelector<HTMLElement>('.scene__avatar')
     if (!colonne) return poseDocs()
@@ -87,7 +87,12 @@ export function creerVoyage(options: {
     const plafond = parseFloat(getComputedStyle(avatar).maxWidth) || 460
     return {
       x: r.left + r.width / 2,
-      y: r.top + scrollY + r.height / 2 - finDefilement,
+      // Sur grand ecran la colonne est COLLANTE : son rect ment des qu'elle
+      // colle (rebuild pendant un defilement profond). Sa position NATURELLE
+      // est connue — le padding de la scene (2rem) — donc la verticale se
+      // deduit sans lire rect.top. Sous 64rem la pile n'est pas collante et le
+      // rect dit vrai.
+      y: etroit() ? r.top + scrollY + r.height / 2 - finDefilement : 32 + r.height / 2,
       width: Math.min(r.width, plafond)
     }
   }

@@ -207,13 +207,7 @@ button { font: inherit; }
   scroll-margin-top: var(--nav-h);
 }
 
-/*
- * La scene de la boule : un anneau fantome au point exact ou elle se gare —
- * le meme motif que le o creux du titre. FIXE comme la boule, et non pose dans
- * la section : ils restent concentriques a n'importe quelle position de
- * defilement. Un vrai element (et pas un ::after) parce que `journey.ts` le
- * MESURE pour y viser la boule. Il ne parait que pendant l'installation.
- */
+/* Cible de mesure invisible ou la boule se gare pendant l'installation. */
 .docs-ring {
   position: fixed;
   z-index: 5;
@@ -221,15 +215,9 @@ button { font: inherit; }
   left: 74%;
   width: calc(min(32vw, 440px) * 0.76);
   aspect-ratio: 1;
-  border: 2px solid var(--ink);
-  border-radius: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0;
-  scale: 0.9;
-  transition: opacity 0.4s ease, scale var(--envol);
   pointer-events: none;
 }
-.one-page[data-section='docs'] .docs-ring { opacity: 1; scale: 1; }
 
 .section-copy { width: 100%; max-width: 700px; padding-inline: clamp(32px, 5vw, 80px); }
 .docs-copy { padding-block: 52px; }
@@ -318,50 +306,48 @@ button { font: inherit; }
 /* -------------------------------------------------------------------- studio */
 
 .studio-section { position: relative; min-height: 100dvh; background: var(--paper); scroll-margin-top: 0; }
-.studio-label {
-  position: absolute;
-  z-index: 10;
-  top: 30px;
-  left: max(90px, calc((100vw - 1400px) / 2 + 32px));
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  pointer-events: none;
-}
-.studio-label > span {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border: 1.5px solid var(--ink);
-  border-radius: 50%;
-  font: 700 10px ui-monospace, SFMono-Regular, monospace;
-}
-.studio-label p {
-  margin: 2px 0 4px;
-  font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.studio-label h2 { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
-
-/*
- * De l'air en haut du panneau de droite (>= 64rem) : son contenu partait du
- * bord de la fenetre, dans la meme bande que l'etiquette « 03 » — les deux se
- * lisaient comme une collision. Sur le panneau et pas sur la scene : decaler la
- * scene deplacerait la colonne de l'avatar, donc le point d'atterrissage.
- */
 @media (width >= 64rem) {
-  .studio-section .scene__droite { padding-top: 3.5rem; }
+  /*
+   * La colonne de la boule est COLLANTE : quand le panneau d'options depasse
+   * la fenetre (personnalisateur sur un ecran bas), la page defile les options
+   * et la boule reste en scene — au lieu de sortir decapitee par le haut en
+   * laissant un quart de page vide. Sa piste de grille est aussi haute que le
+   * panneau, donc elle a de quoi voyager ; quand tout tient dans la fenetre,
+   * elle ne bouge simplement pas.
+   */
+  .studio-section .scene__avatar {
+    position: sticky;
+    top: 2rem;
+  }
+
+  /*
+   * La barre d'export est ancree a la COLONNE collante, plus a la coquille :
+   * elle suit la boule au defilement. Et `left/right: 0` la centre enfin sous
+   * la boule — les 4,5/24,5 rem historiques etaient des coordonnees de
+   * FENETRE, appliquees a la colonne elles la decalaient de 160 px a gauche.
+   * (Trois niveaux de selecteur : `styles.css` charge apres ce fichier, il
+   * faut le battre a la specificite.)
+   */
+  .studio-section .scene .barre-export {
+    position: absolute;
+    left: 0;
+    right: 0;
+    /* la meme formule que la coquille, moins les 2rem ou commence la colonne */
+    top: calc(
+      (100dvh - 3rem - var(--timeline)) / 2 +
+        min(460px, 100dvh - var(--timeline) - 7rem) / 2 - 0.5rem
+    );
+  }
+
+  /* Le rail se centre sur la premiere FENETRE de la coquille, pas sur sa
+     hauteur totale : sur une coquille plus haute que l'ecran, 50 % le faisait
+     deriver sous le pli. */
+  .studio-section .rail {
+    top: min(50dvh, 50%);
+  }
 }
 /* La hauteur et le conteneur du studio sont dans `styles.css` (`.studio-shell`) :
    meme gabarit de 1400 px que le reste de la page, hauteur au contenu. */
-/* La planche (`#planche`) remplace le studio et pose son propre lien de retour
-   en haut a gauche : l'etiquette « 03 » n'a plus rien a titrer. */
-.studio-section:not(:has(.studio-shell)) .studio-label { display: none; }
 
 /* ------------------------------------------------------------------- voyage */
 
@@ -399,21 +385,12 @@ button { font: inherit; }
   .docs-section { display: block; min-height: auto; }
   /* la boule est en guetteur au bord bas : pas d'anneau a viser */
   .docs-ring { display: none; }
-  /* halo autocollant du guetteur : la silhouette occupe 63 % de la boite, le
-     disque blanc s'arrete a 67 % — un lisere qui la detache du bloc de code */
-  .one-page[data-section='docs'] .studio-section .avatar--journey {
-    background: radial-gradient(circle closest-side, var(--paper) 0 67%, rgb(255 255 255 / 0) 67.5%);
-    border-radius: 50%;
-  }
   .section-copy { max-width: none; }
   .docs-copy { padding-block: 96px 140px; }
 
-  .studio-label { top: 84px; left: 20px; }
-  .studio-label h2 { font-size: 20px; }
   .studio-section .studio-shell { height: auto; min-height: 100svh; overflow: visible; }
   .studio-shell--embedded .scene { height: auto; min-height: 100svh; }
-  /* de l'air sous le rail devenu bande haute, pour que la boule posee ne morde
-     ni le rail ni l'etiquette « Jetzt bist du dran. » */
+  /* de l'air sous le rail devenu bande haute pour la boule posee */
   .studio-section .studio-shell--embedded .scene { padding-top: 10rem; }
   .studio-section .scene__avatar { min-height: 400px; }
 }
@@ -430,6 +407,5 @@ button { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .site-nav { transition: none; }
-  .docs-ring { transition: none; }
   .primary-action span { transition: none; }
 }

@@ -110,7 +110,6 @@
     </section>
 
     <section class="studio-section" id="studio" bind:this={studioSection}>
-      <div class="studio-label"><span>03</span><div><p>Dein bloub</p><h2>Jetzt bist du dran.</h2></div></div>
       <App embedded journey={!arrived} journeySection={section} />
     </section>
   </main>
