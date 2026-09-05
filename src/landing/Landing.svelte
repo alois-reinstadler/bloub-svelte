@@ -91,7 +91,7 @@
       </div>
       <div class="hero-stage">
         <div class="stage-header"><span><span class="live-dot"></span> Das bin ich, live.</span><span>01 / bloub</span></div>
-        <div class="hero-avatar"><LiveBloub expression={heroExpression} lookAt="cursor" size={500} paper="#efc6af" label="Bloub begrüßt dich und folgt deinem Cursor" /></div>
+        <div class="hero-avatar"><LiveBloub expression={heroExpression} lookAt="cursor" size={500} paper="#ffffff" label="Bloub begrüßt dich und folgt deinem Cursor" /></div>
         <p class="stage-note">Wähle einen Ausdruck. Das ist der echte Bloub.</p>
         <div class="expression-picks" aria-label="Bloubs Ausdruck wählen">
           {#each [{ id: 'happy', label: 'Fröhlich' }, { id: 'laughing', label: 'Lachend' }, { id: 'curious', label: 'Neugierig' }] as item}
@@ -112,7 +112,7 @@
           {/each}
           <button class="celebrate-button" onclick={() => demo.react('celebrate', { force: true })}>Ein Grund zum Feiern <span aria-hidden="true">✳</span></button>
         </div>
-        <div class="behavior-stage"><span class="stage-label">Probier’s aus</span><LiveBloub controller={demo} size={360} paper="#e9edda" label="Bloub zeigt den gewählten Anwendungszustand" /><p aria-live="polite">{demoText}</p><code>{demo.reaction ? "bloub.react('celebrate')" : `<Bloub status="${demo.status}" />`}</code></div>
+        <div class="behavior-stage"><span class="stage-label">Probier’s aus</span><LiveBloub controller={demo} size={360} paper="#ffffff" label="Bloub zeigt den gewählten Anwendungszustand" /><p aria-live="polite">{demoText}</p><code>{demo.reaction ? "bloub.react('celebrate')" : `<Bloub status="${demo.status}" />`}</code></div>
       </div>
 
     </section>
@@ -130,10 +130,10 @@
       <div class="wrap">
         <div class="section-heading"><div><p class="section-kicker">Welcher Ausdruck passt zu dir?</p><h2 id="expression-title">Elf Ausdrücke. Ein Charakter.</h2></div><p>Wähle ein Gefühl. Der Code zeigt dir, wie du es einbaust.</p></div>
         <div class="expression-explorer">
-          <div class="expression-preview"><LiveBloub expression={galleryExpression} size={260} paper="#f0eee6" label={EXPRESSIONS.find(item => item.id === galleryExpression)?.label} /><code aria-live="polite">{`<Bloub expression="${galleryExpression}" />`}</code></div>
+          <div class="expression-preview"><LiveBloub expression={galleryExpression} size={260} paper="#ffffff" label={EXPRESSIONS.find(item => item.id === galleryExpression)?.label} /><code aria-live="polite">{`<Bloub expression="${galleryExpression}" />`}</code></div>
           <div class="expression-gallery" aria-label="Gesichtsausdruck wählen">
             {#each EXPRESSIONS as item}
-              <button aria-pressed={galleryExpression === item.id} onclick={() => galleryExpression = item.id}><LiveBloub expression={item.id} size={75} frozenAt={1} paper="#f0eee6" label={item.label} /><span>{item.label}</span></button>
+              <button aria-pressed={galleryExpression === item.id} onclick={() => galleryExpression = item.id}><LiveBloub expression={item.id} size={75} frozenAt={1} paper="#ffffff" label={item.label} /><span>{item.label}</span></button>
             {/each}
           </div>
         </div>
