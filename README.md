@@ -15,7 +15,7 @@ Vite läuft standardmäßig auf <http://localhost:5190>.
 
 ```bash
 pnpm check   # Svelte- und TypeScript-Diagnosen
-pnpm test    # 233 Vitest-Tests
+pnpm test    # Vitest-Tests
 pnpm build   # Prüfung plus Produktions-Build
 ```
 

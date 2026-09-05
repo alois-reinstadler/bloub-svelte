@@ -334,7 +334,17 @@
       apply(block, elapsed)
       raf = requestAnimationFrame(tick)
     }
+    // Suspend the rendering clock without remounting or losing editor state.
+    const observer = frozenAt === undefined && typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver(([entry]) => {
+          cancelAnimationFrame(raf)
+          last = 0
+          if (entry?.isIntersecting) raf = requestAnimationFrame(tick)
+        }, { rootMargin: '80px' })
+      : null
+    observer?.observe(svg)
     return () => {
+      observer?.disconnect()
       cancelAnimationFrame(raf)
       detach()
     }
