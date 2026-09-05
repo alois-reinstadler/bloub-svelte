@@ -15,7 +15,7 @@ import { SHAPES } from '@/lib/internal/core/skins'
  * eviter.
  */
 
-/** Un profil franchement non circulaire : sur un cercle, tout angle donnerait 1. */
+/** Un profil franchement non circulaire : sur un circle, tout angle donnerait 1. */
 const TRIANGLE = silhouette('triangle').radii
 
 describe('radiusAtAngle', () => {
@@ -65,8 +65,8 @@ describe('radiusAtAngle', () => {
  * qui produit `profiles.ts`. Rien ne verifiait leur echantillonnage.
  *
  * C'est ce qui rend le controle necessaire : `blend` interpole par INDEX et retombe sur
- * `?? 1` quand l'index manque, donc une forme construite avec un autre nombre
- * d'echantillons morphe silencieusement vers un cercle unite au lieu d'echouer. Elle serait
+ * `?? 1` quand l'index manque, donc une forme construite avec un autre formatNumber
+ * d'echantillons morphe silencieusement vers un circle unite au lieu d'echouer. Elle serait
  * juste au repos et fausse dans toutes ses transitions — le pire des deux mondes, parce que
  * personne ne penserait a regarder un morph.
  */

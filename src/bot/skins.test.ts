@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BotEngine, type RenderedEye } from '@/lib/internal/core/engine'
-import { decalageDesYeux, POUR_TESTS } from '@/lib/internal/core/eyefit'
+import { eyeOffset, FOR_TESTS } from '@/lib/internal/core/eyefit'
 import { EXPRESSIONS } from '@/lib/internal/core/expressions'
 import { DEFAULT_SHAPE, SHAPES, SHAPE_BY_ID } from '@/lib/internal/core/skins'
 import { STATES, type StateId } from '@/lib/internal/core/states'
@@ -91,7 +91,7 @@ function contourDeLOeil(eye: RenderedEye, N = 32) {
   return out
 }
 
-/** Trois secondes a vingt images par seconde : assez pour plusieurs clignements. */
+/** Trois seconds a vingt images par seconde : assez pour plusieurs clignements. */
 const INSTANTS = 60
 const PAS = 1 / 20
 
@@ -100,7 +100,7 @@ const PAS = 1 / 20
  *
  * Balaye le TEMPS et pas seulement la combinaison. La derive du regard deplace l'oeil
  * d'une douzaine d'unites, donc une seule image ne prouve rien : c'est en ne mesurant qu'a
- * `POSES[state]` que `capsule` + `effraye` est passe inapercu, alors qu'il sortait de
+ * `POSES[state]` que `capsule` + `scared` est passe inapercu, alors qu'il sortait de
  * 4,4 unites une seconde plus tard.
  */
 function debordement(state: StateId, radii: number[], expr: (typeof EXPRESSIONS)[number] | null) {
@@ -141,35 +141,35 @@ describe('formes du personnalisateur', () => {
     }
     // Cinq couples etat x forme debordaient : `wide`+`capsule` de 14,5 unites sur une boule
     // de rayon 100, `wide`+`triangle` de 11,9, `idle`+`capsule` et `swirl`+`capsule` de 5,3,
-    // `notify`+`goutte` de 3,3.
+    // `notify`+`droplet` de 3,3.
     expect(fautifs).toEqual([])
   }, 30_000)
 
   /**
-   * Le cercle est la forme relevee sur la video, et le corps par defaut : le choisir dans
+   * Le circle est la forme relevee sur la video, et le corps par defaut : le choisir dans
    * le personnalisateur ne doit RIEN changer par rapport a ne rien choisir. C'est ce qui
-   * garantit que la correction est neutre sur la reference — y compris son oeil exterieur,
+   * garantit que la correction est neutral sur la reference — y compris son oeil exterieur,
    * qui frole deja le bord et doit continuer de le froler. C'est aussi ce qui protege
    * `public/favicon.svg`, dont les deux matrices d'yeux sont celles de `sample(1)` sur
    * `idle`, au byte.
    */
-  it('choisir le cercle rend exactement la meme chose que ne rien choisir', () => {
-    expect(DEFAULT_SHAPE).toBe('cercle')
-    const cercle = SHAPE_BY_ID.get('cercle')!.radii
+  it('choisir le circle rend exactement la meme chose que ne rien choisir', () => {
+    expect(DEFAULT_SHAPE).toBe('circle')
+    const circle = SHAPE_BY_ID.get('circle')!.radii
     for (const state of CORPS_DE_BASE) {
       for (const expr of [null, ...EXPRESSIONS]) {
-        const avec = new BotEngine(R, state, cercle, expr).sample(1)
+        const avec = new BotEngine(R, state, circle, expr).sample(1)
         const sans = new BotEngine(R, state, null, expr).sample(1)
         expect(avec.eyes, `${state}/${expr?.id ?? 'pose'}`).toEqual(sans.eyes)
       }
-      expect(decalageDesYeux(cercle, state, null)).toEqual({ x: 0, y: 0 })
+      expect(eyeOffset(circle, state, null)).toEqual({ x: 0, y: 0 })
     }
   })
 
   /**
    * Les silhouettes relevees sur la video ne sont pas remplacables, donc la forme choisie
    * ne doit pas les atteindre — ni leur corps, ni leurs yeux. `orbit` est le cas qui
-   * compte : la marge de son oeil est plus serree que celle du cercle et elle est pourtant
+   * compte : la marge de son oeil est plus serree que celle du circle et elle est pourtant
    * juste, puisque relevee ainsi. Une regle de marge appliquee sans distinction la
    * deplacerait.
    */
@@ -210,7 +210,7 @@ describe('formes du personnalisateur', () => {
    * Ce qu'on mesure est l'OSCILLATION et non la vitesse. Un morph deplace les yeux vite de
    * toute facon — les expressions ne regardent pas au meme endroit — et c'est du mouvement
    * voulu. Trembler, c'est aller et REVENIR. On compte donc les changements de sens image
-   * par image, et on les compare au cercle, que la correction ne touche pas.
+   * par image, et on les compare au circle, que la correction ne touche pas.
    *
    * La mesure discrimine tres bien : 0 a 1 aller-retour sur le moteur d'origine, 4 a 14
    * avec des reculs jusqu'a 26 unites sur les versions qui tremblaient.
@@ -256,11 +256,11 @@ describe('formes du personnalisateur', () => {
       return { n, amplitude }
     }
 
-    const cercle = SHAPE_BY_ID.get('cercle')!.radii
+    const circle = SHAPE_BY_ID.get('circle')!.radii
     const morphDeForme = (radii: number[]) =>
       allersRetours(
         trajectoire(() => {
-          const e = new BotEngine(R, 'idle', cercle, null)
+          const e = new BotEngine(R, 'idle', circle, null)
           e.setShape(radii, 0)
           return e
         })
@@ -285,23 +285,23 @@ describe('formes du personnalisateur', () => {
      * Sur le CERCLE, rien du tout : la correction y est nulle, donc elle ne peut ajouter
      * aucun mouvement, et c'est la reference des trois comparaisons.
      */
-    expect(morphsDExpression(cercle).n, 'cercle : morphs d expression').toBe(0)
+    expect(morphsDExpression(circle).n, 'circle : morphs d expression').toBe(0)
 
     for (const forme of SHAPES) {
       // Au repos, la seule chose qui bouge est la derive du regard. Une correction qui la
       // suivrait ferait trembler les yeux en permanence : c'est le defaut le plus visible
       // de tous, et le premier qu'on a eu.
       expect(auRepos(forme.radii).n, `${forme.id} : derive au repos`).toBeLessThanOrEqual(
-        auRepos(cercle).n + 1
+        auRepos(circle).n + 1
       )
       // Un changement de forme fait bouger le decalage, mais sur la meme courbe que la
-      // silhouette : aucun aller-retour de plus que le cercle.
+      // silhouette : aucun aller-retour de plus que le circle.
       expect(morphDeForme(forme.radii).n, `morph de forme vers ${forme.id}`).toBeLessThanOrEqual(
-        morphDeForme(cercle).n + 1
+        morphDeForme(circle).n + 1
       )
       /*
        * Un changement d'expression fait passer le decalage d'une entree de table a l'autre.
-       * Sept formes sur huit n'y gagnent aucun aller-retour ; la `goutte` passe de un
+       * Sept formes sur huit n'y gagnent aucun aller-retour ; la `droplet` passe de un
        * rebroussement de 6,3 unites — deja present sans correction — a deux de 11,1. La
        * borne laisse passer ca et rien de plus : les versions fautives etaient a 26.
        */
@@ -315,11 +315,11 @@ describe('formes du personnalisateur', () => {
   /**
    * La table est une constante de module. Elle doit rester assez rapide a batir pour ne pas
    * peser sur le premier affichage : c'est le seul cout que ce correctif ajoute au moteur,
-   * qui ne fait plus ensuite qu'y lire deux entrees et les interpoler.
+   * qui ne fait plus ensuite qu'y lire deux entrees et les interpolate.
    */
   it('la table se batit en quelques millisecondes', () => {
     const t = performance.now()
-    POUR_TESTS.batir()
+    FOR_TESTS.batir()
     expect(performance.now() - t).toBeLessThan(200)
   })
 })

@@ -13,8 +13,8 @@
 import { flushSync, mount, unmount } from 'svelte'
 import BloubBot from '@/lib/internal/BloubRenderer.svelte'
 import type { Block } from '@/lib/internal/core/cycles'
-import { gifAnime, gifIndexe, indexe, nouvellePalette, recense, svgAnime } from './anime'
-import { arrete, DEMI_ECRAN, sansCommentaires, viewBoxExport } from './export'
+import { animatedGif, indexedGif, indexPixels, createPalette, collectColors, animatedSvg } from './animation'
+import { throwIfAborted, HALF_SCREEN, withoutComments, viewBoxExport } from './export'
 
 /**
  * Serialise le SVG affiche en un document autonome, recadre sur la boule.
@@ -23,7 +23,7 @@ import { arrete, DEMI_ECRAN, sansCommentaires, viewBoxExport } from './export'
  * dimension intrinseque, Firefox refuse de rasteriser un SVG charge dans une
  * `<img>`, et le canvas ressort vide.
  */
-export function svgAutonome(svg: SVGSVGElement, taille: number, viewBox = viewBoxExport()) {
+export function standaloneSvg(svg: SVGSVGElement, taille: number, viewBox = viewBoxExport()) {
   const clone = svg.cloneNode(true) as SVGSVGElement
   // Les classes Tailwind de la page n'existent pas dans le fichier livre.
   clone.removeAttribute('class')
@@ -31,7 +31,7 @@ export function svgAutonome(svg: SVGSVGElement, taille: number, viewBox = viewBo
   clone.setAttribute('viewBox', viewBox)
   clone.setAttribute('width', String(taille))
   clone.setAttribute('height', String(taille))
-  return sansCommentaires(new XMLSerializer().serializeToString(clone))
+  return withoutComments(new XMLSerializer().serializeToString(clone))
 }
 
 /**
@@ -78,7 +78,7 @@ async function dessine(
 }
 
 /** Rasterise un SVG en PNG. Le PNG est sans perte, il n'a pas de qualite a regler. */
-export async function versPng(markup: string, taille: number): Promise<Blob> {
+export async function toPng(markup: string, taille: number): Promise<Blob> {
   const canvas = document.createElement('canvas')
   await dessine(markup, taille, canvas)
   return await new Promise<Blob>((resolve, reject) => {
@@ -90,7 +90,7 @@ export async function versPng(markup: string, taille: number): Promise<Blob> {
 }
 
 /** Declenche le telechargement d'un blob sous le nom donne. */
-export function telecharge(blob: Blob, nom: string) {
+export function download(blob: Blob, nom: string) {
   const url = URL.createObjectURL(blob)
   try {
     const a = document.createElement('a')
@@ -104,7 +104,7 @@ export function telecharge(blob: Blob, nom: string) {
 }
 
 /** Le presse-papiers sait-il ecrire une image ici ? */
-export function copiePossible() {
+export function canCopy() {
   return (
     typeof ClipboardItem !== 'undefined' &&
     !!navigator.clipboard?.write &&
@@ -118,9 +118,9 @@ export function copiePossible() {
  *
  * Le blob est passe en PROMESSE et non attendu avant l'appel : Safari exige que
  * `write` part du geste de l'utilisateur, or tout `await` glisse entre les deux
- * perd ce geste et la copie est refusee.
+ * perd ce geste et la copyImage est refusee.
  */
-export async function copie(blob: Promise<Blob>) {
+export async function copyImage(blob: Promise<Blob>) {
   await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
 }
 
@@ -129,12 +129,12 @@ export async function copie(blob: Promise<Blob>) {
  * Illustrator et un editeur de code le collent en vectoriel modifiable. Colle en
  * `image/svg+xml`, il ressortirait aplati la ou il ressort editable ici.
  */
-export async function copieTexte(texte: string) {
+export async function copyText(texte: string) {
   await navigator.clipboard.writeText(texte)
 }
 
 /** Combien d'images faites sur combien, pour la barre de progression. */
-export type Avancement = (fait: number, total: number) => void
+export type Progress = (fait: number, total: number) => void
 
 /**
  * Exporte le cycle en MP4.
@@ -143,27 +143,27 @@ export type Avancement = (fait: number, total: number) => void
  * `VideoEncoder` refuse `alpha: 'keep'`). Sans fond, le bot serait compose sur du
  * noir.
  */
-export async function cycleVersMp4(
-  reglages: ReglagesBot,
+export async function cycleToMp4(
+  reglages: BotSettings,
   blocs: Block[],
   taille: number,
   images: number,
   pas: number,
   fond: string,
-  avance?: Avancement,
+  avance?: Progress,
   signal?: AbortSignal
 ): Promise<Blob> {
-  const { versMp4 } = await import('./video')
+  const { toMp4 } = await import('./video')
   const canvas = document.createElement('canvas')
-  const lecteur = await ouvreCycle(reglages, blocs, taille, fond)
+  const lecteur = await openCycle(reglages, blocs, taille, fond)
   try {
-    return await versMp4(
+    return await toMp4(
       canvas,
       images,
       Math.round(1 / pas),
       async (i) => {
         const svg = await lecteur.rendre(i * pas)
-        await dessine(svgAutonome(svg, taille, viewBoxExport(DEMI_ECRAN)), taille, canvas, fond)
+        await dessine(standaloneSvg(svg, taille, viewBoxExport(HALF_SCREEN)), taille, canvas, fond)
       },
       avance,
       signal
@@ -179,7 +179,7 @@ export async function cycleVersMp4(
  * DEUX passes sur la sequence, et c'est pour la memoire : un GIF a besoin d'une
  * palette commune a toutes les images, donc de les avoir toutes vues avant d'en
  * encoder une seule. Les garder en pixels bruts couterait 255 Mo sur un cycle de
- * trente secondes. La premiere passe ne retient que les couleurs, la seconde
+ * trente seconds. La premiere passe ne retient que les couleurs, la seconde
  * encode — le rendu est deterministe, donc rejouer la sequence redonne exactement
  * les memes images.
  *
@@ -192,48 +192,48 @@ export async function cycleVersMp4(
  * `capture.test.ts` le verrouille — sans quoi ce module devrait ouvrir un lecteur par
  * passe pour s'en sortir.
  */
-export async function cycleVersGif(
-  reglages: ReglagesBot,
+export async function cycleToGif(
+  reglages: BotSettings,
   blocs: Block[],
   taille: number,
   images: number,
   pas: number,
   fond: string | null,
-  avance?: Avancement,
+  avance?: Progress,
   signal?: AbortSignal
 ): Promise<Blob> {
   // Un seul canvas et un seul lecteur pour les deux passes : le canvas est reinitialise a
   // chaque image, et le lecteur sait rembobiner.
   const canvas = document.createElement('canvas')
-  const vue = viewBoxExport(DEMI_ECRAN)
-  const lecteur = await ouvreCycle(reglages, blocs, taille, fond ?? undefined)
+  const vue = viewBoxExport(HALF_SCREEN)
+  const lecteur = await openCycle(reglages, blocs, taille, fond ?? undefined)
 
   /** Une passe complete sur la sequence. */
   const passe = async (lis: (index: number, pixels: Uint8ClampedArray) => void) => {
     for (let i = 0; i < images; i++) {
-      // teste a chaque image : un cycle de trente secondes fait deux fois six cents
+      // teste a chaque image : un cycle de trente seconds fait deux fois six cents
       // images, et l'abandon ne doit pas attendre la fin d'une passe
-      arrete(signal)
+      throwIfAborted(signal)
       const svg = await lecteur.rendre(i * pas)
-      const ctx = await dessine(svgAutonome(svg, taille, vue), taille, canvas, fond)
+      const ctx = await dessine(standaloneSvg(svg, taille, vue), taille, canvas, fond)
       lis(i, ctx.getImageData(0, 0, taille, taille).data)
     }
   }
 
   try {
-    const palette = nouvellePalette()
+    const palette = createPalette()
     await passe((i, pixels) => {
-      recense(palette, pixels)
+      collectColors(palette, pixels)
       avance?.(i + 1, images * 2)
     })
 
     const morceaux: Uint8Array[] = []
     await passe((i, pixels) => {
-      morceaux.push(indexe(palette, pixels))
+      morceaux.push(indexPixels(palette, pixels))
       avance?.(images + i + 1, images * 2)
     })
 
-    return new Blob([gifIndexe(palette, morceaux, taille, taille, Math.round(pas * 1000))], {
+    return new Blob([indexedGif(palette, morceaux, taille, taille, Math.round(pas * 1000))], {
       type: 'image/gif'
     })
   } finally {
@@ -242,7 +242,7 @@ export async function cycleVersGif(
 }
 
 /** Ce que le bot doit porter sur l'animation exportee. */
-export interface ReglagesBot {
+export interface BotSettings {
   shape: string
   color: string
   expression: string
@@ -261,10 +261,10 @@ export interface ReglagesBot {
  * Le meme composant sert donc a l'ecran et a l'export : une seule source de
  * dessin, aucune chance de derive.
  */
-export async function sequenceDuBot<T>(
-  reglages: ReglagesBot,
+export async function renderBotSequence<T>(
+  reglages: BotSettings,
   taille: number,
-  nombre: number,
+  formatNumber: number,
   pas: number,
   lis: (svg: SVGSVGElement, index: number) => T | Promise<T>,
   /**
@@ -288,7 +288,7 @@ export async function sequenceDuBot<T>(
 
   try {
     const out: T[] = []
-    for (let i = 0; i < nombre; i++) {
+    for (let i = 0; i < formatNumber; i++) {
       bot.redrawAt(i * pas)
       flushSync()
       const svg = hote.querySelector('svg')
@@ -305,7 +305,7 @@ export async function sequenceDuBot<T>(
 /**
  * Rend un CYCLE hors ecran, image par image, en appelant `lis` pour chacune.
  *
- * Les images ne sont jamais accumulees : un cycle de trente secondes fait plus de
+ * Les images ne sont jamais accumulees : un cycle de trente seconds fait plus de
  * six cents images, soit 255 Mo de pixels bruts si on les gardait toutes. C'est
  * l'appelant qui decide quoi en faire au fil de l'eau — encoder, indexer, jeter.
  *
@@ -314,18 +314,18 @@ export async function sequenceDuBot<T>(
  * memes fondus aux jointures que la lecture temps reel. Voir sa doc dans
  * `BloubBot.svelte`.
  */
-export interface LecteurHorsEcran {
+export interface OffscreenPlayer {
   /** Rend l'instant `t` du cycle et renvoie le SVG a lire. */
   rendre: (t: number) => Promise<SVGSVGElement>
   ferme: () => void
 }
 
-export async function ouvreCycle(
-  reglages: ReglagesBot,
+export async function openCycle(
+  reglages: BotSettings,
   blocs: Block[],
   taille: number,
   paper?: string
-): Promise<LecteurHorsEcran> {
+): Promise<OffscreenPlayer> {
   const hote = document.createElement('div')
   hote.style.cssText = 'position:fixed;left:-99999px;top:0;width:0;height:0;overflow:hidden'
   document.body.appendChild(hote)
@@ -389,18 +389,18 @@ function matricesDesYeux(svg: SVGSVGElement) {
  * silhouette ne se deplace que de 1,17 unite sur un rayon de 100, soit environ un
  * pixel et demi. Tout le mouvement est dans les yeux.
  */
-export async function versSvgAnime(
-  reglages: ReglagesBot,
+export async function toAnimatedSvg(
+  reglages: BotSettings,
   taille: number,
-  nombre: number,
+  formatNumber: number,
   pas: number
 ): Promise<Blob> {
   let base = ''
-  const matrices = await sequenceDuBot(reglages, taille, nombre, pas, (svg, i) => {
-    if (i === 0) base = svgAutonome(svg, taille)
+  const matrices = await renderBotSequence(reglages, taille, formatNumber, pas, (svg, i) => {
+    if (i === 0) base = standaloneSvg(svg, taille)
     return matricesDesYeux(svg)
   })
-  const markup = svgAnime(base, matrices, +((nombre - 1) * pas).toFixed(3))
+  const markup = animatedSvg(base, matrices, +((formatNumber - 1) * pas).toFixed(3))
   return new Blob([markup], { type: 'image/svg+xml' })
 }
 
@@ -412,27 +412,27 @@ export async function versSvgAnime(
  * refusent le SVG — un avatar anime Discord ou Slack — et son bord sera dur, sa
  * transparence n'ayant qu'un bit.
  */
-export async function versGifAnime(
-  reglages: ReglagesBot,
+export async function toAnimatedGif(
+  reglages: BotSettings,
   taille: number,
-  nombre: number,
+  formatNumber: number,
   pas: number,
   fond: string | null = null
 ): Promise<Blob> {
   // Un seul canvas pour toute la sequence : en creer un par image laisse des
   // dizaines de contextes au ramasse-miettes pendant l'export.
   const canvas = document.createElement('canvas')
-  const images = await sequenceDuBot(
+  const images = await renderBotSequence(
     reglages,
     taille,
-    nombre,
+    formatNumber,
     pas,
     async (svg) => {
-      const ctx = await dessine(svgAutonome(svg, taille), taille, canvas, fond)
+      const ctx = await dessine(standaloneSvg(svg, taille), taille, canvas, fond)
       return ctx.getImageData(0, 0, taille, taille).data
     },
     // les yeux prennent la teinte du fond pour s'y fondre exactement
     fond ?? undefined
   )
-  return new Blob([gifAnime(images, taille, taille, Math.round(pas * 1000))], { type: 'image/gif' })
+  return new Blob([animatedGif(images, taille, taille, Math.round(pas * 1000))], { type: 'image/gif' })
 }

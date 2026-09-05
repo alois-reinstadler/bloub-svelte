@@ -5,7 +5,7 @@
   import { clampDuration, moveBlock, offsetOf, STEP, totalDuration, type Block } from '@/lib/internal/core/cycles'
   import { POSES, type StateId } from '@/lib/internal/core/states'
   import { BASE_SCALE, clampZoom, ticksFor } from '@/ui/timeline'
-  import { secondes, secondesCourtes, t } from '@/i18n'
+  import { seconds, shortSeconds, t } from '@/i18n'
 
   let { blocks, elapsed, shape, color, expression, block = $bindable(), zoom = $bindable(), onblocks, onseek, onadd }: {
     blocks: Block[]; elapsed: number; shape: string; color: string; expression: string; block: number; zoom: number
@@ -16,7 +16,7 @@
   let total = $derived(totalDuration(blocks))
   let at = $derived(offsetOf(blocks, block) + elapsed)
   let ticks = $derived(ticksFor(total, scale))
-  let exact = $derived(secondes(at))
+  let exact = $derived(seconds(at))
   let track: HTMLElement
   let overflow = $state({ left: false, right: false })
   let scrolled = $state(0)
@@ -118,16 +118,16 @@
   <div bind:this={track} class="h-full overflow-x-auto overflow-y-hidden [scrollbar-width:none]" onscroll={onScroll} onwheel={onWheel}>
     <div class="relative flex h-full flex-col" style:width={`${total * scale + 76}px`}>
       <div class="relative h-7 shrink-0 cursor-ew-resize pt-1 select-none" role="slider" tabindex="0" aria-label={t('timeline.playhead')} aria-valuemin="0" aria-valuemax={total} aria-valuenow={at} aria-valuetext={exact} onkeydown={onRulerKey} onpointerdown={onRulerDown} onpointermove={(event) => scrubbing && scrubTo(event)} onpointerup={() => (scrubbing = false)} onpointercancel={() => (scrubbing = false)}>
-        {#each ticks as mark (mark.t)}<span class="absolute bottom-1.5 flex items-end gap-1" style:transform={`translateX(${mark.t * scale}px)`}><span class="block w-px bg-[var(--line)] {mark.major ? 'h-3' : 'h-1.5'}"></span>{#if mark.major}<span class="-mb-0.5 text-xs leading-none text-[var(--muted)]">{secondesCourtes(mark.t, Number.isInteger(mark.t) ? 0 : 1)}</span>{/if}</span>{/each}
+        {#each ticks as mark (mark.t)}<span class="absolute bottom-1.5 flex items-end gap-1" style:transform={`translateX(${mark.t * scale}px)`}><span class="block w-px bg-[var(--line)] {mark.major ? 'h-3' : 'h-1.5'}"></span>{#if mark.major}<span class="-mb-0.5 text-xs leading-none text-[var(--muted)]">{shortSeconds(mark.t, Number.isInteger(mark.t) ? 0 : 1)}</span>{/if}</span>{/each}
       </div>
       <ul class="flex flex-1 items-stretch">
         {#each blocks as item, index (`${index}-${item.state}`)}
           <li class="group relative shrink-0 pr-1 {lifted(index) ? 'z-20' : 'transition-transform duration-150 ease-out'}" style:width={`${item.duration * scale}px`} style:transform={shiftOf(index) ? `translateX(${shiftOf(index)}px)` : undefined}>
-            <button type="button" class="flex h-full w-full cursor-grab flex-col justify-between overflow-hidden rounded-lg px-1.5 py-1 text-left transition select-none active:cursor-grabbing {index === block ? 'bg-white ring-2 ring-[var(--ink)] ring-inset' : 'bg-black/[0.045] hover:bg-black/[0.08]'} {lifted(index) ? 'scale-[1.02] opacity-75 shadow-lg' : ''}" aria-label={t('timeline.blockAria', { state: label(index), duration: secondes(item.duration) })} aria-current={index === block ? 'true' : undefined} onpointerdown={(event) => onBlockDown(index, event)} onpointermove={onBlockMove} onpointerup={() => onBlockUp(index)} onpointercancel={() => (drag = null)} data-card aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight ArrowLeft ArrowRight" onkeydown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); block = index } else onCardKey(index, event) }}>
+            <button type="button" class="flex h-full w-full cursor-grab flex-col justify-between overflow-hidden rounded-lg px-1.5 py-1 text-left transition select-none active:cursor-grabbing {index === block ? 'bg-white ring-2 ring-[var(--ink)] ring-inset' : 'bg-black/[0.045] hover:bg-black/[0.08]'} {lifted(index) ? 'scale-[1.02] opacity-75 shadow-lg' : ''}" aria-label={t('timeline.blockAria', { state: label(index), duration: seconds(item.duration) })} aria-current={index === block ? 'true' : undefined} onpointerdown={(event) => onBlockDown(index, event)} onpointermove={onBlockMove} onpointerup={() => onBlockUp(index)} onpointercancel={() => (drag = null)} data-card aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight ArrowLeft ArrowRight" onkeydown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); block = index } else onCardKey(index, event) }}>
               <span class="flex min-w-0 flex-1 items-center justify-center">{#if width(index) > 44}<BloubBot class="shrink-0" state={item.state} size={Math.min(56, Math.max(30, width(index) * 0.5))} {shape} {color} {expression} paper={index === block ? '#ffffff' : '#f2f2f2'} frozenAt={POSES[item.state]} />{/if}</span>
-              {#if width(index) > 50}<span class="tronque text-center text-xs leading-none font-semibold tabular-nums {index === block ? 'text-[var(--ink)]' : 'text-[var(--muted)]'}">{secondes(item.duration)}</span>{/if}
+              {#if width(index) > 50}<span class="tronque text-center text-xs leading-none font-semibold tabular-nums {index === block ? 'text-[var(--ink)]' : 'text-[var(--muted)]'}">{seconds(item.duration)}</span>{/if}
             </button>
-            <button type="button" class="absolute inset-y-2 right-0.5 w-1 cursor-ew-resize rounded-full bg-[var(--muted)] opacity-0 transition group-hover:opacity-60 hover:opacity-100! focus-visible:opacity-100" aria-label={t('timeline.blockDurationAria', { state: label(index), duration: secondes(item.duration) })} onpointerdown={(event) => onResizeDown(index, event)} onpointermove={onResizeMove} onpointerup={() => (resize = null)} onpointercancel={() => (resize = null)} onkeydown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setDuration(index, item.duration + (event.key === 'ArrowLeft' ? -STEP : STEP)) } }}></button>
+            <button type="button" class="absolute inset-y-2 right-0.5 w-1 cursor-ew-resize rounded-full bg-[var(--muted)] opacity-0 transition group-hover:opacity-60 hover:opacity-100! focus-visible:opacity-100" aria-label={t('timeline.blockDurationAria', { state: label(index), duration: seconds(item.duration) })} onpointerdown={(event) => onResizeDown(index, event)} onpointermove={onResizeMove} onpointerup={() => (resize = null)} onpointercancel={() => (resize = null)} onkeydown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setDuration(index, item.duration + (event.key === 'ArrowLeft' ? -STEP : STEP)) } }}></button>
             {#if blocks.length > 1}<button type="button" class="absolute top-1 right-2 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-black/10 text-[var(--ink)] opacity-0 transition group-hover:opacity-100 hover:bg-black/20 focus-visible:opacity-100" aria-label={t('timeline.blockRemoveAria', { state: label(index) })} onclick={() => removeBlock(index)}><svg width="9" height="9" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.6 2.6 7.4 7.4M7.4 2.6 2.6 7.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>{/if}
           </li>
         {/each}

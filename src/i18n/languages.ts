@@ -9,45 +9,45 @@
  * l'attribut `lang` du document. `zh` seul ne dit pas si l'ecriture est
  * simplifiee ou traditionnelle, d'ou `zh-Hans`.
  *
- * `nom` est l'endonyme — le nom de la langue DANS cette langue. Une liste de
+ * `nom` est l'endonyme — le nom de la language DANS cette language. Une liste de
  * langues traduite serait absurde : on la lit justement quand on ne comprend
- * pas la langue affichee.
+ * pas la language affichee.
  *
  * `code` est la pastille affichee devant le nom. Un CODE et pas un drapeau
  * emoji : le theme est strictement noir et blanc, et un drapeau designe un pays
- * la ou l'entree designe une langue.
+ * la ou l'entree designe une language.
  */
-export const LANGUES = [
-  { id: 'de', tag: 'de-AT', code: 'DE', nom: 'Deutsch' },
-  { id: 'fr', tag: 'fr', code: 'FR', nom: 'Français' },
-  { id: 'en', tag: 'en', code: 'EN', nom: 'English' },
-  { id: 'zh', tag: 'zh-Hans', code: 'ZH', nom: '简体中文' }
+export const LANGUAGES = [
+  { id: 'de', tag: 'de-AT', code: 'DE', name: 'Deutsch' },
+  { id: 'fr', tag: 'fr', code: 'FR', name: 'Français' },
+  { id: 'en', tag: 'en', code: 'EN', name: 'English' },
+  { id: 'zh', tag: 'zh-Hans', code: 'ZH', name: '简体中文' }
 ] as const
 
-export type Langue = (typeof LANGUES)[number]['id']
+export type Language = (typeof LANGUAGES)[number]['id']
 
-export const LANGUE_PAR_DEFAUT: Langue = 'de'
+export const DEFAULT_LANGUAGE: Language = 'de'
 
-export function estLangue(valeur: string | null | undefined): valeur is Langue {
-  return LANGUES.some((l) => l.id === valeur)
+export function isLanguage(valeur: string | null | undefined): valeur is Language {
+  return LANGUAGES.some((l) => l.id === valeur)
 }
 
-export function tagDe(langue: Langue): string {
-  return LANGUES.find((l) => l.id === langue)!.tag
+export function tagFor(language: Language): string {
+  return LANGUAGES.find((l) => l.id === language)!.tag
 }
 
 /**
- * Langue a afficher au demarrage.
+ * Language a afficher au demarrage.
  *
  * Un choix explicite gagne toujours : quelqu'un qui a mis l'interface en
  * anglais doit la retrouver en anglais. Sans choix memorise, cette portation
- * s'ouvre en allemand autrichien, quelle que soit la langue du navigateur.
+ * s'ouvre en allemand autrichien, quelle que soit la language du navigateur.
  */
-export function choisirLangue(memorisee: string | null, preferences: readonly string[]): Langue {
-  if (estLangue(memorisee)) return memorisee
+export function chooseLanguage(memorisee: string | null, preferences: readonly string[]): Language {
+  if (isLanguage(memorisee)) return memorisee
   // L'interface de cette portation est allemande par defaut. Les preferences
   // sont conservees dans la signature pour que les anciennes integrations ne
   // cassent pas ; un choix explicite dans l'application gagne toujours.
   void preferences
-  return LANGUE_PAR_DEFAUT
+  return DEFAULT_LANGUAGE
 }

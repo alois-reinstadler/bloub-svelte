@@ -4,18 +4,18 @@ import { EXPRESSIONS, EXPRESSION_BY_ID, type ExpressionId } from '@/lib/internal
 import { SHAPE_BY_ID } from '@/lib/internal/core/skins'
 import { STATE_BY_ID } from '@/lib/internal/core/states'
 import {
-  HUMEURS,
+  MOODS,
   lookTarget,
   PITCH,
   SPIN,
   TOUR_TIME,
-  tourLook,
+  spinLook,
   TURN,
   YAW_MAX,
   type Aim
 } from '@/lib/internal/gaze'
 
-const cercle = () => SHAPE_BY_ID.get('cercle')!.radii
+const circle = () => SHAPE_BY_ID.get('circle')!.radii
 
 /** Visee au repos : pointeur au centre du bot, demi-tour acheve. */
 const vise = (o: Partial<Aim> = {}): Aim => ({ nx: 0, ny: 0, tour: 1, pointer: true, ...o })
@@ -31,8 +31,8 @@ describe('cible de regard', () => {
 
     // ce qui compte n'est pas la valeur des champs mais l'image rendue :
     // au depart, elle doit etre celle d'un bot qu'on ne pilote pas du tout
-    const nu = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get('neutre')!)
-    const debut = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get('neutre')!)
+    const nu = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('neutral')!)
+    const debut = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('neutral')!)
     debut.setLook(cible, 0)
     expect(debut.sample(1).eyes[0]!.matrix).toBe(nu.sample(1).eyes[0]!.matrix)
   })
@@ -59,7 +59,7 @@ describe('cible de regard', () => {
   })
 
   it('change de cible depuis la pose interpolee sans saut', () => {
-    const moteur = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get('neutre')!)
+    const moteur = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('neutral')!)
     const gauche = lookTarget(vise({ nx: -1 }))
     const droite = lookTarget(vise({ nx: 1 }))
     moteur.setLook(gauche, 0, 0.6)
@@ -74,7 +74,7 @@ describe('cible de regard', () => {
   })
 
   it('rend la main a l animation depuis la pose courante sans saut', () => {
-    const moteur = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get('neutre')!)
+    const moteur = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('neutral')!)
     moteur.setLook(lookTarget(vise({ nx: 0.8, ny: -0.6 })), 0, 0.3)
     const avant = moteur.sample(1).eyes.map((eye) => eye.matrix)
 
@@ -87,14 +87,14 @@ describe('les deux yeux restent visibles', () => {
   /**
    * L'invariant qui protege la fonctionnalite : passe un certain lacet, l'oeil
    * exterieur passe derriere le limbe de la sphere et le moteur le RETIRE de
-   * l'image — le bot se retrouve borgne. On balaie donc les 16 expressions aux
+   * l'image — le bot se retrouve borgne. On balaie donc les 11 expressions aux
    * quatre coins de l'ecran, demi-tour compris.
    */
-  it('sur les 16 expressions, aux quatre coins de l ecran', () => {
+  it('sur les 11 expressions, aux quatre coins de l ecran', () => {
     for (const e of EXPRESSIONS) {
       for (const nx of [-1, 0, 1]) {
         for (const ny of [-1, 0, 1]) {
-          const moteur = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get(e.id)!)
+          const moteur = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get(e.id)!)
           moteur.setLook(lookTarget(vise({ nx, ny })), 0)
           const image = moteur.sample(1)
           expect(image.eyes, `${e.id} nx=${nx} ny=${ny}`).toHaveLength(2)
@@ -109,7 +109,7 @@ describe('les deux yeux restent visibles', () => {
 
   it('garde de la marge : le suivi ne va pas jusqu au point de rupture', () => {
     // si cette marge disparait, c'est que YAW_MAX ou TURN a ete pousse trop loin
-    const moteur = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get('neutre')!)
+    const moteur = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('neutral')!)
     moteur.setLook({ yaw: -(TURN + YAW_MAX) - 25, pitch: 0, mix: 1, spin: 0, wander: 0 }, 0)
     expect(moteur.sample(1).eyes).toHaveLength(2)
   })
@@ -124,7 +124,7 @@ describe('le tour sur soi-meme', () => {
      * bug — et pour verifier qu'ils reviennent bien, au bon endroit.
      */
     const image = (tour: number) => {
-      const moteur = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get('neutre')!)
+      const moteur = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('neutral')!)
       moteur.setLook(lookTarget(vise({ tour })), 0)
       return moteur.sample(1)
     }
@@ -136,14 +136,14 @@ describe('le tour sur soi-meme', () => {
     // ...et un tour complet repose les yeux exactement ou un simple demi-tour
     // les aurait mis : c'est ce qui rend l'atterrissage juste sans reglage
     const complet = image(1).eyes[0]!.matrix
-    const sansTour = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get('neutre')!)
+    const sansTour = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('neutral')!)
     sansTour.setLook({ yaw: -TURN, pitch: PITCH, mix: 1, spin: 0, wander: 0 }, 0)
     expect(complet).toBe(sansTour.sample(1).eyes[0]!.matrix)
   })
 })
 
 describe('tour d arrivee sur le site', () => {
-  const bot = (id: ExpressionId) => new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get(id)!)
+  const bot = (id: ExpressionId) => new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get(id)!)
 
   /**
    * LA regle d'un script de regard, et ce qui le rend sans entretien : il finit a
@@ -152,14 +152,14 @@ describe('tour d arrivee sur le site', () => {
    * juste au moment ou tout devrait etre pose.
    */
   it('rend la main a la pose en finissant', () => {
-    expect(tourLook(TOUR_TIME).mix).toBe(0)
-    expect(tourLook(TOUR_TIME + 5).spin).toBe(0)
+    expect(spinLook(TOUR_TIME).mix).toBe(0)
+    expect(spinLook(TOUR_TIME + 5).spin).toBe(0)
   })
 
   it('repose les yeux sur l expression choisie, quelle qu elle soit', () => {
     for (const id of EXPRESSIONS.map((e) => e.id)) {
       const joue = bot(id)
-      joue.setLook(tourLook(TOUR_TIME), 0)
+      joue.setLook(spinLook(TOUR_TIME), 0)
       expect(joue.sample(1).eyes[0]!.matrix, id).toBe(bot(id).sample(1).eyes[0]!.matrix)
     }
   })
@@ -167,32 +167,32 @@ describe('tour d arrivee sur le site', () => {
   it('laisse le bot vivre pendant le tour', () => {
     // la derive n'est pas eteinte : il n'y a pas de pointeur a suivre, donc rien
     // ne justifie de figer le regard comme le fait `lookTarget`
-    expect(tourLook(TOUR_TIME / 2).wander).toBe(1)
+    expect(spinLook(TOUR_TIME / 2).wander).toBe(1)
   })
 
   it('n impose aucune direction, a aucun moment', () => {
     // `mix` a zero sur tout le parcours : seul `spin` travaille, ce qui fait
     // passer les yeux derriere la boule au lieu de les glisser en travers
     for (const k of [0, 0.25, 0.5, 0.75, 1]) {
-      expect(tourLook(k * TOUR_TIME).mix, `tour ${k}`).toBe(0)
+      expect(spinLook(k * TOUR_TIME).mix, `tour ${k}`).toBe(0)
     }
   })
 
   it('le tour part d un tour ENTIER, qui est deja le bon angle', () => {
     // -360deg est le meme angle que 0 : la premiere image est deja posee juste,
     // et c'est ce qui fait atterrir le tour sans reglage
-    expect(tourLook(0).spin).toBe(SPIN)
-    const depart = bot('neutre')
-    depart.setLook(tourLook(0), 0)
-    expect(depart.sample(1).eyes[0]!.matrix).toBe(bot('neutre').sample(1).eyes[0]!.matrix)
+    expect(spinLook(0).spin).toBe(SPIN)
+    const depart = bot('neutral')
+    depart.setLook(spinLook(0), 0)
+    expect(depart.sample(1).eyes[0]!.matrix).toBe(bot('neutral').sample(1).eyes[0]!.matrix)
   })
 
   it('le tour fait passer les yeux DERRIERE la boule', () => {
     // a mi-parcours ils ont franchi le limbe, donc le moteur ne les dessine plus
     // du tout : c'est la preuve que le tour est un vrai trajet SUR LA SPHERE et
     // non un glissement en travers du visage
-    const milieu = bot('neutre')
-    milieu.setLook(tourLook(TOUR_TIME / 2), 0)
+    const milieu = bot('neutral')
+    milieu.setLook(spinLook(TOUR_TIME / 2), 0)
     expect(milieu.sample(1).eyes).toHaveLength(0)
   })
 
@@ -209,9 +209,9 @@ describe('tour d arrivee sur le site', () => {
    */
   it('ne peut pas anticiper le roulis, d ou une arrivee sans changement d etat', () => {
     expect(STATE_BY_ID.get('wink')!.pose(0).gaze.roll).not.toBe(
-      EXPRESSION_BY_ID.get('neutre')!.gaze.roll
+      EXPRESSION_BY_ID.get('neutral')!.gaze.roll
     )
-    expect(tourLook(0)).not.toHaveProperty('roll')
+    expect(spinLook(0)).not.toHaveProperty('roll')
   })
 })
 
@@ -228,8 +228,8 @@ describe('stabilite du regard entre expressions', () => {
      * changement d'humeur — ce qui se lit comme un defaut, pas comme une
      * expression.
      */
-    const hauteurs = HUMEURS.map((id) => {
-      const m = new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get(id)!)
+    const hauteurs = MOODS.map((id) => {
+      const m = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get(id)!)
       m.setLook(lookTarget(vise()), 0)
       return oeilY(m)
     })
@@ -242,7 +242,7 @@ describe('stabilite du regard entre expressions', () => {
     // le contre-test : c'est le SUIVI qui stabilise, pas les expressions qui
     // auraient perdu leur caractere vertical
     const hauteurs = EXPRESSIONS.map((e) =>
-      oeilY(new BotEngine(100, 'idle', cercle(), EXPRESSION_BY_ID.get(e.id)!))
+      oeilY(new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get(e.id)!))
     )
     expect(Math.max(...hauteurs) - Math.min(...hauteurs)).toBeGreaterThan(30)
   })
@@ -250,7 +250,7 @@ describe('stabilite du regard entre expressions', () => {
   it('ne retient que des humeurs a roulis nul, sinon la tete penche', () => {
     // c'est le critere de la liste, et il ne se devine pas : le roulis n'est pas
     // neutralise par le suivi, contrairement au lacet et au tangage
-    for (const id of HUMEURS) {
+    for (const id of MOODS) {
       expect(EXPRESSION_BY_ID.get(id)!.gaze.roll, id).toBe(0)
     }
   })

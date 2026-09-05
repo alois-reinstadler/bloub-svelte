@@ -1,5 +1,5 @@
 import { clampDuration, makeBlock, type Block } from '@/lib/internal/core/cycles'
-import { TOUR_TIME, tourLook } from '@/lib/internal/gaze'
+import { TOUR_TIME, spinLook } from '@/lib/internal/gaze'
 
 /**
  * L'arrivee sur le site : la boule parait seule au centre de la page, les yeux
@@ -44,11 +44,11 @@ export const INTRO: Block[] = [
  */
 export const POSE_AT = 1
 
-/** Ce que font les yeux pendant l'arrivee. Voir `tourLook` dans `./gaze`. */
-export const INTRO_GAZE = tourLook
+/** Ce que font les yeux pendant l'arrivee. Voir `spinLook` dans `./gaze`. */
+export const INTRO_GAZE = spinLook
 
 /** Ce que l'application sait de l'arrivee au moment de decider. */
-export interface Arrivee {
+export interface Arrival {
   /** l'URL nomme un etat (`#etat=`) */
   named: boolean
   /** l'URL demande la planche (`#planche`) */
@@ -77,6 +77,6 @@ export interface Arrivee {
  *
  * `#arrivee` court-circuite le tout : c'est le lien qui sert a la revoir.
  */
-export function introDue({ named, gallery, rechargement, calme }: Arrivee): boolean {
+export function introDue({ named, gallery, rechargement, calme }: Arrival): boolean {
   return !named && !gallery && !rechargement && !calme
 }

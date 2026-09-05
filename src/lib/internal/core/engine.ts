@@ -1,6 +1,6 @@
 import { arcRender, type ArcRender, type DotRender } from './decor'
-import { blendExpression, type BotExpression } from './expressions'
-import { decalageDesYeux } from './eyefit'
+import { blendExpression, type BotExpression, type MouthCfg } from './expressions'
+import { eyeOffset } from './eyefit'
 import { blinkScale, eyePoses, liveliness } from './face'
 import { clamp, easings, lerp, r2 } from './math'
 import {
@@ -20,10 +20,19 @@ export interface RenderedEye {
   alpha: number
 }
 
+export interface RenderedMouth {
+  d: string
+  transform: string
+  filled: boolean
+  strokeWidth: number
+  alpha: number
+}
+
 export interface BotFrame {
   bodyPath: string
   bodyAlpha: number
   eyes: RenderedEye[]
+  mouth: RenderedMouth | null
   dots: DotRender[]
   /** true = les points passent derriere le corps (particules de l'eclatement) */
   dotsBehind: boolean
@@ -44,7 +53,7 @@ export interface BotFrame {
  *   l'expression lirait sa valeur d'arrivee pendant que le morph est encore en
  *   cours, et les yeux sautaient a chaque changement d'humeur ;
  * - et il faut que ce soit absolu sur les DEUX axes. En relatif, la hauteur des
- *   yeux suivait celle de chaque expression — « neutre » regarde a +28,6deg quand
+ *   yeux suivait celle de chaque expression — « neutral » regarde a +28,6deg quand
  *   les autres sont entre -9 et +9 — donc les yeux tombaient d'un coup au premier
  *   changement d'humeur. Ce qui fait le caractere d'une expression pendant le
  *   suivi, c'est la FORME de ses yeux (plisses, ronds, dissymetriques), pas
@@ -89,6 +98,27 @@ const lerpEye = (a: Pose['eyes'][number], b: Pose['eyes'][number], t: number) =>
   tilt: lerp(a.tilt ?? 0, b.tilt ?? 0, t)
 })
 
+function blendMouth(a: MouthCfg | null, b: MouthCfg | null, t: number): MouthCfg | null {
+  if (!a && !b) return null
+  const source = a ?? { ...b!, alpha: 0 }
+  const target = b ?? { ...a!, alpha: 0 }
+  if (source.kind !== target.kind) {
+    return t < 0.5
+      ? { ...source, alpha: source.alpha * (1 - t * 2) }
+      : { ...target, alpha: target.alpha * (t * 2 - 1) }
+  }
+  return {
+    kind: target.kind,
+    x: lerp(source.x, target.x, t),
+    y: lerp(source.y, target.y, t),
+    width: lerp(source.width, target.width, t),
+    height: lerp(source.height, target.height, t),
+    curve: lerp(source.curve, target.curve, t),
+    thickness: lerp(source.thickness, target.thickness, t),
+    alpha: lerp(source.alpha, target.alpha, t)
+  }
+}
+
 /** Interpolation de deux poses. Le decor se croise en opacite, pas en geometrie. */
 function blendPose(a: Pose, b: Pose, t: number): Pose {
   const out = 1 - t
@@ -103,6 +133,7 @@ function blendPose(a: Pose, b: Pose, t: number): Pose {
     },
     split: lerp(a.split, b.split, t),
     eyes: [lerpEye(a.eyes[0], b.eyes[0], t), lerpEye(a.eyes[1], b.eyes[1], t)],
+    mouth: blendMouth(a.mouth, b.mouth, t),
     eyeAlpha: lerp(a.eyeAlpha, b.eyeAlpha, t),
     bodyAlpha: lerp(a.bodyAlpha, b.bodyAlpha, t),
     dots: [
@@ -157,7 +188,7 @@ export class BotEngine {
 
   /**
    * Duree de rattrapage du regard vers la cible. Plus court que `SHAPE_MORPH` :
-   * un regard qui suit doit paraitre attentif, pas visqueux. Comme la cible est
+   * un regard qui suit doit paraitre attentive, pas visqueux. Comme la cible est
    * reposee a chaque mouvement de souris, c'est cette duree qui donne au suivi
    * son inertie — le regard n'atteint jamais tout a fait un curseur qui bouge.
    */
@@ -202,7 +233,7 @@ export class BotEngine {
    * l'animation et ne doit pas etre ecrasee.
    *
    * Le changement se fait en morph, pas d'un coup : comme toutes les formes sont
-   * echantillonnees aux memes angles, il suffit d'interpoler les rayons.
+   * echantillonnees aux memes angles, il suffit d'interpolate les rayons.
    */
   setShape(radii: number[] | null, now = 0) {
     if (radii === this.shape) return
@@ -278,7 +309,7 @@ export class BotEngine {
       pose = { ...pose, sil: { ...pose.sil, radii: shape } }
     }
     if (def.baseFace && expr) {
-      pose = { ...pose, gaze: expr.gaze, split: expr.split, eyes: expr.eyes }
+      pose = { ...pose, gaze: expr.gaze, split: expr.split, eyes: expr.eyes, mouth: expr.mouth }
     }
     return pose
   }
@@ -287,7 +318,7 @@ export class BotEngine {
    * Decalage des yeux a l'instant `now` pour un etat donne, en unites de rayon de boule.
    *
    * Il est LU dans une table et interpole, jamais recalcule : `eyefit.ts` explique
-   * pourquoi cette distinction est tout le correctif. Ici il ne reste qu'a l'interpoler
+   * pourquoi cette distinction est tout le correctif. Ici il ne reste qu'a l'interpolate
    * sur l'axe de la forme, avec exactement la courbe et la duree du morph de silhouette
    * — c'est la meme cause, donc ce doit etre le meme mouvement.
    *
@@ -320,8 +351,8 @@ export class BotEngine {
       surAxe(
         this.exprAt,
         BotEngine.SHAPE_MORPH,
-        decalageDesYeux(radii, state, this.exprPrev?.id ?? null),
-        decalageDesYeux(radii, state, this.expr?.id ?? null)
+        eyeOffset(radii, state, this.exprPrev?.id ?? null),
+        eyeOffset(radii, state, this.expr?.id ?? null)
       )
 
     // puis axe de la forme
@@ -399,7 +430,7 @@ export class BotEngine {
    * `idle -> wide -> idle` a 100 ms : 35,9 px de saut contre 8,0 px de mouvement normal.
    *
    * On fige donc la pose composite courante et on melange depuis elle. Continu par
-   * construction, quel que soit le nombre de changements enchaines.
+   * construction, quel que soit le formatNumber de changements enchaines.
    *
    * Et SEULEMENT dans ce cas. Figer a chaque changement arreterait net l'animation de
    * l'etat qu'on quitte pendant tout le fondu — le « ! » d'`alert` se figerait en pleine
@@ -493,7 +524,7 @@ export class BotEngine {
 
     // --- yeux -------------------------------------------------------------
     // Les yeux vivent sur une sphere de rayon 1 ; des que la silhouette n'est
-    // plus un cercle, on les ramene au prorata du rayon reel dans leur
+    // plus un circle, on les ramene au prorata du rayon reel dans leur
     // direction, sinon ils debordent et le masque les coupe.
     const bodyRadius = (x: number, y: number) =>
       radiusAtAngle(pose.sil.radii, Math.atan2(y, x) - pose.sil.rot)
@@ -527,6 +558,31 @@ export class BotEngine {
       }
     }
 
+    const mouth = (() => {
+      const cfg = pose.mouth
+      if (!cfg || cfg.alpha <= 0.01) return null
+      const x = (cfg.x + offX) * R
+      const y = (cfg.y + offY) * R
+      if (cfg.kind === 'open') {
+        return {
+          d: capsulePath(cfg.width * R, cfg.height * R),
+          transform: `translate(${r2(x)} ${r2(y)})`,
+          filled: true,
+          strokeWidth: 0,
+          alpha: cfg.alpha * pose.eyeAlpha
+        }
+      }
+      const half = (cfg.width * R) / 2
+      const bend = cfg.curve * R * 2
+      return {
+        d: `M${r2(-half)} 0Q0 ${r2(bend)} ${r2(half)} 0`,
+        transform: `translate(${r2(x)} ${r2(y)})`,
+        filled: false,
+        strokeWidth: cfg.thickness * R,
+        alpha: cfg.alpha * pose.eyeAlpha
+      }
+    })()
+
     // --- decor ------------------------------------------------------------
     const dots = pose.dots
       .filter((p) => p.opacity > 0.01 && p.r > 0.0005)
@@ -543,6 +599,7 @@ export class BotEngine {
       bodyPath,
       bodyAlpha: pose.bodyAlpha,
       eyes,
+      mouth,
       dots,
       dotsBehind: pose.dotsBehind,
       // Les etats declarent des arcs en unites de rayon de boule ; le moteur
@@ -555,4 +612,3 @@ export class BotEngine {
     }
   }
 }
-

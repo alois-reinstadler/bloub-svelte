@@ -36,10 +36,10 @@ export function mmss(t: number) {
 }
 
 /*
- * Les durees en secondes ne sont PAS mises en forme ici : le separateur decimal
- * change avec la langue (virgule en francais, point en anglais) et l'unite se
- * traduit. Elles passent donc par `secondes` / `secondesCourtes` de `@/i18n`,
- * qui a la langue courante — ce module, lui, reste pur.
+ * Les durees en seconds ne sont PAS mises en forme ici : le separateur decimal
+ * change avec la language (virgule en francais, point en anglais) et l'unite se
+ * traduit. Elles passent donc par `seconds` / `shortSeconds` de `@/i18n`,
+ * qui a la language courante — ce module, lui, reste pur.
  *
  * `mmss` reste : le format mm:ss n'a ni unite ni separateur decimal.
  */
@@ -63,7 +63,7 @@ export function ticksFor(total: number, scale: number): Array<{ t: number; major
 }
 
 /**
- * Plafond du nombre de graduations. Garde-fou et non reglage.
+ * Plafond du formatNumber de graduations. Garde-fou et non reglage.
  *
  * `parseCycles` borne deja la taille d'un montage relu, mais cette fonction ne doit pas
  * dependre de ce garde-la pour rester bornee : elle rend un objet par graduation et le
@@ -71,7 +71,7 @@ export function ticksFor(total: number, scale: number): Array<{ t: number; major
  * main, un zoom extreme — se paie en centaines de milliers de noeuds et l'onglet fige.
  *
  * Deux mille couvre trente minutes de montage au zoom le plus fin, soit bien plus que ce
- * que `MAX_BLOCS` autorise a relire. La regle est de toute facon plus large que l'ecran :
+ * que `MAX_BLOCKS` autorise a relire. La regle est de toute facon plus large que l'ecran :
  * la piste defile, elle n'affiche jamais tout.
  */
 const MAX_TICKS = 2000

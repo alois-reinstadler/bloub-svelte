@@ -9,7 +9,7 @@ export interface Point {
 /**
  * Une silhouette = un profil radial r(theta) plus une pose.
  *
- * Tout passe par des profils echantillonnes au MEME nombre d'angles : deux
+ * Tout passe par des profils echantillonnes au MEME formatNumber d'angles : deux
  * formes quelconques ont donc des points qui se correspondent un a un, et le
  * morphing se reduit a une interpolation lineaire des rayons. C'est ce qui
  * rend les transitions propres sans librairie de morphing de path.
@@ -42,7 +42,7 @@ export function silhouette(name: ProfileName, pose: Partial<Silhouette> = {}): S
   }
 }
 
-/** Cercle parfait : sert de base neutre (point, bulle, cible de fondu). */
+/** Cercle parfait : sert de base neutral (point, bulle, cible de fondu). */
 export function circle(radius: number, pose: Partial<Silhouette> = {}): Silhouette {
   return {
     radii: new Array(PROFILE_SAMPLES).fill(radius),
@@ -168,12 +168,12 @@ export function hullOfCircles(
   const base = Math.atan2(dy, dx)
   const spread = Math.acos(Math.max(-1, Math.min(1, (r1 - r2v) / dist)))
   const pts: Point[] = []
-  // arc du grand cercle
+  // arc du grand circle
   for (let i = 0; i <= steps / 2; i++) {
     const a = base + spread + ((TAU - 2 * spread) * i) / (steps / 2)
     pts.push({ x: x1 + Math.cos(a) * r1, y: y1 + Math.sin(a) * r1 })
   }
-  // arc du petit cercle
+  // arc du petit circle
   for (let i = 0; i <= steps / 2; i++) {
     const a = base - spread + ((2 * spread) * i) / (steps / 2)
     pts.push({ x: x2 + Math.cos(a) * r2v, y: y2 + Math.sin(a) * r2v })
@@ -186,7 +186,7 @@ export function hullOfCircles(
  * deux echantillons voisins.
  *
  * Sert a recaler ce qui est pose "sur" le corps (les yeux, la pastille de
- * notification) quand la silhouette n'est plus un cercle : sans ca, un oeil
+ * notification) quand la silhouette n'est plus un circle : sans ca, un oeil
  * place a 0.62 rayon sort d'une forme dont le bord est a 0.55 dans cette
  * direction, et le masque le rogne.
  */
@@ -211,8 +211,8 @@ export function superellipseProfile(n: number, sx = 1, sy = 1): number[] {
 
 /**
  * Profil radial de l'UNION de disques : r(theta) = la plus lointaine des
- * intersections rayon/cercle. Exact tant que l'origine est dans l'union — c'est
- * ce qui donne les bosses du nuage sans booleen de path.
+ * intersections rayon/circle. Exact tant que l'origine est dans l'union — c'est
+ * ce qui donne les bosses du cloud sans booleen de path.
  */
 export function unionOfCirclesProfile(circles: Array<{ x: number; y: number; r: number }>): number[] {
   const out = new Array<number>(PROFILE_SAMPLES).fill(0)

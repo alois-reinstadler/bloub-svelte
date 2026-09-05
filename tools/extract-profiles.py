@@ -38,7 +38,7 @@ SAMPLES = 64
 # plus juste que de figer un releve bruite.
 SHAPES = [
     ('egg', 164, 'oeuf : meme hauteur que la boule, retreci en largeur'),
-    ('hexagon', 174, 'hexagone pointe en haut, coins tres arrondis'),
+    ('hexagon', 174, 'hexagon pointe en haut, coins tres arrondis'),
     ('triangle', 190, 'triangle pointe en haut, coins tres arrondis'),
 ]
 

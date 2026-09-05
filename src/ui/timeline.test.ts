@@ -3,7 +3,7 @@ import { BASE_SCALE, clampZoom, MAX_ZOOM, MIN_ZOOM, mmss, ticksFor } from './tim
 import * as timeline from './timeline'
 
 describe('mise en forme', () => {
-  it('ecrit le temps en minutes et secondes', () => {
+  it('ecrit le temps en minutes et seconds', () => {
     expect(mmss(0)).toBe('0:00')
     expect(mmss(4.9)).toBe('0:04')
     expect(mmss(65)).toBe('1:05')
@@ -14,14 +14,14 @@ describe('mise en forme', () => {
   /*
    * Ce test etait VIDE : il ne verifiait rien et comptait quand meme dans le total. Il
    * restait de l'epoque ou la mise en forme localisee vivait ici. On lui fait donc dire ce
-   * qu'il pretendait — que ce module reste PUR, sans langue.
+   * qu'il pretendait — que ce module reste PUR, sans language.
    *
-   * Le separateur decimal change avec la langue et l'unite se traduit, donc les durees en
-   * secondes passent par `secondes` / `secondesCourtes` de `@/i18n`. `mmss` reste ici : le
+   * Le separateur decimal change avec la language et l'unite se traduit, donc les durees en
+   * seconds passent par `seconds` / `shortSeconds` de `@/i18n`. `mmss` reste ici : le
    * format mm:ss n'a ni unite ni separateur decimal.
    */
   it('ne met en forme aucune duree localisee : ca appartient a i18n', () => {
-    expect(Object.keys(timeline).filter((n) => /^secondes/.test(n))).toEqual([])
+    expect(Object.keys(timeline).filter((n) => /^seconds/.test(n))).toEqual([])
     expect(mmss(65)).toBe('1:05')
   })
 
@@ -73,7 +73,7 @@ describe('graduation de la regle', () => {
    * graduation et le composant un `<span>` par objet, donc une duree aberrante se paie en
    * centaines de milliers de noeuds. Elle ne doit pas dependre d'un garde situe ailleurs.
    */
-  it('ne rend jamais un nombre aberrant de graduations', () => {
+  it('ne rend jamais un formatNumber aberrant de graduations', () => {
     for (const total of [1e5, 1e7, 1.5e6]) {
       const ticks = ticksFor(total, BASE_SCALE)
       expect(ticks.length, `total=${total}`).toBeLessThanOrEqual(2000)

@@ -16,7 +16,7 @@
  * un fond, la ou le GIF laisse le choix.
  */
 
-import { arrete } from './export'
+import { throwIfAborted } from './export'
 
 /**
  * QUANTISEUR explicite, et pas un niveau `QUALITY_*`.
@@ -46,16 +46,16 @@ const DEBIT_REPLI = 6_000_000
  *
  * `rend` dessine l'image `i` DANS le canvas fourni, puis rend la main. Les images
  * ne sont jamais accumulees : chacune est encodee et jetee avant la suivante,
- * sans quoi un cycle de trente secondes tiendrait 255 Mo de pixels bruts en
+ * sans quoi un cycle de trente seconds tiendrait 255 Mo de pixels bruts en
  * memoire.
  */
-export async function versMp4(
+export async function toMp4(
   canvas: HTMLCanvasElement,
   images: number,
   fps: number,
   rend: (index: number) => void | Promise<void>,
   avance?: (fait: number, total: number) => void,
-  /** Abandon demande par l'utilisateur. Cf. `arrete` ci-dessous. */
+  /** ExportCancelled demande par l'utilisateur. Cf. `throwIfAborted` ci-dessous. */
   signal?: AbortSignal
 ): Promise<Blob> {
   const { BufferTarget, CanvasSource, Mp4OutputFormat, Output, Quality } = await import(
@@ -73,7 +73,7 @@ export async function versMp4(
   /*
    * A partir d'ici l'encodeur est OUVERT, donc tout chemin de sortie doit passer par
    * `cancel`. Sans ca, une image qui echoue a se rendre laissait le `VideoEncoder`
-   * derriere elle : Chrome plafonne le nombre d'encodeurs materiels simultanes, si bien
+   * derriere elle : Chrome plafonne le formatNumber d'encodeurs materiels simultanes, si bien
    * qu'apres quelques echecs les exports suivants tombaient a `start()` pour une raison
    * qui n'avait plus rien a voir avec la cause reelle. Le lecteur hors ecran de
    * `capture.ts` est ferme dans un `finally` pour la meme raison ; l'encodeur n'avait pas
@@ -82,14 +82,14 @@ export async function versMp4(
   try {
     const duree = 1 / fps
     for (let i = 0; i < images; i++) {
-      arrete(signal)
+      throwIfAborted(signal)
       await rend(i)
       // `await` sur chaque image et non en lot : c'est ce qui applique la
       // contre-pression de l'encodeur, donc ce qui borne la memoire.
       await source.add(i * duree, duree)
       avance?.(i + 1, images)
     }
-    arrete(signal)
+    throwIfAborted(signal)
 
     await sortie.finalize()
     const buffer = sortie.target.buffer

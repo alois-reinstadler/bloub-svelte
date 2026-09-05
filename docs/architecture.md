@@ -149,8 +149,8 @@ Each of these was written and measured, and each broke something visible:
   changes mid-morph and the push direction flips with it, 11.6 units on the triangle whose
   two slanted edges compete for the pair.
 - **One entry per shape, worst case over expressions.** Tempting, since a constant offset
-  cannot move when the expression changes — but on a capsule `neutre` has its eyes high and
-  needs to go down while `effraye` has them low and needs to go up. No single translation
+  cannot move when the expression changes — but on a capsule `neutral` has its eyes high and
+  needs to go down while `scared` has them low and needs to go up. No single translation
   satisfies both, measured: 4 combinations still overflowing.
 - **Giving up when nothing fits.** `wide` has 87-unit gélules and `notify` 50-unit ones; on
   a triangle or a teardrop they overflow whatever you do, and "no worse than the circle" is
@@ -258,5 +258,5 @@ callers being careful.
 
 `--ink` (`styles.css` and `landing.css`) is the **interface** colour, an ink
 black (`#0a0a0a`), chosen, not measured — the site is strictly black and white.
-The video's black is the bot's, in `skins.ts` (`encre`, `#0a0a0c`). Retouching
+The video's black is the bot's, in `skins.ts` (`ink`, `#0a0a0c`). Retouching
 one doesn't touch the other.

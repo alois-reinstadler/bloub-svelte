@@ -31,12 +31,8 @@ function footprint(d: string) {
 const EMPREINTES: Array<[StateId, number, number, number, number]> = [
   // etat,        date,  largeur, hauteur, tolerance
   ['idle', 0.5, 2.0, 2.0, 0.05],
-  ['egg', 0.9, 1.653, 2.0, 0.06],
-  ['hexagon', 0.9, 1.82, 2.01, 0.07],
-  ['exclaim', 0.9, 0.263, 0.842, 0.03],
   ['alert', 0.8, 0.421, 0.753, 0.04],
-  ['sleep', 0.6, 0.317, 0.317, 0.03],
-  ['comet', 1.0, 0.258, 0.258, 0.03]
+  ['burst', 0.9, 0.332, 0.332, 0.04]
 ]
 
 describe('silhouettes', () => {
@@ -49,15 +45,15 @@ describe('silhouettes', () => {
     })
   }
 
-  it('la boule au repos est un cercle, pas un ovale', () => {
+  it('la boule au repos est un circle, pas un ovale', () => {
     const e = new BotEngine(100, 'idle')
     const { w, h } = footprint(e.sample(0.5).bodyPath)
     expect(Math.abs(w - h)).toBeLessThan(0.03)
   })
 
-  it('le triangle est plus large que haut, pointe en haut', () => {
-    const e = new BotEngine(100, 'play')
-    const { w, h } = footprint(e.sample(0.9).bodyPath)
+  it('commence l orbite avec une silhouette triangulaire', () => {
+    const e = new BotEngine(100, 'orbit')
+    const { w, h } = footprint(e.sample(0).bodyPath)
     expect(w).toBeGreaterThan(h)
     expect(Math.abs(w - 1.99)).toBeLessThan(0.08)
   })
@@ -78,7 +74,7 @@ describe('moteur', () => {
     // le piege : purger l'etat precedent une fois le fondu fini rend cette
     // date irrecuperable, et le fondu disparait a la relecture
     const e = new BotEngine(100, 'idle')
-    e.setState('egg', 1)
+    e.setState('alert', 1)
     const pendant = e.sample(1.2).bodyPath
     e.sample(3)
     expect(e.sample(1.2).bodyPath).toBe(pendant)
@@ -88,7 +84,7 @@ describe('moteur', () => {
     // avant le changement, il n'y a rien a fondre : on doit voir l'etat sortant
     const e = new BotEngine(100, 'idle')
     const avant = e.sample(0.5).bodyPath
-    e.setState('egg', 1)
+    e.setState('alert', 1)
     expect(e.sample(0.5).bodyPath).toBe(avant)
   })
 
@@ -100,14 +96,14 @@ describe('moteur', () => {
 
   it('interpole la silhouette pendant une transition, sans saut', () => {
     const e = new BotEngine(100, 'idle')
-    e.setState('egg', 1)
+    e.setState('alert', 1)
     const largeurs = [1, 1.1, 1.2, 1.3, 1.4].map((t) => footprint(e.sample(t).bodyPath).w)
-    // strictement decroissant : la boule se retrecit vers l'oeuf
+    // strictement decroissant : la boule se retrecit vers le signe d'alerte
     for (let i = 1; i < largeurs.length; i++) {
       expect(largeurs[i]!).toBeLessThan(largeurs[i - 1]!)
     }
     expect(largeurs[0]!).toBeCloseTo(2, 1)
-    expect(footprint(e.sample(2).bodyPath).w).toBeCloseTo(1.65, 1)
+    expect(footprint(e.sample(2).bodyPath).w).toBeLessThan(0.7)
   })
 
   it('ne fait jamais depasser le corps du viewBox', () => {
@@ -130,21 +126,21 @@ describe('forme personnalisee', () => {
 
   it('remplace la silhouette des etats au repos', () => {
     const rond = new BotEngine(100, 'idle')
-    const goutte = new BotEngine(100, 'idle', radii('goutte'))
-    expect(goutte.sample(1).bodyPath).not.toBe(rond.sample(1).bodyPath)
+    const droplet = new BotEngine(100, 'idle', radii('droplet'))
+    expect(droplet.sample(1).bodyPath).not.toBe(rond.sample(1).bodyPath)
   })
 
   it('laisse intacts les etats qui dessinent leur propre forme', () => {
-    for (const id of ['exclaim', 'alert', 'sleep', 'egg', 'hexagon'] as const) {
+    for (const id of ['thinking', 'alert', 'orbit', 'burst'] as const) {
       const nu = new BotEngine(100, id)
-      const habille = new BotEngine(100, id, radii('goutte'))
+      const habille = new BotEngine(100, id, radii('droplet'))
       expect(habille.sample(1).bodyPath).toBe(nu.sample(1).bodyPath)
     }
   })
 
   it('morphe vers la nouvelle forme au lieu de sauter', () => {
-    const e = new BotEngine(100, 'idle', radii('cercle'))
-    // le cercle fait 2.0 de haut, la capsule 1.24 : la hauteur est parlante
+    const e = new BotEngine(100, 'idle', radii('circle'))
+    // le circle fait 2.0 de haut, la capsule 1.24 : la hauteur est parlante
     expect(hauteur(e, 1)).toBeCloseTo(2, 1)
     e.setShape(radii('capsule'), 1)
 
@@ -161,7 +157,7 @@ describe('forme personnalisee', () => {
   })
 
   it('reste une fonction pure du temps pendant un morph de forme', () => {
-    const e = new BotEngine(100, 'idle', radii('cercle'))
+    const e = new BotEngine(100, 'idle', radii('circle'))
     e.setShape(radii('capsule'), 1)
     const milieu = e.sample(1.1).bodyPath
     // on depasse la fin du morph, puis on relit la date passee
@@ -170,7 +166,7 @@ describe('forme personnalisee', () => {
   })
 
   it('garde les yeux dans la silhouette sur une forme non circulaire', () => {
-    for (const id of ['nuage', 'capsule', 'goutte', 'triangle', 'squircle'] as const) {
+    for (const id of ['cloud', 'capsule', 'droplet', 'triangle', 'squircle'] as const) {
       const f = new BotEngine(100, 'idle', radii(id)).sample(1)
       expect(f.eyes).toHaveLength(2)
       for (const eye of f.eyes) {
@@ -187,14 +183,14 @@ describe('forme personnalisee', () => {
 
 describe('etats', () => {
   /**
-   * La sequence est le CATALOGUE : les 14 etats releves sur la video, ceux que
+   * La sequence est le CATALOGUE : les 8 etats retenus pour les retours d'interface, ceux que
    * la palette propose et que la planche montre. Tout etat hors sequence est une
    * transition d'interface, choisie et non mesuree — il ne doit donc jamais
    * apparaitre dans le catalogue, et le rester est precisement ce qu'on verifie.
    */
-  it('garde les 14 etats de la video dans la sequence, et rien d autre', () => {
-    expect(SEQUENCE).toHaveLength(14)
-    expect(new Set(SEQUENCE).size).toBe(14)
+  it('garde les 8 etats expressifs dans la sequence, et rien d autre', () => {
+    expect(SEQUENCE).toHaveLength(8)
+    expect(new Set(SEQUENCE).size).toBe(8)
     for (const id of SEQUENCE) expect(STATES.some((s) => s.id === id), id).toBe(true)
   })
 
@@ -204,8 +200,8 @@ describe('etats', () => {
   })
 
   it('montre le visage sur les etats a visage, le cache sur les autres', () => {
-    const avec: StateId[] = ['idle', 'wink', 'wide', 'notify', 'egg', 'hexagon']
-    const sans: StateId[] = ['thinking', 'alert', 'exclaim', 'sleep']
+    const avec: StateId[] = ['idle', 'wink', 'wide', 'notify', 'orbit']
+    const sans: StateId[] = ['thinking', 'alert', 'burst']
     for (const id of avec) expect(new BotEngine(100, id).sample(0.9).eyes.length).toBe(2)
     for (const id of sans) expect(new BotEngine(100, id).sample(0.9).eyes.length).toBe(0)
   })
@@ -273,13 +269,13 @@ describe('regard qui suit le pointeur', () => {
     // Deux expressions qui ne different QUE par leur lacet : l'abscisse d'un oeil
     // depend aussi du tangage et de l'ecart des yeux, donc les faire varier
     // ensemble ne prouverait rien.
-    const modele = EXPRESSION_BY_ID.get('neutre')!
+    const modele = EXPRESSION_BY_ID.get('neutral')!
     const gauchier = { ...modele, gaze: { ...modele.gaze, yaw: -30 } }
     const droitier = { ...modele, gaze: { ...modele.gaze, yaw: 60 } }
-    const cercle = SHAPE_BY_ID.get('cercle')!.radii
+    const circle = SHAPE_BY_ID.get('circle')!.radii
 
-    const a = new BotEngine(100, 'idle', cercle, gauchier)
-    const b = new BotEngine(100, 'idle', cercle, droitier)
+    const a = new BotEngine(100, 'idle', circle, gauchier)
+    const b = new BotEngine(100, 'idle', circle, droitier)
     // sans cible, les deux regardent franchement ailleurs l'un de l'autre
     expect(Math.abs(oeilX(a, 1) - oeilX(b, 1))).toBeGreaterThan(40)
 
@@ -413,14 +409,14 @@ describe('robustesse du regard', () => {
 describe('reset', () => {
   it('oublie l etat precedent, la ou setState le garde pour le fondre', () => {
     const avecFondu = new BotEngine(100, 'idle')
-    avecFondu.setState('egg', 0)
+    avecFondu.setState('alert', 0)
     const remis = new BotEngine(100, 'idle')
-    remis.reset('egg', 0)
+    remis.reset('alert', 0)
 
-    // au debut du morph, l'un melange encore le repos, l'autre est deja l'oeuf
+    // au debut du morph, l'un melange encore le repos, l'autre est deja l'alerte
     expect(avecFondu.sample(0).bodyPath).not.toBe(remis.sample(0).bodyPath)
-    // et l'oeuf seul est bien ce qu'un moteur neuf sur `egg` rend
-    expect(remis.sample(0).bodyPath).toBe(new BotEngine(100, 'egg').sample(0).bodyPath)
+    // et l'alerte seule est bien ce qu'un moteur neuf rend
+    expect(remis.sample(0).bodyPath).toBe(new BotEngine(100, 'alert').sample(0).bodyPath)
   })
 
   /*
@@ -506,7 +502,7 @@ describe('changement d etat pendant un fondu', () => {
     const suite: Array<[StateId, number]> = [
       ['wide', 0.5],
       ['idle', 0.55],
-      ['egg', 0.6],
+      ['wide', 0.6],
       ['orbit', 0.65],
       ['notify', 0.7]
     ]

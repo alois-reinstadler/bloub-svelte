@@ -25,14 +25,14 @@ import {
  * rendrait `radii` en lecture seule, alors que le moteur le passe tel quel.
  */
 export type ShapeId =
-  | 'cercle'
-  | 'galet'
+  | 'circle'
+  | 'pebble'
   | 'squircle'
   | 'capsule'
   | 'triangle'
-  | 'hexagone'
-  | 'nuage'
-  | 'goutte'
+  | 'hexagon'
+  | 'cloud'
+  | 'droplet'
 
 export interface BotShape {
   id: ShapeId
@@ -49,7 +49,7 @@ function normalize(radii: number[], max = 1): number[] {
 
 const ANGLES = Array.from({ length: PROFILE_SAMPLES }, (_, i) => (i / PROFILE_SAMPLES) * Math.PI * 2)
 
-/** Galet : cercle deforme par deux harmoniques basses, donc irregulier mais lisse. */
+/** Galet : circle deforme par deux harmoniques basses, donc irregulier mais lisse. */
 const pebble = normalize(
   ANGLES.map((a) => 1 + 0.075 * Math.cos(2 * a + 0.5) + 0.035 * Math.cos(3 * a + 2.1)),
   1.02
@@ -77,38 +77,38 @@ const droplet = normalize(
 const capsule = profileFromPolygon(hullOfCircles(-0.42, 0, 0.62, 0.42, 0, 0.62), 0, 0)
 
 export const SHAPES: BotShape[] = [
-  { id: 'cercle', radii: new Array(PROFILE_SAMPLES).fill(1) },
-  { id: 'galet', radii: pebble },
+  { id: 'circle', radii: new Array(PROFILE_SAMPLES).fill(1) },
+  { id: 'pebble', radii: pebble },
   // 1.15 et pas 1.02 : sur une superellipse le rayon maximal est la diagonale,
-  // donc normaliser dessus donne une forme qui parait plus petite que le cercle.
+  // donc normaliser dessus donne une forme qui parait plus petite que le circle.
   { id: 'squircle', radii: normalize(superellipseProfile(4.2), 1.15) },
   { id: 'capsule', radii: capsule },
   // -90deg : un sommet vers le haut de l'ecran (y est oriente vers le bas)
   { id: 'triangle', radii: regularPolygonProfile(3, 1.12, 0.34, -90) },
   // 0deg : sommets a gauche et a droite, donc aretes du haut et du bas plates
-  { id: 'hexagone', radii: regularPolygonProfile(6, 1.04, 0.26, 0) },
-  { id: 'nuage', radii: cloud },
-  { id: 'goutte', radii: droplet }
+  { id: 'hexagon', radii: regularPolygonProfile(6, 1.04, 0.26, 0) },
+  { id: 'cloud', radii: cloud },
+  { id: 'droplet', radii: droplet }
 ]
 
 // Map indexee par `string` et non par `ShapeId` : les appelants interrogent avec
 // une valeur relue du localStorage ou d'une prop, donc non validee.
 export const SHAPE_BY_ID = new Map<string, BotShape>(SHAPES.map((s) => [s.id, s]))
-export const DEFAULT_SHAPE = 'cercle'
+export const DEFAULT_SHAPE = 'circle'
 
 export type ColorId =
-  | 'encre'
-  | 'creme'
-  | 'brun'
-  | 'rouge'
+  | 'ink'
+  | 'cream'
+  | 'brown'
+  | 'red'
   | 'orange'
-  | 'ambre'
-  | 'vert'
+  | 'amber'
+  | 'green'
   | 'turquoise'
-  | 'bleu'
+  | 'blue'
   | 'violet'
-  | 'rose'
-  | 'gris'
+  | 'pink'
+  | 'gray'
 
 export interface BotColor {
   id: ColorId
@@ -117,22 +117,22 @@ export interface BotColor {
 
 /** Palette du personnalisateur d'origine. */
 export const COLORS: BotColor[] = [
-  { id: 'encre', hex: '#0a0a0c' },
-  { id: 'brun', hex: '#8b5e3c' },
-  { id: 'rouge', hex: '#e8483f' },
+  { id: 'ink', hex: '#0a0a0c' },
+  { id: 'brown', hex: '#8b5e3c' },
+  { id: 'red', hex: '#e8483f' },
   { id: 'orange', hex: '#f08a24' },
-  { id: 'ambre', hex: '#f0b429' },
-  { id: 'vert', hex: '#3ecf8e' },
+  { id: 'amber', hex: '#f0b429' },
+  { id: 'green', hex: '#3ecf8e' },
   { id: 'turquoise', hex: '#2fbfa0' },
-  { id: 'bleu', hex: '#3b93f0' },
+  { id: 'blue', hex: '#3b93f0' },
   { id: 'violet', hex: '#8b5cf6' },
-  { id: 'rose', hex: '#e152b0' },
-  { id: 'gris', hex: '#a3a3a3' },
-  { id: 'creme', hex: '#f1efe9' }
+  { id: 'pink', hex: '#e152b0' },
+  { id: 'gray', hex: '#a3a3a3' },
+  { id: 'cream', hex: '#f1efe9' }
 ]
 
 export const COLOR_BY_ID = new Map<string, BotColor>(COLORS.map((c) => [c.id, c]))
-export const DEFAULT_COLOR = 'encre'
+export const DEFAULT_COLOR = 'ink'
 
 /** Melange deux couleurs hex. Sert a la brume de profondeur des particules. */
 export function mixHex(from: string, to: string, t: number): string {

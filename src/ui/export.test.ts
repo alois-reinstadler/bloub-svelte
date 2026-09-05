@@ -1,25 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { RAYON } from '@/lib/internal/core/repere'
+import { RADIUS } from '@/lib/internal/core/coordinates'
 import { SHAPES } from '@/lib/internal/core/skins'
 import {
   ACTIONS,
-  BLANC,
+  WHITE,
   CYCLE_FPS,
-  CYCLE_TAILLE,
-  DEMI_ECRAN,
-  FORMATS_CYCLE,
-  FORMAT_CYCLE_DEFAUT,
-  cycleAccepteTransparence,
-  cycleImages,
-  FONDS_GIF,
-  FOND_GIF_DEFAUT,
-  couleurDeFond,
+  CYCLE_SIZE,
+  HALF_SCREEN,
+  CYCLE_FORMATS,
+  DEFAULT_CYCLE_FORMAT,
+  cycleSupportsTransparency,
+  cycleFrames,
+  GIF_BACKGROUNDS,
+  DEFAULT_GIF_BACKGROUND,
+  backgroundColor,
   ACTION_BY_ID,
-  ACTION_DEFAUT,
-  DEMI_CADRE,
-  RAYON_MAX,
-  nomFichier,
-  sansCommentaires,
+  DEFAULT_ACTION,
+  HALF_FRAME,
+  MAX_RADIUS,
+  fileName,
+  withoutComments,
   viewBoxExport
 } from './export'
 
@@ -37,14 +37,14 @@ describe('cadre d export', () => {
    */
   it('contient toutes les formes du personnalisateur', () => {
     for (const forme of SHAPES) {
-      const rayon = Math.max(...forme.radii) * RAYON
-      expect(rayon, `la forme « ${forme.id} » depasse du cadre`).toBeLessThan(DEMI_CADRE)
+      const rayon = Math.max(...forme.radii) * RADIUS
+      expect(rayon, `la forme « ${forme.id} » depasse du cadre`).toBeLessThan(HALF_FRAME)
     }
   })
 
   it('laisse une marge pour le rognage circulaire d une photo de profil', () => {
     // La boule au repos ne doit pas toucher le bord : entre 70 % et 90 % du cadre.
-    const remplissage = RAYON / DEMI_CADRE
+    const remplissage = RADIUS / HALF_FRAME
     expect(remplissage).toBeGreaterThan(0.7)
     expect(remplissage).toBeLessThan(0.9)
   })
@@ -52,19 +52,19 @@ describe('cadre d export', () => {
   it('est plus serre que le viewBox de l ecran', () => {
     // La marge de l'ecran loge les anneaux des etats animes, absents au repos :
     // la garder remplirait l'export de vide.
-    expect(DEMI_CADRE).toBeLessThan(VB_ECRAN)
+    expect(HALF_FRAME).toBeLessThan(VB_ECRAN)
   })
 
-  it('se cadre sur la forme la plus etalee et non sur le cercle', () => {
+  it('se cadre sur la forme la plus etalee et non sur le circle', () => {
     // Le squircle culmine a 1.15 sur sa diagonale : un cadre calcule sur le
-    // cercle seul (1.0) le rognerait.
-    expect(RAYON_MAX).toBeGreaterThan(1)
-    expect(RAYON_MAX).toBe(Math.max(...SHAPES.map((f) => Math.max(...f.radii))))
+    // circle seul (1.0) le rognerait.
+    expect(MAX_RADIUS).toBeGreaterThan(1)
+    expect(MAX_RADIUS).toBe(Math.max(...SHAPES.map((f) => Math.max(...f.radii))))
   })
 
   it('produit un viewBox carre centre sur la boule', () => {
     expect(viewBoxExport(125)).toBe('-125 -125 250 250')
-    expect(viewBoxExport()).toBe(`${-DEMI_CADRE} ${-DEMI_CADRE} ${DEMI_CADRE * 2} ${DEMI_CADRE * 2}`)
+    expect(viewBoxExport()).toBe(`${-HALF_FRAME} ${-HALF_FRAME} ${HALF_FRAME * 2} ${HALF_FRAME * 2}`)
   })
 })
 
@@ -74,7 +74,7 @@ describe('catalogue des exports', () => {
   })
 
   it('expose une action par defaut qui existe', () => {
-    expect(ACTION_BY_ID.get(ACTION_DEFAUT)).toBeDefined()
+    expect(ACTION_BY_ID.get(DEFAULT_ACTION)).toBeDefined()
   })
 
   /*
@@ -82,21 +82,21 @@ describe('catalogue des exports', () => {
    * l'utilisateur une question qui n'est pas la sienne.
    */
   it('ne propose qu un seul png a telecharger', () => {
-    const pngs = ACTIONS.filter((a) => a.mode === 'telecharge' && a.extension === 'png')
+    const pngs = ACTIONS.filter((a) => a.mode === 'download' && a.extension === 'png')
     expect(pngs).toHaveLength(1)
   })
 
   /* Le presse-papiers image ne sait ecrire que du bitmap ; le SVG passe en texte. */
-  it('copie le bitmap en image et le vectoriel en texte', () => {
+  it('copyImage le bitmap en image et le vectoriel en texte', () => {
     for (const action of ACTIONS) {
       if (action.mode === 'copieImage') expect(action.extension).toBe('png')
-      if (action.mode === 'copieTexte') expect(action.extension).toBe('svg')
+      if (action.mode === 'copyText') expect(action.extension).toBe('svg')
     }
   })
 
   it('propose de copier les deux formats', () => {
     expect(ACTIONS.some((a) => a.mode === 'copieImage')).toBe(true)
-    expect(ACTIONS.some((a) => a.mode === 'copieTexte')).toBe(true)
+    expect(ACTIONS.some((a) => a.mode === 'copyText')).toBe(true)
   })
 
   it('donne une taille exploitable a chaque action', () => {
@@ -115,28 +115,28 @@ describe('export d un cycle', () => {
    */
   it('exporte sur le viewBox de l ecran, pas sur le cadre serre', () => {
     const RAYON_ARCS = 140
-    expect(DEMI_ECRAN).toBeGreaterThan(RAYON_ARCS)
-    expect(DEMI_CADRE).toBeLessThan(RAYON_ARCS)
+    expect(HALF_SCREEN).toBeGreaterThan(RAYON_ARCS)
+    expect(HALF_FRAME).toBeLessThan(RAYON_ARCS)
   })
 
 
   it('ne propose ni SVG anime ni format hors video', () => {
     // le corps morphe a chaque image : 2,5 ko de chemin fois six cents images
-    expect(FORMATS_CYCLE).toEqual(['mp4', 'gif'])
-    expect(FORMATS_CYCLE).toContain(FORMAT_CYCLE_DEFAUT)
+    expect(CYCLE_FORMATS).toEqual(['mp4', 'gif'])
+    expect(CYCLE_FORMATS).toContain(DEFAULT_CYCLE_FORMAT)
   })
 
   /* La video n'a pas d'alpha : `VideoEncoder` refuse `alpha: 'keep'`. */
   it('ne laisse le choix du fond qu au gif', () => {
-    expect(cycleAccepteTransparence('gif')).toBe(true)
-    expect(cycleAccepteTransparence('mp4')).toBe(false)
+    expect(cycleSupportsTransparency('gif')).toBe(true)
+    expect(cycleSupportsTransparency('mp4')).toBe(false)
   })
 
   it('compte les images d apres la duree et le format', () => {
-    expect(cycleImages(31.2, 'mp4')).toBe(Math.round(31.2 * CYCLE_FPS.mp4))
-    expect(cycleImages(31.2, 'gif')).toBe(Math.round(31.2 * CYCLE_FPS.gif))
+    expect(cycleFrames(31.2, 'mp4')).toBe(Math.round(31.2 * CYCLE_FPS.mp4))
+    expect(cycleFrames(31.2, 'gif')).toBe(Math.round(31.2 * CYCLE_FPS.gif))
     // un montage minuscule doit quand meme donner une image
-    expect(cycleImages(0, 'mp4')).toBe(1)
+    expect(cycleFrames(0, 'mp4')).toBe(1)
   })
 
   /*
@@ -146,9 +146,9 @@ describe('export d un cycle', () => {
    * Une video compresse le mouvement, elle n'a pas cette contrainte.
    */
   it('exporte la video plus grande et plus fluide que le gif', () => {
-    expect(CYCLE_TAILLE.mp4).toBeGreaterThan(CYCLE_TAILLE.gif)
+    expect(CYCLE_SIZE.mp4).toBeGreaterThan(CYCLE_SIZE.gif)
     expect(CYCLE_FPS.mp4).toBeGreaterThan(CYCLE_FPS.gif)
-    expect(CYCLE_TAILLE.mp4).toBeGreaterThanOrEqual(1024)
+    expect(CYCLE_SIZE.mp4).toBeGreaterThanOrEqual(1024)
   })
 
   /* Le delai d'un GIF se compte en centiemes : 20 img/s tombe juste, 30 non. */
@@ -165,16 +165,16 @@ describe('fond du gif', () => {
   })
 
   it('propose blanc et transparent, blanc par defaut', () => {
-    expect(FONDS_GIF).toEqual(['blanc', 'transparent'])
-    expect(FONDS_GIF).toContain(FOND_GIF_DEFAUT)
-    expect(FOND_GIF_DEFAUT).toBe('blanc')
+    expect(GIF_BACKGROUNDS).toEqual(['blanc', 'transparent'])
+    expect(GIF_BACKGROUNDS).toContain(DEFAULT_GIF_BACKGROUND)
+    expect(DEFAULT_GIF_BACKGROUND).toBe('blanc')
   })
 
-  /* « Fond blanc » doit etre BLANC, pas le `--paper` legerement casse du site. */
+  /* « Fond blanc » doit etre WHITE, pas le `--paper` legerement casse du site. */
   it('peint du blanc pur, et rien du tout en transparent', () => {
-    expect(couleurDeFond('blanc')).toBe(BLANC)
-    expect(BLANC).toBe('#ffffff')
-    expect(couleurDeFond('transparent')).toBeNull()
+    expect(backgroundColor('blanc')).toBe(WHITE)
+    expect(WHITE).toBe('#ffffff')
+    expect(backgroundColor('transparent')).toBeNull()
   })
 })
 
@@ -184,7 +184,7 @@ describe('nettoyage du markup', () => {
       '<defs><!-- les yeux sont de vrais trous --><mask id="m">' +
       '<path d="M0 0" fill="#fff"/></mask></defs>' +
       '<g mask="url(#m)"><rect fill="#0a0a0c"/></g>'
-    const propre = sansCommentaires(markup)
+    const propre = withoutComments(markup)
     expect(propre).not.toContain('<!--')
     expect(propre).not.toContain('trous')
     // Ce qui fait le dessin doit survivre intact.
@@ -195,18 +195,18 @@ describe('nettoyage du markup', () => {
   })
 
   it('retire un commentaire multiligne', () => {
-    expect(sansCommentaires('<a/><!--\n  deux\n  lignes\n--><b/>')).toBe('<a/><b/>')
+    expect(withoutComments('<a/><!--\n  deux\n  lignes\n--><b/>')).toBe('<a/><b/>')
   })
 
   it('laisse un markup sans commentaire tel quel', () => {
-    expect(sansCommentaires('<circle r="100"/>')).toBe('<circle r="100"/>')
+    expect(withoutComments('<circle r="100"/>')).toBe('<circle r="100"/>')
   })
 })
 
 describe('nom de fichier', () => {
   it('se construit sur les ids et pas sur les libelles', () => {
-    expect(nomFichier('goutte', 'neutre', 'encre', 'png')).toBe('bloub-goutte-neutre-encre.png')
-    expect(nomFichier('cercle', 'hilare', 'violet', 'svg')).toBe('bloub-cercle-hilare-violet.svg')
+    expect(fileName('droplet', 'neutral', 'ink', 'png')).toBe('bloub-droplet-neutral-ink.png')
+    expect(fileName('circle', 'laughing', 'violet', 'svg')).toBe('bloub-circle-laughing-violet.svg')
   })
 
   /*
@@ -214,7 +214,7 @@ describe('nom de fichier', () => {
    * valider : une valeur trafiquee ne doit pas pouvoir composer un chemin.
    */
   it('ne laisse pas passer de separateur de chemin', () => {
-    const nom = nomFichier('../../etc/passwd', 'neutre', 'encre', 'png')
+    const nom = fileName('../../etc/passwd', 'neutral', 'ink', 'png')
     expect(nom).not.toContain('/')
     // Un seul point, celui de l'extension.
     expect(nom.split('.')).toHaveLength(2)
@@ -223,11 +223,11 @@ describe('nom de fichier', () => {
 
   /* Un nom de montage doit rester lisible : « Cycle par défaut », pas « cyclepardfaut ». */
   it('translittere les accents et separe les mots', () => {
-    expect(nomFichier('Cycle par défaut', '', '', 'mp4')).toBe('bloub-cycle-par-defaut.mp4')
-    expect(nomFichier('Été 2026', '', '', 'gif')).toBe('bloub-ete-2026.gif')
+    expect(fileName('Cycle par défaut', '', '', 'mp4')).toBe('bloub-cycle-par-defaut.mp4')
+    expect(fileName('Été 2026', '', '', 'gif')).toBe('bloub-ete-2026.gif')
   })
 
   it('survit a des ids vides', () => {
-    expect(nomFichier('', '', '', 'png')).toBe('bloub.png')
+    expect(fileName('', '', '', 'png')).toBe('bloub.png')
   })
 })

@@ -2,11 +2,11 @@
 import { describe, expect, it } from 'vitest'
 import { BotEngine } from '@/lib/internal/core/engine'
 import { blockAt, defaultCycle, offsetOf, type Block } from '@/lib/internal/core/cycles'
-import { RAYON } from '@/lib/internal/core/repere'
+import { RADIUS } from '@/lib/internal/core/coordinates'
 import { SHAPE_BY_ID } from '@/lib/internal/core/skins'
 import { EXPRESSION_BY_ID } from '@/lib/internal/core/expressions'
-import { ouvreCycle } from './capture'
-import { DEMI_ECRAN, viewBoxExport } from './export'
+import { openCycle } from './capture'
+import { HALF_SCREEN, viewBoxExport } from './export'
 
 /**
  * Le lecteur hors ecran, celui qui rend les images d'un export de montage.
@@ -20,7 +20,7 @@ import { DEMI_ECRAN, viewBoxExport } from './export'
  * silencieusement chaque video exportee.
  */
 
-const REGLAGES = { shape: 'cercle', color: 'encre', expression: 'neutre' }
+const REGLAGES = { shape: 'circle', color: 'ink', expression: 'neutral' }
 const TAILLE = 128
 
 /** Le `d` du corps, tel que le composant l'a mis dans le masque. */
@@ -36,7 +36,7 @@ function yeuxDe(svg: SVGSVGElement) {
 /** Le moteur seul, cale comme `rendAt` le fait : chaque etat date de son offset absolu. */
 function moteurAuMemeInstant(blocs: Block[], t: number) {
   const e = new BotEngine(
-    RAYON,
+    RADIUS,
     blocs[0]!.state,
     SHAPE_BY_ID.get(REGLAGES.shape)!.radii,
     EXPRESSION_BY_ID.get(REGLAGES.expression)!
@@ -47,13 +47,13 @@ function moteurAuMemeInstant(blocs: Block[], t: number) {
 }
 
 /**
- * Le cadre de l'export d'un CYCLE doit etre celui que le composant DESSINE, pas un nombre
+ * Le cadre de l'export d'un CYCLE doit etre celui que le composant DESSINE, pas un formatNumber
  * qui lui ressemble.
  *
- * `DEMI_ECRAN` valait 158 en dur face a un `VB = 158` ecrit a la main dans le composant, et
+ * `HALF_SCREEN` valait 158 en dur face a un `VB = 158` ecrit a la main dans le composant, et
  * rien ne reliait les deux. La regression visee : quelqu'un elargit le viewBox pour un
  * nouvel etat aux anneaux plus grands, l'export continue au cadre precedent et ajoute des
- * bandes vides a chaque video, tous les tests au vert.
+ * bandes vides a chaque video, tous les tests au green.
  *
  * Compare ici au `viewBox` reellement emis, et non a la constante : les deux viennent
  * desormais du meme module, donc une assertion entre elles serait une tautologie. Ce qui
@@ -61,10 +61,10 @@ function moteurAuMemeInstant(blocs: Block[], t: number) {
  */
 describe('cadre de l export', () => {
   it('exporte le cycle sur le viewBox que le composant dessine', async () => {
-    const lecteur = await ouvreCycle(REGLAGES, defaultCycle().blocks, TAILLE)
+    const lecteur = await openCycle(REGLAGES, defaultCycle().blocks, TAILLE)
     try {
       const svg = await lecteur.rendre(0)
-      expect(svg.getAttribute('viewBox')).toBe(viewBoxExport(DEMI_ECRAN))
+      expect(svg.getAttribute('viewBox')).toBe(viewBoxExport(HALF_SCREEN))
     } finally {
       lecteur.ferme()
     }
@@ -85,11 +85,11 @@ describe('lecteur hors ecran', () => {
    */
   it('rejoue la sequence a l identique', async () => {
     const blocs = defaultCycle().blocks
-    const neuf = await ouvreCycle(REGLAGES, blocs, TAILLE)
+    const neuf = await openCycle(REGLAGES, blocs, TAILLE)
     const reference = { corps: corpsDe(await neuf.rendre(0)), yeux: yeuxDe(await neuf.rendre(0)) }
     neuf.ferme()
 
-    const rejoue = await ouvreCycle(REGLAGES, blocs, TAILLE)
+    const rejoue = await openCycle(REGLAGES, blocs, TAILLE)
     try {
       // une passe complete, grossierement echantillonnee : ce qui compte est d'avoir
       // traverse tous les blocs avant de revenir au debut
@@ -115,7 +115,7 @@ describe('lecteur hors ecran', () => {
    */
   it('rend exactement ce que le moteur rend, jointures comprises', async () => {
     const blocs = defaultCycle().blocks
-    const lecteur = await ouvreCycle(REGLAGES, blocs, TAILLE)
+    const lecteur = await openCycle(REGLAGES, blocs, TAILLE)
     try {
       // les dates des jointures elles-memes, plus un point au milieu de chaque bloc
       const dates = blocs.flatMap((b, i) => {
@@ -142,12 +142,12 @@ describe('lecteur hors ecran', () => {
    * fait pas ca, elle amorce l'etat sur le bloc courant.
    */
   it('ouvre sur le premier etat du montage, sans morpher depuis le repos', async () => {
-    for (const debut of ['orbit', 'egg', 'hexagon'] as const) {
+    for (const debut of ['orbit', 'wide', 'notify'] as const) {
       const blocs = [
         { state: debut, duration: 2 },
         { state: 'idle' as const, duration: 2 }
       ]
-      const lecteur = await ouvreCycle(REGLAGES, blocs, TAILLE)
+      const lecteur = await openCycle(REGLAGES, blocs, TAILLE)
       try {
         const svg = await lecteur.rendre(0)
         expect(corpsDe(svg), debut).toBe(moteurAuMemeInstant(blocs, 0).bodyPath)

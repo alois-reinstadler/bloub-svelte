@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cle, ecris, lis } from './stockage'
+import { readStorage, storageKey, writeStorage } from './storage'
 
 /**
  * La garde du stockage.
@@ -35,18 +35,18 @@ afterEach(() => {
 
 describe('garde du stockage', () => {
   it('prefixe les cles avec le nom du produit', () => {
-    expect(cle('cycles')).toBe('bloub:cycles')
+    expect(storageKey('cycles')).toBe('bloub:cycles')
   })
 
   it('rend `null` au lieu de jeter quand la lecture est refusee', () => {
     interdit()
-    expect(() => lis('cycles')).not.toThrow()
-    expect(lis('cycles')).toBeNull()
+    expect(() => readStorage('cycles')).not.toThrow()
+    expect(readStorage('cycles')).toBeNull()
   })
 
   it('ne jette pas quand l ecriture est refusee', () => {
     interdit()
-    expect(() => ecris('cycles', '[]')).not.toThrow()
+    expect(() => writeStorage('cycles', '[]')).not.toThrow()
   })
 
   /**
@@ -61,7 +61,7 @@ describe('garde du stockage', () => {
         throw new DOMException('plein', 'QuotaExceededError')
       }
     })
-    expect(() => ecris('cycles', '[]')).not.toThrow()
+    expect(() => writeStorage('cycles', '[]')).not.toThrow()
   })
 
   it('lit et ecrit vraiment quand le stockage repond', () => {
@@ -70,9 +70,9 @@ describe('garde du stockage', () => {
       getItem: (k: string) => tas.get(k) ?? null,
       setItem: (k: string, v: string) => void tas.set(k, v)
     })
-    ecris('forme', 'goutte')
-    expect(tas.get('bloub:forme')).toBe('goutte')
-    expect(lis('forme')).toBe('goutte')
-    expect(lis('couleur')).toBeNull()
+    writeStorage('shape', 'droplet')
+    expect(tas.get('bloub:shape')).toBe('droplet')
+    expect(readStorage('shape')).toBe('droplet')
+    expect(readStorage('color')).toBeNull()
   })
 })

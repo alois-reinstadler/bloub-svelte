@@ -24,20 +24,20 @@ gsap.registerPlugin(ScrollTrigger)
 const O_BOITE = 1.62 // boite = anneau du o x 1,62 : la silhouette le recouvre de peu
 const ANNEAU_BOITE = 1.31 // boite = anneau des docs x 1,31 : ~17 % d'air dans l'anneau
 
-export type Voyage = {
-  detruire: () => void
+export type Journey = {
+  destroy: () => void
   /* Repose la boule a sa pose d'atterrissage — a appeler juste apres que la
      classe `avatar--journey` est revenue, sinon une image passe sans style. */
-  reposer: () => void
+  reset: () => void
 }
 
-export function creerVoyage(options: {
+export function createJourney(options: {
   heroPin: HTMLElement
   oSlot: HTMLElement
   anneau: HTMLElement
   studio: HTMLElement
   onArrive: (arrivee: boolean) => void
-}): Voyage | null {
+}): Journey | null {
   const { heroPin, oSlot, anneau, studio, onArrive } = options
   const avatar = document.querySelector<HTMLElement>('.avatar')
   const heroSection = heroPin.parentElement as HTMLElement
@@ -193,13 +193,13 @@ export function creerVoyage(options: {
   document.fonts?.ready.then(construire)
 
   return {
-    detruire: () => {
+    destroy: () => {
       removeEventListener('resize', surResize)
       tl?.scrollTrigger?.kill()
       tl?.kill()
       gsap.killTweensOf([avatar, svg])
     },
-    reposer: () => {
+    reset: () => {
       const fin = studio.getBoundingClientRect().top + scrollY
       const p = poseStudio(fin)
       // La pose est exprimee au defilement de fin ; on la ramene au defilement

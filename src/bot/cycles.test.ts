@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   MAX_BLOCK,
-  MAX_BLOCS,
+  MAX_BLOCKS,
   MAX_CYCLES,
   MIN_BLOCK,
   blockAt,
@@ -90,7 +90,7 @@ describe('lecture', () => {
     blocks: [
       { state: 'idle', duration: 2 },
       { state: 'wink', duration: 1 },
-      { state: 'egg', duration: 3 }
+      { state: 'wide', duration: 3 }
     ]
   }
 
@@ -118,9 +118,9 @@ describe('lecture', () => {
 
   it('deplace un bloc sans toucher la liste d origine', () => {
     const blocks = cycle.blocks
-    expect(moveBlock(blocks, 0, 2).map((b) => b.state)).toEqual(['wink', 'egg', 'idle'])
-    expect(moveBlock(blocks, 2, 0).map((b) => b.state)).toEqual(['egg', 'idle', 'wink'])
-    expect(blocks.map((b) => b.state)).toEqual(['idle', 'wink', 'egg'])
+    expect(moveBlock(blocks, 0, 2).map((b) => b.state)).toEqual(['wink', 'wide', 'idle'])
+    expect(moveBlock(blocks, 2, 0).map((b) => b.state)).toEqual(['wide', 'idle', 'wink'])
+    expect(blocks.map((b) => b.state)).toEqual(['idle', 'wink', 'wide'])
   })
 })
 
@@ -140,7 +140,7 @@ describe('relecture du stockage', () => {
 
   it('ramene les durees aberrantes dans leurs bornes', () => {
     const raw = '[{"id":"c1","name":"A","blocks":[{"state":"idle","duration":-4},' +
-      '{"state":"egg","duration":9999}]}]'
+      '{"state":"orbit","duration":9999}]}]'
     expect(parseCycles(raw)[0]!.blocks.map((b) => b.duration)).toEqual([MIN_BLOCK, MAX_BLOCK])
   })
 
@@ -169,7 +169,7 @@ describe('relecture du stockage', () => {
   it('borne la taille d un montage relu', () => {
     const blocs = Array.from({ length: 200_000 }, () => ({ state: 'idle', duration: 10 }))
     const raw = JSON.stringify([{ id: 'c1', name: 'A', blocks: blocs }])
-    expect(parseCycles(raw)[0]!.blocks).toHaveLength(MAX_BLOCS)
+    expect(parseCycles(raw)[0]!.blocks).toHaveLength(MAX_BLOCKS)
   })
 
   /*
@@ -185,14 +185,14 @@ describe('relecture du stockage', () => {
   })
 
   it('borne aussi l ajout depuis l editeur, pas seulement la relecture', () => {
-    let blocs = Array.from({ length: MAX_BLOCS }, () => makeBlock('idle'))
-    expect(blocksWith(blocs, 'egg')).toHaveLength(MAX_BLOCS)
+    let blocs = Array.from({ length: MAX_BLOCKS }, () => makeBlock('idle'))
+    expect(blocksWith(blocs, 'wide')).toHaveLength(MAX_BLOCKS)
     // et il reste possible d'ajouter juste en dessous de la borne
-    blocs = blocs.slice(0, MAX_BLOCS - 1)
-    expect(blocksWith(blocs, 'egg')).toHaveLength(MAX_BLOCS)
+    blocs = blocs.slice(0, MAX_BLOCKS - 1)
+    expect(blocksWith(blocs, 'wide')).toHaveLength(MAX_BLOCKS)
   })
 
-  it('borne le nombre de montages relus', () => {
+  it('borne le formatNumber de montages relus', () => {
     const raw = JSON.stringify(
       Array.from({ length: 5000 }, (_, i) => ({
         id: `c${i}`,

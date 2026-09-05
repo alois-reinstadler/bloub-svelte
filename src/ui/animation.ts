@@ -24,7 +24,7 @@ const ascii = (s: string) => Array.from(s, (c) => c.charCodeAt(0))
  * meme regle que pour l'export fixe.
  *
  * Seuls les yeux bougent, et c'est mesure : au repos la silhouette ne se deplace
- * que de 1,17 unite sur un rayon de 100 en trois secondes, soit environ un pixel
+ * que de 1,17 unite sur un rayon de 100 en trois seconds, soit environ un pixel
  * et demi a la taille d'export. Le corps reste donc tel quel, ce qui rend le
  * fichier minuscule — tout le poids d'une animation du bot est dans son regard.
  *
@@ -32,7 +32,7 @@ const ascii = (s: string) => Array.from(s, (c) => c.charCodeAt(0))
  * lisse a la frequence de l'ecran au lieu de sauter d'image en image comme un
  * feuilletage. C'est tout l'interet par rapport a un WebP ou un GIF.
  */
-export function svgAnime(base: string, matrices: string[][], duree: number): string {
+export function animatedSvg(base: string, matrices: string[][], duree: number): string {
   if (matrices.length < 2) throw new Error('il faut au moins deux images cles')
 
   const mask = base.match(/<mask[\s\S]*?<\/mask>/)
@@ -153,7 +153,7 @@ function lzw(indices: Uint8Array, bitsParPixel: number): number[] {
  *
  * Elle se construit en DEUX temps — recenser les couleurs, puis indexer les
  * images — parce qu'un GIF exige une palette commune : il faut avoir vu toutes
- * les images avant d'en encoder une seule. Sur un cycle de trente secondes, les
+ * les images avant d'en encoder une seule. Sur un cycle de trente seconds, les
  * garder en pixels bruts couterait 255 Mo ; recensees puis indexees, elles ne
  * pesent plus qu'un octet par pixel.
  */
@@ -168,7 +168,7 @@ export interface PaletteGif {
   transparence: boolean
 }
 
-export const nouvellePalette = (): PaletteGif => ({
+export const createPalette = (): PaletteGif => ({
   vues: new Map(),
   index: new Map(),
   proches: new Map(),
@@ -184,7 +184,7 @@ export const nouvellePalette = (): PaletteGif => ({
  * sur la meme case. Mesure : un cycle depasse les 255 couleurs, donc il FAUT
  * choisir lesquelles garder.
  */
-export function recense(palette: PaletteGif, px: Uint8ClampedArray) {
+export function collectColors(palette: PaletteGif, px: Uint8ClampedArray) {
   for (let p = 0; p < px.length; p += 4) {
     if (px[p + 3]! < 128) {
       palette.transparence = true
@@ -196,7 +196,7 @@ export function recense(palette: PaletteGif, px: Uint8ClampedArray) {
 }
 
 /** Arrete la palette sur les 255 teintes les plus presentes. */
-function arrete(palette: PaletteGif) {
+function throwIfAborted(palette: PaletteGif) {
   if (palette.index.size) return
   const tries = [...palette.vues.entries()].sort((a, b) => b[1] - a[1]).slice(0, 255)
   for (const [cle] of tries) palette.index.set(cle, palette.index.size + 1)
@@ -228,8 +228,8 @@ function plusProche(palette: PaletteGif, cle: number) {
 }
 
 /** Traduit une image en index de palette, un octet par pixel. */
-export function indexe(palette: PaletteGif, px: Uint8ClampedArray): Uint8Array {
-  arrete(palette)
+export function indexPixels(palette: PaletteGif, px: Uint8ClampedArray): Uint8Array {
+  throwIfAborted(palette)
   const out = new Uint8Array(px.length / 4)
   for (let i = 0, p = 0; i < out.length; i++, p += 4) {
     // 0 = transparent, et c'est deja la valeur par defaut du tableau
@@ -256,18 +256,18 @@ export function indexe(palette: PaletteGif, px: Uint8ClampedArray): Uint8Array {
  * Le GIF n'existe que pour les endroits qui refusent le SVG anime, comme les
  * avatars animes de Discord ou de Slack. Partout ailleurs le SVG est meilleur.
  */
-export function gifAnime(
+export function animatedGif(
   images: Uint8ClampedArray[],
   largeur: number,
   hauteur: number,
   delaiMs: number
 ): Uint8Array<ArrayBuffer> {
   if (!images.length) throw new Error('aucune image a emballer')
-  const palette = nouvellePalette()
-  for (const px of images) recense(palette, px)
-  return gifIndexe(
+  const palette = createPalette()
+  for (const px of images) collectColors(palette, px)
+  return indexedGif(
     palette,
-    images.map((px) => indexe(palette, px)),
+    images.map((px) => indexPixels(palette, px)),
     largeur,
     hauteur,
     delaiMs
@@ -278,7 +278,7 @@ export function gifAnime(
  * Meme chose, mais sur des images DEJA indexees — la voie a memoire bornee, pour
  * les longues sequences. Cf. `PaletteGif`.
  */
-export function gifIndexe(
+export function indexedGif(
   palette: PaletteGif,
   images: Uint8Array[],
   largeur: number,
@@ -287,7 +287,7 @@ export function gifIndexe(
 ): Uint8Array<ArrayBuffer> {
   if (!images.length) throw new Error('aucune image a emballer')
 
-  arrete(palette)
+  throwIfAborted(palette)
   const transparence = palette.transparence
   const couleurs = palette.index
   // Une palette GIF a une taille en puissance de deux, et il faut au moins deux

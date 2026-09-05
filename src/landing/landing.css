@@ -2,7 +2,7 @@
 
 /*
  * Habillage de la page unique : arrivee, installation, studio. Noir et blanc
- * SEULEMENT — l'encre, le papier et deux gris. La police d'affichage (Bricolage
+ * SEULEMENT — l'ink, le papier et deux gray. La police d'affichage (Bricolage
  * Grotesque, variable) est declaree dans `app.html`, ou l'URL du fichier peut
  * porter le prefixe de deploiement.
  */
@@ -302,6 +302,7 @@ button { font: inherit; }
 
 .api-link { display: inline-block; margin-top: 28px; padding-bottom: 3px; border-bottom: 1.5px solid var(--ink); font-size: 13px; font-weight: 600; }
 .api-link span { margin-left: 8px; }
+.api-link--secondary { margin-left: 22px; color: var(--muted); border-bottom-color: var(--muted); }
 
 /* -------------------------------------------------------------------- studio */
 
@@ -402,6 +403,7 @@ button { font: inherit; }
   .facts span:nth-child(3) { padding-left: 0; border-left: 0; }
   .docs-copy h2 { font-size: 40px; }
   .install-command code { font-size: 11px; }
+  .api-link--secondary { margin-left: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

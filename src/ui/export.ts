@@ -4,7 +4,7 @@
  * vit dans `capture.ts`, elle, parce qu'elle a besoin d'un canvas.
  */
 
-import { DEMI_VIEWBOX, RAYON } from '@/lib/internal/core/repere'
+import { HALF_VIEWBOX, RADIUS } from '@/lib/internal/core/coordinates'
 import { SHAPES } from '@/lib/internal/core/skins'
 
 /**
@@ -19,7 +19,7 @@ const MARGE = 1.08
  * ecrit en dur : ajouter une forme plus large deplace le cadre tout seul au lieu
  * de se faire rogner.
  */
-export const RAYON_MAX = Math.max(...SHAPES.map((forme) => Math.max(...forme.radii)))
+export const MAX_RADIUS = Math.max(...SHAPES.map((forme) => Math.max(...forme.radii)))
 
 /**
  * Demi-cote du cadre d'export, en unites de viewBox.
@@ -34,10 +34,10 @@ export const RAYON_MAX = Math.max(...SHAPES.map((forme) => Math.max(...forme.rad
  * pareil a l'oeil », or les recadrer separement remettrait chacune a la meme
  * taille et casserait ce reglage.
  */
-export const DEMI_CADRE = Math.ceil(RAYON * RAYON_MAX * MARGE)
+export const HALF_FRAME = Math.ceil(RADIUS * MAX_RADIUS * MARGE)
 
 /** viewBox du document exporte, centre sur la boule. */
-export function viewBoxExport(demi = DEMI_CADRE) {
+export function viewBoxExport(demi = HALF_FRAME) {
   return `${-demi} ${-demi} ${demi * 2} ${demi * 2}`
 }
 
@@ -49,14 +49,14 @@ export function viewBoxExport(demi = DEMI_CADRE) {
  * montent a 1,4 fois le rayon de la boule, soit 140 — donc au-dela des 125 du cadre serre,
  * qui les rognerait. Un test le verrouille.
  */
-export const DEMI_ECRAN = DEMI_VIEWBOX
+export const HALF_SCREEN = HALF_VIEWBOX
 
-export type ActionId = 'png' | 'svg' | 'anime' | 'gif' | 'copie' | 'copieSvg'
+export type ActionId = 'png' | 'svg' | 'anime' | 'gif' | 'copyImage' | 'copieSvg'
 
 /** Ce qu'on fait de l'image une fois produite. */
-export type ModeExport = 'telecharge' | 'anime' | 'gif' | 'copieImage' | 'copieTexte'
+export type ModeExport = 'download' | 'anime' | 'gif' | 'copieImage' | 'copyText'
 
-export interface ActionExport {
+export interface ExportAction {
   id: ActionId
   mode: ModeExport
   /** Cote de l'image en pixels. */
@@ -74,7 +74,7 @@ export interface ActionExport {
  *
  * L'animation exportee est un SVG : c'est le navigateur qui interpole entre les
  * cles, donc le mouvement est lisse a la frequence de l'ecran quel qu'en soit le
- * nombre. C'est toute la difference avec un feuilletage bitmap, ou une animation
+ * formatNumber. C'est toute la difference avec un feuilletage bitmap, ou une animation
  * a 20 images par seconde saccade parce que le clignement ne dure que 0,18 s
  * (`BLINK_DUR`, face.ts) et n'a donc que trois ou quatre images pour se jouer.
  *
@@ -82,22 +82,22 @@ export interface ActionExport {
  * de texte — et que ca suit fidelement la courbe du clignement, qui ferme vite et
  * rouvre plus lentement.
  */
-export const ANIM_CLES_PAR_SEC = 30
+export const ANIMATION_KEYS_PER_SECOND = 30
 
 /**
  * Duree capturee. Le premier clignement tombe a 1,4 s puis les suivants toutes
- * les 1,9 a 4,6 s (`BLINKS`, face.ts) : trois secondes en contiennent donc
+ * les 1,9 a 4,6 s (`BLINKS`, face.ts) : trois seconds en contiennent donc
  * toujours au moins un. Plus court, on exporterait souvent une boule qui se
  * contente de deriver.
  *
  * La boucle, elle, est sans couture malgre une derive non periodique : l'animation
  * est jouee en aller-retour (`animation-direction: alternate`), donc elle reboucle
- * exactement sur elle-meme. Voir `svgAnime`.
+ * exactement sur elle-meme. Voir `animatedSvg`.
  */
-export const ANIM_SECONDES = 3
+export const ANIMATION_SECONDS = 3
 
-export const ANIM_IMAGES = ANIM_CLES_PAR_SEC * ANIM_SECONDES
-export const ANIM_PAS = 1 / ANIM_CLES_PAR_SEC
+export const ANIMATION_FRAMES = ANIMATION_KEYS_PER_SECOND * ANIMATION_SECONDS
+export const ANIMATION_STEP = 1 / ANIMATION_KEYS_PER_SECOND
 
 /**
  * Le GIF, lui, est un vrai feuilletage : sa cadence EST sa fluidite, et rien ne
@@ -106,7 +106,7 @@ export const ANIM_PAS = 1 / ANIM_CLES_PAR_SEC
  * tomberait pas, et chaque image ajoutee pese.
  */
 export const GIF_FPS = 20
-export const GIF_IMAGES = GIF_FPS * ANIM_SECONDES
+export const GIF_IMAGES = GIF_FPS * ANIMATION_SECONDS
 export const GIF_PAS = 1 / GIF_FPS
 
 /**
@@ -116,7 +116,7 @@ export const GIF_PAS = 1 / GIF_FPS
  * donc la reduction du navigateur relisse ce bord — ce que ne ferait pas un
  * fichier exporte a la taille finale.
  */
-export const GIF_TAILLE = 320
+export const GIF_SIZE = 320
 
 /* --------------------------------------------------- export d'un cycle */
 
@@ -126,10 +126,10 @@ export const GIF_TAILLE = 320
  * images en feraient 1,5 Mo, sans compter les arcs. Le SVG anime ne tient que
  * pour l'avatar au repos, ou la silhouette est immobile.
  */
-export type FormatCycle = 'mp4' | 'gif'
+export type CycleFormat = 'mp4' | 'gif'
 
-export const FORMATS_CYCLE: FormatCycle[] = ['mp4', 'gif']
-export const FORMAT_CYCLE_DEFAUT: FormatCycle = 'mp4'
+export const CYCLE_FORMATS: CycleFormat[] = ['mp4', 'gif']
+export const DEFAULT_CYCLE_FORMAT: CycleFormat = 'mp4'
 
 /**
  * Cadence et taille, SEPAREES par format — les avoir mutualisees etait une
@@ -145,19 +145,19 @@ export const FORMAT_CYCLE_DEFAUT: FormatCycle = 'mp4'
  * la definition d'une vignette : c'est ce qui lui donnait un air de GIF.
  */
 export const CYCLE_FPS = { gif: 20, mp4: 30 } as const
-export const CYCLE_TAILLE = { gif: 320, mp4: 1024 } as const
+export const CYCLE_SIZE = { gif: 320, mp4: 1024 } as const
 
-export const cyclePas = (format: FormatCycle) => 1 / CYCLE_FPS[format]
+export const cycleStep = (format: CycleFormat) => 1 / CYCLE_FPS[format]
 
-/** Combien d'images pour un cycle de `duree` secondes. */
-export const cycleImages = (duree: number, format: FormatCycle) =>
+/** Combien d'images pour un cycle de `duree` seconds. */
+export const cycleFrames = (duree: number, format: CycleFormat) =>
   Math.max(1, Math.round(duree * CYCLE_FPS[format]))
 
 /**
  * La video est TOUJOURS opaque : `VideoEncoder` refuse `alpha: 'keep'`, en H.264
  * comme en VP9. Le GIF, lui, garde le choix du fond.
  */
-export const cycleAccepteTransparence = (format: FormatCycle) => format === 'gif'
+export const cycleSupportsTransparency = (format: CycleFormat) => format === 'gif'
 
 /**
  * Fond du GIF, au choix de l'utilisateur.
@@ -170,16 +170,16 @@ export const cycleAccepteTransparence = (format: FormatCycle) => format === 'gif
  * `blanc` par defaut : c'est celui qui a l'air propre partout, la ou le
  * transparent montre ses marches d'escalier sur un fond de couleur.
  */
-export type FondGif = 'blanc' | 'transparent'
+export type GifBackground = 'blanc' | 'transparent'
 
-export const FONDS_GIF: FondGif[] = ['blanc', 'transparent']
-export const FOND_GIF_DEFAUT: FondGif = 'blanc'
+export const GIF_BACKGROUNDS: GifBackground[] = ['blanc', 'transparent']
+export const DEFAULT_GIF_BACKGROUND: GifBackground = 'blanc'
 
 /** Blanc pur, et non le `--paper` du site : « fond blanc » doit etre blanc. */
-export const BLANC = '#ffffff'
+export const WHITE = '#ffffff'
 
 /** La couleur a peindre sous la boule, ou `null` pour ne rien peindre. */
-export const couleurDeFond = (fond: FondGif) => (fond === 'blanc' ? BLANC : null)
+export const backgroundColor = (fond: GifBackground) => (fond === 'blanc' ? WHITE : null)
 
 /**
  * UNE seule taille de PNG, volontairement : proposer 1024 et 2048 obligeait
@@ -196,47 +196,47 @@ export const couleurDeFond = (fond: FondGif) => (fond === 'blanc' ? BLANC : null
  * `t('export.<id>')`, et l'union litterale au-dessus fait verifier a la
  * compilation que chacun a sa traduction dans les quatre langues.
  */
-export const ACTIONS: ActionExport[] = [
-  { id: 'png', mode: 'telecharge', taille: 1024, extension: 'png' },
-  { id: 'svg', mode: 'telecharge', taille: DEMI_CADRE * 2, extension: 'svg' },
-  { id: 'anime', mode: 'anime', taille: DEMI_CADRE * 2, extension: 'svg', suffixe: 'anime' },
-  { id: 'gif', mode: 'gif', taille: GIF_TAILLE, extension: 'gif' },
-  { id: 'copie', mode: 'copieImage', taille: 1024, extension: 'png' },
-  { id: 'copieSvg', mode: 'copieTexte', taille: DEMI_CADRE * 2, extension: 'svg' }
+export const ACTIONS: ExportAction[] = [
+  { id: 'png', mode: 'download', taille: 1024, extension: 'png' },
+  { id: 'svg', mode: 'download', taille: HALF_FRAME * 2, extension: 'svg' },
+  { id: 'anime', mode: 'anime', taille: HALF_FRAME * 2, extension: 'svg', suffixe: 'anime' },
+  { id: 'gif', mode: 'gif', taille: GIF_SIZE, extension: 'gif' },
+  { id: 'copyImage', mode: 'copieImage', taille: 1024, extension: 'png' },
+  { id: 'copieSvg', mode: 'copyText', taille: HALF_FRAME * 2, extension: 'svg' }
 ]
 
-export const ACTION_BY_ID = new Map<string, ActionExport>(ACTIONS.map((a) => [a.id, a]))
+export const ACTION_BY_ID = new Map<string, ExportAction>(ACTIONS.map((a) => [a.id, a]))
 
 /** Ce que fait le bouton principal ; les autres sont dans le menu. */
-export const ACTION_DEFAUT: ActionId = 'png'
+export const DEFAULT_ACTION: ActionId = 'png'
 
 /**
  * Etat de la barre d'export. Un telechargement ne se voit pas forcement — selon
  * le navigateur il tombe dans un dossier sans rien afficher — d'ou cette
  * confirmation : sans elle, l'utilisateur reclique en croyant que rien n'a pris.
  */
-export type EtatExport = 'pret' | 'occupe' | 'exporte' | 'copie' | 'erreur'
+export type ExportState = 'pret' | 'occupe' | 'exporte' | 'copyImage' | 'erreur'
 
 /**
  * Retire les commentaires XML. Le SVG du bot en porte de longs, qui expliquent
  * le masque a qui lit le composant — ils n'ont rien a faire dans un fichier
  * livre a l'utilisateur.
  */
-export function sansCommentaires(markup: string) {
+export function withoutComments(markup: string) {
   return markup.replace(/<!--[\s\S]*?-->/g, '')
 }
 
 /**
- * `bloub-goutte-neutre-encre.png`.
+ * `bloub-droplet-neutral-ink.png`.
  *
  * Construit sur les **ids** et non sur les libelles traduits : le nom du fichier
- * ne doit pas changer avec la langue de l'interface.
+ * ne doit pas changer avec la language de l'interface.
  *
  * Les ids sont filtres alors qu'ils viennent d'unions litterales, parce que
  * `App.svelte` les relit du `localStorage` sans les valider : une valeur trafiquee
- * n'a pas a pouvoir composer le nom du fichier telecharge.
+ * n'a pas a pouvoir composer le nom du fichier download.
  */
-export function nomFichier(
+export function fileName(
   forme: string,
   expression: string,
   couleur: string,
@@ -265,12 +265,12 @@ export function nomFichier(
  *
  * Ce garde vit ICI et pas dans `video.ts`, et ce n'est pas un rangement : le
  * moindre import statique de `video.ts` ramene mediabunny dans le chunk d'entree.
- * `video.ts` ne charge la lib qu'a l'interieur de `versMp4`, mais Rollup ne peut
+ * `video.ts` ne charge la lib qu'a l'interieur de `toMp4`, mais Rollup ne peut
  * plus sortir un module a la fois importe statiquement et dynamiquement — il le
  * signale par `INEFFECTIVE_DYNAMIC_IMPORT` — et les 43 ko gzip repartent au
  * premier chargement. C'est arrive une fois, pour cette fonction de deux lignes.
  */
-export function videoPossible() {
+export function canEncodeVideo() {
   return typeof VideoEncoder !== 'undefined'
 }
 
@@ -284,18 +284,18 @@ export function videoPossible() {
  * ecran. L'appelant la reconnait pour ne PAS afficher d'erreur — on ne signale pas a
  * quelqu'un qu'il a obtenu ce qu'il demandait.
  *
- * Elle vit ICI et pas dans `video.ts` pour la meme raison que `videoPossible` juste au
+ * Elle vit ICI et pas dans `video.ts` pour la meme raison que `canEncodeVideo` juste au
  * dessus : `capture.ts` en a besoin en import statique, et un import statique de
  * `video.ts` ramene mediabunny dans le chunk d'entree.
  */
-export class Abandon extends Error {
+export class ExportCancelled extends Error {
   constructor() {
     super('export abandonne')
-    this.name = 'Abandon'
+    this.name = 'ExportCancelled'
   }
 }
 
 /** Jette si l'utilisateur a demande l'abandon. */
-export function arrete(signal: AbortSignal | undefined) {
-  if (signal?.aborted) throw new Abandon()
+export function throwIfAborted(signal: AbortSignal | undefined) {
+  if (signal?.aborted) throw new ExportCancelled()
 }

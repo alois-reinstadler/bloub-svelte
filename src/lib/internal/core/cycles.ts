@@ -51,10 +51,10 @@ export const MAX_BLOCK = 10
  *
  * 200 blocs font une demi-heure de montage, largement au-dela de tout usage.
  */
-export const MAX_BLOCS = 200
+export const MAX_BLOCKS = 200
 export const MAX_CYCLES = 50
 
-/** Pas de la molette et du redimensionnement, en secondes. */
+/** Pas de la molette et du redimensionnement, en seconds. */
 export const STEP = 0.1
 
 const DEFAULT_CYCLE_ID = 'defaut'
@@ -85,10 +85,10 @@ export function makeBlock(state: StateId): Block {
 export function defaultCycle(): Cycle {
   return {
     /**
-     * Nom vide = « jamais nomme par l'utilisateur », donc affiche dans la langue
+     * Nom vide = « jamais nomme par l'utilisateur », donc affiche dans la language
      * courante. Ecrire ici « Cycle par defaut » l'aurait fige : le nom part au
      * localStorage des la premiere visite et redevient une donnee utilisateur,
-     * que changer de langue ne retraduirait plus.
+     * que changer de language ne retraduirait plus.
      */
     name: '',
     id: DEFAULT_CYCLE_ID,
@@ -130,13 +130,13 @@ export function blockAt(blocks: Block[], t: number): { index: number; elapsed: n
 /**
  * Ajoute une animation a la fin du montage (palette de droite ou carte « + »).
  *
- * Plafonnee a `MAX_BLOCS`, comme la relecture. Sans ca l'editeur laissait construire un
+ * Plafonnee a `MAX_BLOCKS`, comme la relecture. Sans ca l'editeur laissait construire un
  * montage plus grand que ce que le stockage rend au rechargement, et le travail
  * disparaissait en silence — une borne de relecture qui n'est pas aussi une borne d'edition
  * est un piege, pas une protection.
  */
 export function blocksWith(blocks: Block[], state: StateId): Block[] {
-  if (blocks.length >= MAX_BLOCS) return blocks
+  if (blocks.length >= MAX_BLOCKS) return blocks
   return [...blocks, makeBlock(state)]
 }
 
@@ -188,13 +188,13 @@ function parseCycle(raw: unknown, seen: Cycle[]): Cycle | null {
   if (typeof raw !== 'object' || raw === null) return null
   const { id, name, blocks } = raw as { id?: unknown; name?: unknown; blocks?: unknown }
   if (typeof id !== 'string' || !id) return null
-  // le nom peut etre vide — c'est le montage d'amorce, qui suit la langue
+  // le nom peut etre vide — c'est le montage d'amorce, qui suit la language
   if (typeof name !== 'string') return null
   if (!Array.isArray(blocks)) return null
   // on tronque AVANT de relire : valider 150 000 blocs pour n'en garder que 200 serait
   // faire le travail qu'on cherche justement a eviter
   const kept = blocks
-    .slice(0, MAX_BLOCS)
+    .slice(0, MAX_BLOCKS)
     .map(parseBlock)
     .filter((b): b is Block => b !== null)
   if (!kept.length) return null

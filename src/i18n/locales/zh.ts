@@ -5,7 +5,7 @@ import type fr from './fr'
  * et pas par le code :
  *
  * - ponctuation pleine largeur (， 。 ？ “ ”), y compris dans les gabarits ;
- * - pas de pluriel : `removeDetail` n'a qu'une forme, et le classificateur `个`
+ * - pas de plural : `removeDetail` n'a qu'une forme, et le classificateur `个`
  *   est obligatoire devant le nom compte ;
  * - une espace fine separe les chiffres latins des caracteres chinois, sauf
  *   dans la graduation de la regle ou la place manque.
@@ -58,7 +58,7 @@ const zh: typeof fr = {
     fond_transparent: '透明背景',
     fond_transparent_aide: '适配任何背景，边缘略硬',
     gifConfirm: '下载',
-    copie: '复制图片',
+    copyImage: '复制图片',
     copieSvg: '复制 SVG',
     done: '已导出',
     copied: '已复制',
@@ -125,60 +125,49 @@ const zh: typeof fr = {
     wide: '睁大眼睛',
     alert: '警示',
     notify: '通知',
-    exclaim: '感叹号',
-    sleep: '休眠',
-    egg: '蛋形',
-    hexagon: '六边形',
-    play: '播放',
     orbit: '轨道',
     burst: '爆散',
-    comet: '彗星',
     swirl: '漩涡'
   },
 
   shapes: {
-    cercle: '圆形',
-    galet: '卵石',
+    circle: '圆形',
+    pebble: '卵石',
     squircle: '圆角方形',
     capsule: '胶囊',
     triangle: '三角形',
-    hexagone: '六边形',
-    nuage: '云朵',
-    goutte: '水滴'
+    hexagon: '六边形',
+    cloud: '云朵',
+    droplet: '水滴'
   },
 
   colors: {
-    encre: '墨黑',
-    creme: '奶油白',
-    brun: '棕色',
-    rouge: '红色',
+    ink: '墨黑',
+    cream: '奶油白',
+    brown: '棕色',
+    red: '红色',
     orange: '橙色',
-    ambre: '琥珀色',
-    vert: '绿色',
+    amber: '琥珀色',
+    green: '绿色',
     turquoise: '青绿色',
-    bleu: '蓝色',
+    blue: '蓝色',
     violet: '紫色',
-    rose: '粉色',
-    gris: '灰色'
+    pink: '粉色',
+    gray: '灰色'
   },
 
   expressions: {
-    neutre: '平静',
-    attentif: '专注',
-    surpris: '惊讶',
-    excite: '兴奋',
-    heureux: '开心',
-    hilare: '大笑',
-    colere: '生气',
-    triste: '难过',
-    effraye: '害怕',
-    mefiant: '怀疑',
-    confus: '困惑',
-    curieux: '好奇',
-    fier: '得意',
-    timide: '羞怯',
-    blase: '无趣',
-    somnolent: '困倦'
+    neutral: '平静',
+    attentive: '专注',
+    surprised: '惊讶',
+    happy: '开心',
+    laughing: '大笑',
+    sad: '难过',
+    scared: '害怕',
+    suspicious: '怀疑',
+    confused: '困惑',
+    curious: '好奇',
+    sleepy: '困倦'
   }
 }
 

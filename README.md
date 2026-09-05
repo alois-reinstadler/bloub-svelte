@@ -1,6 +1,6 @@
 # bloub — Svelte 5
 
-Eine pixelgetreue Svelte-5-Portierung von [jeremy-prt/bloub](https://github.com/jeremy-prt/bloub): ein SVG-Avatar mit einer Form, die durch 14 gemessene Zustände morpht, und zwei unabhängig animierten Augen. Ohne Animationsbibliothek.
+Eine ausdrucksstarke Svelte-5-Portierung von [jeremy-prt/bloub](https://github.com/jeremy-prt/bloub): ein SVG-Avatar mit acht klar unterscheidbaren Bewegungszuständen, elf Gesichtsausdrücken und zwei unabhängig animierten Augen. Ohne Animationsbibliothek.
 
 ![Der Avatar durchläuft Ruhe, Zwinkern, Umlauf und Explosion](docs/demo.gif)
 
@@ -15,7 +15,7 @@ Vite läuft standardmäßig auf <http://localhost:5190>.
 
 ```bash
 pnpm check   # Svelte- und TypeScript-Diagnosen
-pnpm test    # 215 Vitest-Tests
+pnpm test    # 217 Vitest-Tests
 pnpm build   # Prüfung plus Produktions-Build
 ```
 
@@ -23,7 +23,7 @@ Die App nutzt Svelte 5 mit Runes, TypeScript, Vite 8 und Tailwind CSS 4. Die gem
 
 ## Funktionen
 
-- Acht Körperformen, zwölf Farben und sechzehn Ruheausdrücke mit lokaler Speicherung
+- Acht Körperformen, zwölf Farben und elf klar unterscheidbare Ruheausdrücke mit lokaler Speicherung
 - Editor für Animationsabläufe mit Verschieben, Skalieren, Scrubbing und Zoom
 - Export als SVG, PNG, animiertes SVG, GIF und MP4
 - Deutsche Oberfläche mit `de-AT`-Formatierung sowie Französisch, Englisch und Chinesisch
@@ -32,7 +32,7 @@ Die App nutzt Svelte 5 mit Runes, TypeScript, Vite 8 und Tailwind CSS 4. Die gem
 
 Zwei URL-Fragmente sind für die visuelle Prüfung praktisch:
 
-- `#planche` zeigt alle 14 Zustände eingefroren nebeneinander.
+- `#planche` zeigt alle acht Zustände eingefroren nebeneinander.
 - `#etat=orbit&stop` öffnet einen bestimmten Zustand und pausiert die Wiedergabe.
 
 ## Installation
@@ -47,23 +47,29 @@ Die Startseite verbindet Landingpage, Installationsanleitung und Studio als durc
 
 ```svelte
 <script lang="ts">
-  import { Bloub, type LookAtTarget } from 'bloub-svelte'
+  import { Bloub, BloubState } from 'bloub-svelte'
 
-  let block = $state(0)
-  let state = $state<'idle' | 'orbit'>('idle')
-  let playing = $state(true)
-  let target: HTMLElement
-  let lookAt = $state<LookAtTarget>('cursor')
+  const bloub = new BloubState()
+  let emailInput: HTMLInputElement
+
+  function validate() {
+    if (!emailInput.validity.valid) {
+      bloub.react('validation-error', { target: emailInput })
+    }
+  }
 </script>
 
-<Bloub bind:block bind:state bind:playing {lookAt} />
-<button bind:this={target} onclick={() => (lookAt = target)}>Hierher schauen</button>
-<button onclick={() => (lookAt = 'cursor')}>Cursor folgen</button>
+<Bloub controller={bloub} />
+<input bind:this={emailInput} onfocus={() => bloub.lookAt(emailInput)} />
+<button onclick={validate}>Prüfen</button>
+<button onclick={() => bloub.followCursor()}>Cursor folgen</button>
 ```
 
-`lookAt="cursor"` folgt dem Zeiger. Mit `lookAt={element}` schaut Bloub auf die sichtbare Mitte eines DOM-Elements; `lookAt={null}` gibt den Blick wieder an den aktuellen Zustand oder die Animation zurück. Zielwechsel und Rückgaben werden interpoliert. `follow` bleibt als veralteter Alias für `lookAt="cursor"` kompatibel.
+`BloubState` verbindet semantische Anwendungszustände mit Ausdruck, Animation und Blick. `setStatus('loading')` bleibt aktiv, bis die Anwendung den Status ändert; `react('success')` und `react('validation-error', { target })` sind zeitlich begrenzte Ereignisse. `followCursor()`, `lookAt(element)` und `releaseAttention()` steuern die Aufmerksamkeit ohne Selektoren – Elemente kommen direkt aus Sveltes `bind:this`. Prioritäten und Wiederholungssperren verhindern konkurrierende oder nervöse Rückmeldungen. [Alle Zustände, Reaktionen und Einsatzregeln](docs/behavior.md).
 
-Props: `size`, `shape`, `color`, `expression`, `paper`, `frozenAt`, `cycle`, `lookAt` und `gaze`. Bindbare Werte: `block`, `state`, `playing` und `elapsed`. Alle öffentlichen Typen und Optionslisten werden vom Paket exportiert.
+Die direkten Props bleiben für einfache Darstellungen verfügbar: `lookAt="cursor"` folgt dem Zeiger, `lookAt={element}` verfolgt die sichtbare Mitte und `lookAt={null}` gibt den Blick frei. `follow` bleibt als veralteter Alias kompatibel.
+
+Props: `size`, `shape`, `color`, `expression`, `paper`, `frozenAt`, `cycle`, `lookAt`, `gaze`, `controller` und `motion`. Bindbare Werte: `block`, `state`, `playing` und `elapsed`. Alle öffentlichen Typen und Optionslisten werden vom Paket exportiert.
 
 ## Architektur und Messwerte
 
@@ -75,6 +81,7 @@ Die Engine ist eine reine Zeitfunktion: `engine.sample(t)` liefert für dieselbe
 - [`docs/export.md`](docs/export.md) — SVG-, PNG-, GIF- und MP4-Export
 - [`docs/intro.md`](docs/intro.md) — Ankunftssequenz
 - [`docs/i18n.md`](docs/i18n.md) — Übersetzungsschicht
+- [`docs/behavior.md`](docs/behavior.md) — semantische Zustände, Reaktionen und Blicksteuerung
 
 ## Herkunft und Lizenz
 

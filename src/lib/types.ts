@@ -1,4 +1,5 @@
 import type { GazeScript as InternalGazeScript } from './internal/gaze'
+import type { BloubState } from './bloub.state.svelte'
 
 export const SHAPES = [
   { id: 'circle', label: 'Kreis' },
@@ -30,18 +31,13 @@ export const EXPRESSIONS = [
   { id: 'neutral', label: 'Neutral' },
   { id: 'attentive', label: 'Aufmerksam' },
   { id: 'surprised', label: 'Überrascht' },
-  { id: 'excited', label: 'Begeistert' },
   { id: 'happy', label: 'Fröhlich' },
   { id: 'laughing', label: 'Lachend' },
-  { id: 'angry', label: 'Wütend' },
   { id: 'sad', label: 'Traurig' },
   { id: 'scared', label: 'Ängstlich' },
   { id: 'suspicious', label: 'Misstrauisch' },
   { id: 'confused', label: 'Verwirrt' },
   { id: 'curious', label: 'Neugierig' },
-  { id: 'proud', label: 'Stolz' },
-  { id: 'shy', label: 'Schüchtern' },
-  { id: 'unimpressed', label: 'Unbeeindruckt' },
   { id: 'sleepy', label: 'Schläfrig' }
 ] as const
 
@@ -52,14 +48,8 @@ export const STATES = [
   'wide',
   'alert',
   'notify',
-  'exclaim',
-  'sleep',
-  'egg',
-  'hexagon',
-  'play',
   'orbit',
-  'burst',
-  'comet'
+  'burst'
 ] as const
 
 export type ShapeId = (typeof SHAPES)[number]['id']
@@ -69,6 +59,7 @@ export type StateId = (typeof STATES)[number]
 export type GazeScript = InternalGazeScript
 /** A live gaze target. Element targets are followed by their visual centre. */
 export type LookAtTarget = 'cursor' | Element
+export type MotionPreference = 'auto' | 'full' | 'reduced'
 
 export interface AnimationBlock {
   state: StateId
@@ -89,6 +80,10 @@ export interface BloubProps {
   /** Follow the cursor or the visual centre of a DOM element. `null` releases the gaze. */
   lookAt?: LookAtTarget | null
   gaze?: GazeScript | null
+  /** Semantic behavior controller. When present it owns state, expression and attention. */
+  controller?: BloubState
+  /** Whether physical reaction motion should follow the operating-system preference. */
+  motion?: MotionPreference
   block?: number
   state?: StateId
   playing?: boolean

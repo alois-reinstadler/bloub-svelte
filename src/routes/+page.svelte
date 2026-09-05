@@ -6,7 +6,7 @@
 
 <svelte:head>
   <title>bloub — der animierte Avatar für Svelte</title>
-  <meta name="description" content="Ein ausdrucksstarker SVG-Avatar für Svelte 5: acht Formen, 14 animierte Zustände und ein vollständiges Studio." />
+  <meta name="description" content="Ein ausdrucksstarker SVG-Avatar für Svelte 5: acht Formen, acht animierte Zustände, elf Gesichtsausdrücke und ein vollständiges Studio." />
 </svelte:head>
 
 <Landing />

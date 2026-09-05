@@ -1,6 +1,4 @@
 import {
-  COMET_DOT,
-  COMET_RIBBONS,
   DOT_PEAK,
   DOT_R,
   DOT_X,
@@ -10,7 +8,6 @@ import {
   NOTIF_POP,
   NOTIF_R,
   RINGS,
-  SWOOSH,
   particles,
   type ArcSpec,
   type DotRender
@@ -25,6 +22,7 @@ import {
   silhouette,
   type Silhouette
 } from './shape'
+import type { MouthCfg } from './expressions'
 
 export interface EyeCfg {
   /** largeur locale (axe court de la gelule), en unites de rayon de boule */
@@ -36,7 +34,7 @@ export interface EyeCfg {
   /**
    * Inclinaison propre de la gelule, en degres, positif = le haut part a
    * droite. Appliquee APRES le repere tangent de la sphere. Sans elle, les deux
-   * yeux penchent forcement du meme cote (le roulis de tete) et la colere comme
+   * yeux penchent forcement du meme cote (le roulis de tete) et la angry comme
    * la tristesse, qui demandent des inclinaisons en miroir, sont hors de portee.
    */
   tilt?: number
@@ -53,6 +51,7 @@ export interface Pose {
   split: number
   /** [oeil interieur, oeil exterieur] */
   eyes: [EyeCfg, EyeCfg]
+  mouth: MouthCfg | null
   /** opacite des yeux : sert aux etats sans visage */
   eyeAlpha: number
   bodyAlpha: number
@@ -76,6 +75,7 @@ function base(over: Partial<Pose> = {}): Pose {
     gaze: { ...REST_GAZE },
     split: EYE_SPLIT,
     eyes: pair(EYE_W, EYE_H),
+    mouth: null,
     eyeAlpha: 1,
     bodyAlpha: 1,
     dots: [],
@@ -90,28 +90,11 @@ function base(over: Partial<Pose> = {}): Pose {
 
 /**
  * Barre du "!" vertical : enveloppe convexe de deux cercles.
- * Mesure : cercle haut (0, -0.505) r 0.132, cercle bas (0, +0.130) r 0.075,
+ * Mesure : circle haut (0, -0.505) r 0.132, circle bas (0, +0.130) r 0.075,
  * flancs rectilignes. Elle est donc tronconique (rapport haut/bas 1.76).
  */
-const BAR_UPRIGHT_CY = -0.1875
-const BAR_UPRIGHT = profileFromPolygon(
-  hullOfCircles(0, -0.505, 0.132, 0, 0.13, 0.075),
-  0,
-  BAR_UPRIGHT_CY
-)
-
 /** Barre du "!" penche : capsule pure (largeur constante 0.269, longueur 0.776). */
 const BAR_ITALIC = profileFromPolygon(hullOfCircles(0, -0.2535, 0.1345, 0, 0.2535, 0.1345), 0, 0)
-
-const barUpright = (pose: Partial<Silhouette> = {}): Silhouette => ({
-  radii: [...BAR_UPRIGHT],
-  rot: 0,
-  cx: 0,
-  cy: BAR_UPRIGHT_CY,
-  sx: 1,
-  sy: 1,
-  ...pose
-})
 
 const barItalic = (pose: Partial<Silhouette> = {}): Silhouette => ({
   radii: [...BAR_ITALIC],
@@ -124,14 +107,14 @@ const barItalic = (pose: Partial<Silhouette> = {}): Silhouette => ({
 })
 
 /**
- * Le point du "!" penche n'est pas un disque : c'est une goutte, bout rond
+ * Le point du "!" penche n'est pas un disque : c'est une droplet, bout rond
  * (r 0.118) du cote de la barre et pointe effilee a l'oppose, longueur 0.300
  * dans l'axe du glyphe. Centree sur le barycentre du bout rond.
  */
 const TEAR = polyPath(hullOfCircles(0, 0, 0.118, 0, 0.172, 0.012))
 
 /**
- * Le triangle ne tourne pas sur lui-meme : son centre decrit un cercle de
+ * Le triangle ne tourne pas sur lui-meme : son centre decrit un circle de
  * rayon 0.213 autour de l'origine (mesure). C'est ce decalage qui donne
  * l'impression qu'il bascule au lieu de pivoter sur place.
  */
@@ -154,14 +137,8 @@ export type StateId =
   | 'wide'
   | 'alert'
   | 'notify'
-  | 'exclaim'
-  | 'sleep'
-  | 'egg'
-  | 'hexagon'
-  | 'play'
   | 'orbit'
   | 'burst'
-  | 'comet'
   /** transition d'interface, pas une animation du catalogue : hors `SEQUENCE` */
   | 'swirl'
 
@@ -322,7 +299,7 @@ export const STATES: StateDef[] = [
     baseFace: false,
     baseBody: true,
     pose: (t) => {
-      // Pop du point bleu : pic a +14 % vers 0.3 s puis stabilisation.
+      // Pop du point blue : pic a +14 % vers 0.3 s puis stabilisation.
       const p = clamp(t / 0.45)
       const pop = 1 + (NOTIF_POP - 1) * Math.sin(p * Math.PI) * (1 - p * 0.35)
       const r = NOTIF_R * (p < 1 ? pop : 1)
@@ -338,95 +315,6 @@ export const STATES: StateDef[] = [
           r,
           notch: r + NOTIF_MARGIN
         }
-      })
-    }
-  },
-
-  {
-    id: 'exclaim',
-    duration: 2,
-    morph: 0.45,
-    baseFace: false,
-    baseBody: false,
-    blinkIn: false,
-    pose: () =>
-      base({
-        sil: barUpright(),
-        eyeAlpha: 0,
-        dots: [{ x: -0.012, y: 0.526, r: 0.113, opacity: 1 }]
-      })
-  },
-
-  {
-    id: 'sleep',
-    duration: 2.4,
-    morph: 0.5,
-    baseFace: false,
-    baseBody: false,
-    blinkIn: false,
-    pose: (t) =>
-      base({
-        // Rebond vertical mesure : +-0.19 autour de +0.11, periode 0.6 s.
-        sil: circle(0.1585, { cy: 0.11 + Math.sin(t * (TAU / 0.6)) * 0.19 }),
-        eyeAlpha: 0
-      })
-  },
-
-  {
-    id: 'egg',
-    duration: 1.8,
-    morph: 0.4,
-    baseFace: false,
-    baseBody: false,
-    blinkIn: true,
-    pose: () =>
-      base({
-        sil: silhouette('egg'),
-        gaze: { yaw: 19.97, pitch: 26.01, roll: -17.1 },
-        // les yeux se resserrent comme le corps
-        split: 11.07,
-        eyes: pair(0.164, 0.385)
-      })
-  },
-
-  {
-    id: 'hexagon',
-    duration: 1.6,
-    morph: 0.4,
-    baseFace: false,
-    baseBody: false,
-    blinkIn: true,
-    pose: () =>
-      base({
-        sil: silhouette('hexagon'),
-        gaze: { yaw: 23.11, pitch: 24.42, roll: -13.3 },
-        split: 13.37,
-        eyes: pair(0.177, 0.411)
-      })
-  },
-
-  {
-    id: 'play',
-    duration: 2,
-    morph: 0.5,
-    baseFace: false,
-    baseBody: false,
-    blinkIn: true,
-    pose: (t) => {
-      // Le triangle reste quasi immobile pendant que le bouquet le traverse.
-      const fade = clamp(t / 0.35) * clamp((2.2 - t) / 0.5)
-      return base({
-        sil: spinningTriangle(0),
-        gaze: { yaw: 12, pitch: -8, roll: -6 },
-        split: 15,
-        eyes: pair(0.18, 0.34),
-        // le bouquet balaie de la droite vers la gauche par-dessus le triangle
-        arcs: SWOOSH.map((s, i) => ({
-          id: `sw${i}`,
-          seed: { ...s, cx: 0.45 - t * 0.42 },
-          t,
-          opacity: fade
-        }))
       })
     }
   },
@@ -489,7 +377,7 @@ export const STATES: StateDef[] = [
      * Les deux drapeaux a `true` sont tout l'interet de cet etat :
      *
      * - `baseBody` laisse la forme choisie remplacer le corps, donc la vue peut
-     *   imposer le cercle et le galet ou la goutte y MORPHENT au lieu de sauter ;
+     *   imposer le circle et le pebble ou la droplet y MORPHENT au lieu de sauter ;
      * - `baseFace` fait porter le visage de repos, donc le suivi du curseur
      *   s'applique des cette entree. Un etat qui aurait sa propre pose de regard
      *   (comme `orbit`) rendrait la main a l'etat suivant en pleine course, et
@@ -543,32 +431,6 @@ export const STATES: StateDef[] = [
         dotsBehind: true
       })
     }
-  },
-
-  {
-    id: 'comet',
-    duration: 2.4,
-    // le point se recompose a 1.85 + 0.6 = 2.45, soit 0.05 s apres la coupe de
-    // la video : ce reliquat se termine pendant le fondu suivant, comme dans la
-    // reference. On ne descend donc pas sous la duree mesuree.
-    minDuration: 2.4,
-    morph: 0.45,
-    baseFace: false,
-    baseBody: false,
-    blinkIn: false,
-    pose: (t) => {
-      const collapse = 1 - (1 - COMET_DOT) * easings.easeOutQuint(clamp(t / 0.55))
-      const regrow = easings.easeOutQuint(clamp((t - 1.85) / 0.6))
-      const fade = clamp((t - 0.15) / 0.25) * clamp((1.95 - t) / 0.3)
-      return base({
-        // Le point derive de 0.035 vers le bas puis remonte (wobble mesure).
-        sil: circle(collapse + (1 - collapse) * regrow, {
-          cy: Math.sin(clamp(t / 1.7) * Math.PI) * 0.035
-        }),
-        eyeAlpha: clamp((t - 2) / 0.35),
-        arcs: COMET_RIBBONS.map((s, i) => ({ id: `cm${i}`, seed: s, t, opacity: fade }))
-      })
-    }
   }
 ]
 
@@ -587,15 +449,9 @@ export const POSES: Record<StateId, number> = {
   wide: 0.8,
   alert: 0.75,
   notify: 0.9,
-  exclaim: 0.8,
-  sleep: 0.45,
-  egg: 0.8,
-  hexagon: 0.8,
-  play: 0.9,
   orbit: 1.2,
   swirl: 0.5,
-  burst: 0.45,
-  comet: 1.15
+  burst: 0.45
 }
 
 export const SEQUENCE: StateId[] = [
@@ -605,12 +461,6 @@ export const SEQUENCE: StateId[] = [
   'wide',
   'alert',
   'notify',
-  'exclaim',
-  'sleep',
-  'egg',
-  'hexagon',
-  'play',
   'orbit',
-  'burst',
-  'comet'
+  'burst'
 ]

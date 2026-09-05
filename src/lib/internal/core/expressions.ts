@@ -18,33 +18,40 @@ import type { EyeCfg } from './states'
  *
  * Les amplitudes s'appuient sur bible-strong-avatar-lab, qui expose le même
  * modèle (tête X/Y/Z, largeur et hauteur par œil, écart, angle par œil) : chez
- * eux la largeur va de 0,8 à 2,7 fois le neutre, la hauteur de 0,3 à 1,5, et
+ * eux la largeur va de 0,8 à 2,7 fois le neutral, la hauteur de 0,3 à 1,5, et
  * les angles jusqu'à ±80°. On reste dans cette enveloppe.
  */
 /** Enumeres pour que la couche i18n verifie leurs traductions a la compilation. */
 export type ExpressionId =
-  | 'neutre'
-  | 'attentif'
-  | 'surpris'
-  | 'excite'
-  | 'heureux'
-  | 'hilare'
-  | 'colere'
-  | 'triste'
-  | 'effraye'
-  | 'mefiant'
-  | 'confus'
-  | 'curieux'
-  | 'fier'
-  | 'timide'
-  | 'blase'
-  | 'somnolent'
+  | 'neutral'
+  | 'attentive'
+  | 'surprised'
+  | 'happy'
+  | 'laughing'
+  | 'sad'
+  | 'scared'
+  | 'suspicious'
+  | 'confused'
+  | 'curious'
+  | 'sleepy'
+
+export interface MouthCfg {
+  kind: 'arc' | 'open'
+  x: number
+  y: number
+  width: number
+  height: number
+  curve: number
+  thickness: number
+  alpha: number
+}
 
 export interface BotExpression {
   id: ExpressionId
   gaze: HeadGaze
   split: number
   eyes: [EyeCfg, EyeCfg]
+  mouth: MouthCfg | null
 }
 
 /** `tilt` en degrés, positif = le haut de la gélule part vers la droite. */
@@ -56,119 +63,106 @@ const pair = (w: number, h: number, tilt = 0, open = 1): [EyeCfg, EyeCfg] => [
   eye(w, h, -tilt, open)
 ]
 
+const arc = (width: number, y: number, curve: number, thickness = 0.065, x = 0): MouthCfg => ({
+  kind: 'arc', x, y, width, height: 0, curve, thickness, alpha: 1
+})
+
+const openMouth = (width: number, height: number, y: number, x = 0): MouthCfg => ({
+  kind: 'open', x, y, width, height, curve: 0, thickness: 0, alpha: 1
+})
+
 export const EXPRESSIONS: BotExpression[] = [
   {
     // la pose relevée image par image sur la vidéo de référence
-    id: 'neutre',
+    id: 'neutral',
     gaze: { ...REST_GAZE },
     split: EYE_SPLIT,
-    eyes: [eye(EYE_W, EYE_H), eye(EYE_W, EYE_H)]
+    eyes: [eye(EYE_W, EYE_H), eye(EYE_W, EYE_H)],
+    mouth: null
   },
   {
-    id: 'attentif',
+    id: 'attentive',
     gaze: { yaw: 4, pitch: 5, roll: -4 },
     split: 16,
-    eyes: pair(0.21, 0.44)
+    eyes: pair(0.22, 0.48),
+    mouth: null
   },
   {
-    id: 'surpris',
-    gaze: { yaw: 3, pitch: -3, roll: 0 },
-    split: 19,
-    eyes: pair(0.45, 0.47)
-  },
-  {
-    id: 'excite',
-    gaze: { yaw: 6, pitch: -14, roll: 0 },
-    split: 19.5,
-    eyes: pair(0.4, 0.56, -10)
+    id: 'surprised',
+    gaze: { yaw: 1, pitch: -5, roll: 0 },
+    split: 20,
+    eyes: pair(0.43, 0.58),
+    mouth: openMouth(0.22, 0.3, 0.38)
   },
   {
     // yeux plissés en arc : les hauts convergent légèrement
-    id: 'heureux',
+    id: 'happy',
     gaze: { yaw: 5, pitch: 9, roll: 0 },
     split: 17,
-    eyes: pair(0.27, 0.17, 14)
+    eyes: pair(0.32, 0.14, 18),
+    mouth: arc(0.48, 0.28, 0.13)
   },
   {
-    id: 'hilare',
-    gaze: { yaw: 4, pitch: 14, roll: 0 },
-    split: 18,
-    eyes: pair(0.34, 0.13, 20)
-  },
-  {
-    // hauts des yeux qui convergent fort vers le centre + yeux étrécis
-    id: 'colere',
-    gaze: { yaw: 3, pitch: 7, roll: 0 },
-    split: 17,
-    eyes: pair(0.34, 0.15, 30)
+    id: 'laughing',
+    gaze: { yaw: 2, pitch: 10, roll: 0 },
+    split: 19,
+    eyes: pair(0.38, 0.1, 24),
+    mouth: openMouth(0.58, 0.38, 0.34)
   },
   {
     // l'inverse : les hauts divergent, et le regard tombe
-    id: 'triste',
-    gaze: { yaw: 3, pitch: -13, roll: 0 },
+    id: 'sad',
+    gaze: { yaw: 1, pitch: -16, roll: 0 },
     split: 16,
-    eyes: pair(0.22, 0.4, -28)
+    eyes: pair(0.24, 0.42, -32),
+    mouth: arc(0.32, 0.49, -0.1, 0.055)
   },
   {
-    id: 'effraye',
+    id: 'scared',
     gaze: { yaw: 2, pitch: -20, roll: 0 },
     split: 20.5,
-    eyes: pair(0.4, 0.6)
+    eyes: pair(0.4, 0.65),
+    mouth: openMouth(0.24, 0.38, 0.39)
   },
   {
     // un œil franchement plus fermé que l'autre
-    id: 'mefiant',
+    id: 'suspicious',
     gaze: { yaw: 12, pitch: 6, roll: -6 },
     split: 16,
-    eyes: [eye(0.21, 0.4), eye(0.22, 0.15)]
+    eyes: [eye(0.22, 0.42), eye(0.3, 0.11, 12)],
+    mouth: arc(0.24, 0.4, -0.025, 0.05, 0.06)
   },
   {
     // asymétrique sur les deux axes : tailles ET inclinaisons dépareillées.
     // L'œil plissé est volontairement plat (rapport 1,6) : à un rapport proche
     // de 1 il serait rond, et son inclinaison ne se verrait pas.
-    id: 'confus',
+    id: 'confused',
     gaze: { yaw: -14, pitch: 3, roll: 8 },
     split: 16.5,
-    eyes: [eye(0.2, 0.44, -18), eye(0.28, 0.17, 14)]
+    eyes: [eye(0.2, 0.48, -22), eye(0.31, 0.14, 18)],
+    mouth: arc(0.3, 0.41, -0.04, 0.055, 0.08)
   },
   {
     // la tête penche : c'est le roulis qui porte la curiosité
-    id: 'curieux',
+    id: 'curious',
     gaze: { yaw: 16, pitch: -9, roll: -15 },
     split: 16.5,
-    eyes: [eye(0.24, 0.46, -8), eye(0.2, 0.38, -8)]
-  },
-  {
-    id: 'fier',
-    gaze: { yaw: 5, pitch: 17, roll: 0 },
-    split: 17,
-    eyes: pair(0.3, 0.15, 18)
-  },
-  {
-    id: 'timide',
-    gaze: { yaw: -19, pitch: -14, roll: -7 },
-    split: 14,
-    eyes: pair(0.17, 0.3)
-  },
-  {
-    // fentes horizontales et regard qui part sur le côté
-    id: 'blase',
-    gaze: { yaw: -22, pitch: 2, roll: 0 },
-    split: 16,
-    eyes: pair(0.3, 0.12)
+    eyes: [eye(0.27, 0.5, -10), eye(0.19, 0.35, -10)],
+    mouth: arc(0.26, 0.38, 0.055, 0.05, 0.03)
   },
   {
     // paupières à moitié tombées : on passe par `open`, donc l'écrasement
     // vertical à l'écran, le même mécanisme que le clignement
-    id: 'somnolent',
+    id: 'sleepy',
     gaze: { yaw: 6, pitch: -9, roll: -3 },
     split: 16,
-    eyes: pair(0.2, 0.42, 0, 0.42)
+    eyes: pair(0.28, 0.36, 4, 0.34),
+    mouth: arc(0.2, 0.43, 0, 0.045)
   }
 ]
 
 export const EXPRESSION_BY_ID = new Map<string, BotExpression>(EXPRESSIONS.map((e) => [e.id, e]))
-export const DEFAULT_EXPRESSION = 'neutre'
+export const DEFAULT_EXPRESSION = 'neutral'
 
 const lerpEyeCfg = (a: EyeCfg, b: EyeCfg, t: number): EyeCfg => ({
   w: lerp(a.w, b.w, t),
@@ -179,6 +173,24 @@ const lerpEyeCfg = (a: EyeCfg, b: EyeCfg, t: number): EyeCfg => ({
 
 /** Interpolation de deux expressions : le changement se fait en glissant. */
 export function blendExpression(a: BotExpression, b: BotExpression, t: number): BotExpression {
+  const mouth = (() => {
+    if (!a.mouth && !b.mouth) return null
+    const source = a.mouth ?? { ...b.mouth!, alpha: 0 }
+    const target = b.mouth ?? { ...a.mouth!, alpha: 0 }
+    if (source.kind !== target.kind) return t < 0.5
+      ? { ...source, alpha: source.alpha * (1 - t * 2) }
+      : { ...target, alpha: target.alpha * (t * 2 - 1) }
+    return {
+      kind: target.kind,
+      x: lerp(source.x, target.x, t),
+      y: lerp(source.y, target.y, t),
+      width: lerp(source.width, target.width, t),
+      height: lerp(source.height, target.height, t),
+      curve: lerp(source.curve, target.curve, t),
+      thickness: lerp(source.thickness, target.thickness, t),
+      alpha: lerp(source.alpha, target.alpha, t)
+    }
+  })()
   return {
     id: b.id,
     gaze: {
@@ -187,6 +199,7 @@ export function blendExpression(a: BotExpression, b: BotExpression, t: number): 
       roll: lerp(a.gaze.roll, b.gaze.roll, t)
     },
     split: lerp(a.split, b.split, t),
-    eyes: [lerpEyeCfg(a.eyes[0], b.eyes[0], t), lerpEyeCfg(a.eyes[1], b.eyes[1], t)]
+    eyes: [lerpEyeCfg(a.eyes[0], b.eyes[0], t), lerpEyeCfg(a.eyes[1], b.eyes[1], t)],
+    mouth
   }
 }

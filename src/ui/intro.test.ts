@@ -5,10 +5,10 @@ import { EXPRESSION_BY_ID } from '@/lib/internal/core/expressions'
 import { SHAPE_BY_ID } from '@/lib/internal/core/skins'
 import { STATE_BY_ID } from '@/lib/internal/core/states'
 import { TOUR_TIME, type GazeScript } from '@/lib/internal/gaze'
-import { INTRO, INTRO_GAZE, POSE_AT, introDue, type Arrivee } from './intro'
+import { INTRO, INTRO_GAZE, POSE_AT, introDue, type Arrival } from './intro'
 
-/** Arrivee ordinaire : URL nue, venue directe, aucune preference de calme. */
-const arrive = (o: Partial<Arrivee> = {}): Arrivee => ({
+/** Arrival ordinaire : URL nue, venue directe, aucune preference de calme. */
+const arrive = (o: Partial<Arrival> = {}): Arrival => ({
   named: false,
   gallery: false,
   rechargement: false,
@@ -114,8 +114,8 @@ describe('montage de l arrivee', () => {
  * quelques lignes et suit `BloubBot.apply`.
  */
 describe('fluidite de l arrivee', () => {
-  const cercle = SHAPE_BY_ID.get('cercle')!.radii
-  const neutre = EXPRESSION_BY_ID.get('neutre')!
+  const circle = SHAPE_BY_ID.get('circle')!.radii
+  const neutral = EXPRESSION_BY_ID.get('neutral')!
   const IMAGE = 1 / 60
 
   /**
@@ -128,7 +128,7 @@ describe('fluidite de l arrivee', () => {
    * limbe, parce qu'un petit angle y devient un grand deplacement a l'ecran.
    */
   function pireSaut(gaze: GazeScript | null = INTRO_GAZE, pendantMorph = false): number {
-    const moteur = new BotEngine(100, INTRO[0]!.state, cercle, neutre)
+    const moteur = new BotEngine(100, INTRO[0]!.state, circle, neutral)
     const fin = offsetOf(INTRO, INTRO.length - 1) + 1
     let courant = 0
     let avant: { x: number; y: number } | null = null
@@ -186,7 +186,7 @@ describe('fluidite de l arrivee', () => {
    * choisie (voir `forme` dans `App.svelte`).
    *
    * Les yeux sont recolles au contour reel pour ne pas deborder de la silhouette
-   * (`radiusAtAngle`). Sur un cercle ce rayon est constant, donc le tour est
+   * (`radiusAtAngle`). Sur un circle ce rayon est constant, donc le tour est
    * lisse. Sur une forme non circulaire, ils suivent le profil et sautillent —
    * c'est ce que ce test mesure, et c'est un constat, pas un defaut a corriger :
    * `radiusAtAngle` fait exactement ce pour quoi il est la.
@@ -194,7 +194,7 @@ describe('fluidite de l arrivee', () => {
   it('un tour sur une forme non circulaire ferait sautiller les yeux', () => {
     /** Ordonnee de l'oeil interieur image par image, `NaN` quand il est cache. */
     const trajectoire = (forme: string) => {
-      const m = new BotEngine(100, 'idle', SHAPE_BY_ID.get(forme)!.radii, neutre)
+      const m = new BotEngine(100, 'idle', SHAPE_BY_ID.get(forme)!.radii, neutral)
       const ys: number[] = []
       for (let t = 0; t < TOUR_TIME; t += IMAGE) {
         m.setLook(INTRO_GAZE(t), t, IMAGE)
@@ -208,15 +208,15 @@ describe('fluidite de l arrivee', () => {
       return ys
     }
 
-    const rond = trajectoire('cercle')
-    const goutte = trajectoire('goutte')
+    const rond = trajectoire('circle')
+    const droplet = trajectoire('droplet')
     let ecart = 0
     for (let i = 0; i < rond.length; i++) {
-      if (Number.isNaN(rond[i]!) || Number.isNaN(goutte[i]!)) continue
-      ecart = Math.max(ecart, Math.abs(goutte[i]! - rond[i]!))
+      if (Number.isNaN(rond[i]!) || Number.isNaN(droplet[i]!)) continue
+      ecart = Math.max(ecart, Math.abs(droplet[i]! - rond[i]!))
     }
     // sur une boule de 100 de rayon : des dizaines de px, pas un ou deux
-    expect(ecart, `${ecart.toFixed(1)} px d ecart vertical avec le cercle`).toBeGreaterThan(15)
+    expect(ecart, `${ecart.toFixed(1)} px d ecart vertical avec le circle`).toBeGreaterThan(15)
   })
 
   it('fait bien parcourir un tour aux yeux', () => {

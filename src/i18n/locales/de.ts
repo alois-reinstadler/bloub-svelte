@@ -15,7 +15,7 @@ const de: typeof fr = {
     gifDetail: 'GIF-Transparenz kennt nur ganz oder gar nicht: Ohne Hintergrund wirkt der Rand der Kugel etwas hart.',
     gifBackground: 'Hintergrund', fond_blanc: 'Weißer Hintergrund', fond_blanc_aide: 'Weicher Rand für helle Flächen',
     fond_transparent: 'Transparenter Hintergrund', fond_transparent_aide: 'Passt auf jeden Hintergrund, Rand etwas härter',
-    gifConfirm: 'Herunterladen', copie: 'Bild kopieren', copieSvg: 'SVG kopieren', done: 'Exportiert', copied: 'Kopiert', failed: 'Export fehlgeschlagen'
+    gifConfirm: 'Herunterladen', copyImage: 'Bild kopieren', copieSvg: 'SVG kopieren', done: 'Exportiert', copied: 'Kopiert', failed: 'Export fehlgeschlagen'
   },
   preview: { exit: 'Vorschau beenden', key: 'Esc' },
   timeline: {
@@ -36,14 +36,13 @@ const de: typeof fr = {
   },
   states: {
     idle: 'Ruhe', thinking: 'Nachdenken', wink: 'Zwinkern', wide: 'Große Augen', alert: 'Alarm', notify: 'Benachrichtigung',
-    exclaim: 'Ausruf', sleep: 'Schlaf', egg: 'Ei', hexagon: 'Sechseck', play: 'Wiedergabe', orbit: 'Umlauf', burst: 'Explosion', comet: 'Komet', swirl: 'Wirbel'
+    orbit: 'Umlauf', burst: 'Explosion', swirl: 'Wirbel'
   },
-  shapes: { cercle: 'Kreis', galet: 'Kiesel', squircle: 'Squircle', capsule: 'Kapsel', triangle: 'Dreieck', hexagone: 'Sechseck', nuage: 'Wolke', goutte: 'Tropfen' },
-  colors: { encre: 'Tinte', creme: 'Creme', brun: 'Braun', rouge: 'Rot', orange: 'Orange', ambre: 'Bernstein', vert: 'Grün', turquoise: 'Türkis', bleu: 'Blau', violet: 'Violett', rose: 'Rosa', gris: 'Grau' },
+  shapes: { circle: 'Kreis', pebble: 'Kiesel', squircle: 'Squircle', capsule: 'Kapsel', triangle: 'Dreieck', hexagon: 'Sechseck', cloud: 'Wolke', droplet: 'Tropfen' },
+  colors: { ink: 'Tinte', cream: 'Creme', brown: 'Braun', red: 'Rot', orange: 'Orange', amber: 'Bernstein', green: 'Grün', turquoise: 'Türkis', blue: 'Blau', violet: 'Violett', pink: 'Rosa', gray: 'Grau' },
   expressions: {
-    neutre: 'Neutral', attentif: 'Aufmerksam', surpris: 'Überrascht', excite: 'Begeistert', heureux: 'Fröhlich', hilare: 'Lachend',
-    colere: 'Wütend', triste: 'Traurig', effraye: 'Ängstlich', mefiant: 'Misstrauisch', confus: 'Verwirrt', curieux: 'Neugierig',
-    fier: 'Stolz', timide: 'Schüchtern', blase: 'Unbeeindruckt', somnolent: 'Schläfrig'
+    neutral: 'Neutral', attentive: 'Aufmerksam', surprised: 'Überrascht', happy: 'Fröhlich', laughing: 'Lachend',
+    sad: 'Traurig', scared: 'Ängstlich', suspicious: 'Misstrauisch', confused: 'Verwirrt', curious: 'Neugierig', sleepy: 'Schläfrig'
   }
 }
 

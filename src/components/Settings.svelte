@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { langue, LANGUES, t } from '@/i18n'
+  import { language, LANGUAGES, t } from '@/i18n'
   const X = 'https://x.com/worlz_'
   const GITHUB = 'https://github.com/jeremy-prt/bloub'
   let credits = $derived((() => { const [before = '', after = ''] = t('settings.credits').split('{name}'); return { before, after } })())
@@ -8,10 +8,10 @@
     const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key]
     if (!step) return
     event.preventDefault()
-    const target = LANGUES[(index + step + LANGUES.length) % LANGUES.length]!
-    langue.value = target.id
+    const target = LANGUAGES[(index + step + LANGUAGES.length) % LANGUAGES.length]!
+    language.value = target.id
     const buttons = (event.currentTarget as HTMLElement).parentElement?.children
-    const next = buttons?.[LANGUES.indexOf(target)]
+    const next = buttons?.[LANGUAGES.indexOf(target)]
     if (next instanceof HTMLElement) next.focus()
   }
 </script>
@@ -19,15 +19,15 @@
 <div>
   <h2 class="text-sm font-semibold">{t('settings.language')}</h2>
   <div class="mt-2 flex flex-col gap-1" role="radiogroup" aria-label={t('settings.language')}>
-    {#each LANGUES as language, index (language.id)}
+    {#each LANGUAGES as option, index (option.id)}
       <button
-        type="button" role="radio" aria-checked={language.id === langue.value} aria-label={language.nom}
-        lang={language.tag} tabindex={language.id === langue.value ? 0 : -1}
-        onkeydown={(event) => onKey(event, index)} onclick={() => (langue.value = language.id)}
-        class="flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-sm transition {language.id === langue.value ? 'border-[var(--ink)] bg-white font-medium' : 'border-[var(--line)] text-[var(--muted)] hover:border-[var(--muted)] hover:text-[var(--ink)]'}"
+        type="button" role="radio" aria-checked={option.id === language.value} aria-label={option.name}
+        lang={option.tag} tabindex={option.id === language.value ? 0 : -1}
+        onkeydown={(event) => onKey(event, index)} onclick={() => (language.value = option.id)}
+        class="flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-sm transition {option.id === language.value ? 'border-[var(--ink)] bg-white font-medium' : 'border-[var(--line)] text-[var(--muted)] hover:border-[var(--muted)] hover:text-[var(--ink)]'}"
       >
-        <span class="w-6 text-center font-mono text-[10px] font-bold tracking-wide" aria-hidden="true">{language.code}</span><span class="flex-1">{language.nom}</span>
-        {#if language.id === langue.value}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.4 4.8 8.7 9.5 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>{/if}
+        <span class="w-6 text-center font-mono text-[10px] font-bold tracking-wide" aria-hidden="true">{option.code}</span><span class="flex-1">{option.name}</span>
+        {#if option.id === language.value}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.4 4.8 8.7 9.5 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>{/if}
       </button>
     {/each}
   </div>

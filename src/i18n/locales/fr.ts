@@ -38,7 +38,7 @@ export default {
   panel: {
     /**
      * Au SINGULIER, comme les trois autres : un titre de grille nomme ce qu'un
-     * clic pose, pas le nombre de vignettes proposees. Le pluriel reste au rail,
+     * clic pose, pas le formatNumber de vignettes proposees. Le plural reste au rail,
      * qui nomme la vue et non le choix (`rail.animations`).
      */
     animations: 'Animation',
@@ -77,7 +77,7 @@ export default {
     fond_transparent: 'Fond transparent',
     fond_transparent_aide: "S'adapte à tout fond, contour un peu dur",
     gifConfirm: 'Télécharger',
-    copie: "Copier l'image",
+    copyImage: "Copier l'image",
     copieSvg: 'Copier le SVG',
     done: 'Exporté',
     copied: 'Copié',
@@ -86,7 +86,7 @@ export default {
 
   preview: {
     exit: "Quitter l'aperçu",
-    /** Nom de la touche tel qu'il est grave sur le clavier de la langue. */
+    /** Nom de la touche tel qu'il est grave sur le clavier de la language. */
     key: 'Échap'
   },
 
@@ -132,7 +132,7 @@ export default {
 
   settings: {
     title: 'Réglages',
-    language: 'Langue',
+    language: 'Language',
     about: 'À propos',
     credits: 'Créé avec ♥︎ par {name}',
     creditsAria: 'Jérémy sur X, dans un nouvel onglet',
@@ -147,59 +147,48 @@ export default {
     wide: 'Yeux écarquillés',
     alert: 'Alerte',
     notify: 'Notification',
-    exclaim: 'Exclamation',
-    sleep: 'Veille',
-    egg: 'Œuf',
-    hexagon: 'Hexagone',
-    play: 'Lecture',
     orbit: 'Orbite',
     burst: 'Éclatement',
-    comet: 'Comète',
     swirl: 'Tourbillon'
   },
 
   shapes: {
-    cercle: 'Cercle',
-    galet: 'Galet',
+    circle: 'Cercle',
+    pebble: 'Galet',
     squircle: 'Squircle',
     capsule: 'Capsule',
     triangle: 'Triangle',
-    hexagone: 'Hexagone',
-    nuage: 'Nuage',
-    goutte: 'Goutte'
+    hexagon: 'Hexagone',
+    cloud: 'Nuage',
+    droplet: 'Goutte'
   },
 
   colors: {
-    encre: 'Encre',
-    creme: 'Crème',
-    brun: 'Brun',
-    rouge: 'Rouge',
+    ink: 'Encre',
+    cream: 'Crème',
+    brown: 'Brun',
+    red: 'Rouge',
     orange: 'Orange',
-    ambre: 'Ambre',
-    vert: 'Vert',
+    amber: 'Ambre',
+    green: 'Vert',
     turquoise: 'Turquoise',
-    bleu: 'Bleu',
+    blue: 'Bleu',
     violet: 'Violet',
-    rose: 'Rose',
-    gris: 'Gris'
+    pink: 'Rose',
+    gray: 'Gris'
   },
 
   expressions: {
-    neutre: 'Neutre',
-    attentif: 'Attentif',
-    surpris: 'Surpris',
-    excite: 'Excité',
-    heureux: 'Heureux',
-    hilare: 'Hilare',
-    colere: 'En colère',
-    triste: 'Triste',
-    effraye: 'Effrayé',
-    mefiant: 'Méfiant',
-    confus: 'Confus',
-    curieux: 'Curieux',
-    fier: 'Fier',
-    timide: 'Timide',
-    blase: 'Blasé',
-    somnolent: 'Somnolent'
+    neutral: 'Neutre',
+    attentive: 'Attentif',
+    surprised: 'Surpris',
+    happy: 'Heureux',
+    laughing: 'Hilare',
+    sad: 'Triste',
+    scared: 'Effrayé',
+    suspicious: 'Méfiant',
+    confused: 'Confus',
+    curious: 'Curieux',
+    sleepy: 'Somnolent'
   }
 }

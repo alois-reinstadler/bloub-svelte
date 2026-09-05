@@ -47,7 +47,7 @@ export interface DotRender {
   depth?: number
   /**
    * Forme non circulaire, en unites de rayon de boule et centree sur l'origine
-   * (le point du "!" penche est une goutte, pas un disque). Quand elle est
+   * (le point du "!" penche est une droplet, pas un disque). Quand elle est
    * fournie, `r` n'est plus utilise pour le trace.
    */
   d?: string
@@ -101,9 +101,9 @@ export interface ArcSeed {
 }
 
 /**
- * Projette un cercle 3D incline en orthographique.
+ * Projette un circle 3D incline en orthographique.
  *
- * Le cercle vit dans le plan engendre par u (dans l'ecran) et v (qui plonge
+ * Le circle vit dans le plan engendre par u (dans l'ecran) et v (qui plonge
  * dans la profondeur). La composante z sert a couper l'arc en deux : la moitie
  * arriere est dessinee avant le corps, donc occultee par lui. C'est ce vrai tri
  * en profondeur qui fait lire les anneaux comme des orbites et pas comme un

@@ -4,16 +4,16 @@
   /* Fond releve au pixel sur la video de reference. */
   --paper: #ffffff;
   /*
-   * Couleur principale de l'INTERFACE : choisie, pas relevee — un noir d'encre,
+   * Couleur principale de l'INTERFACE : choisie, pas relevee — un noir d'ink,
    * theme noir et blanc oblige. Le noir de la video, lui, n'a pas bouge — c'est
-   * celui du bot, dans skins.ts (`encre`, #0a0a0c). Les deux ne doivent pas etre
+   * celui du bot, dans skins.ts (`ink`, #0a0a0c). Les deux ne doivent pas etre
    * confondus : changer celle-ci retouche le decor, changer l'autre casse la
    * ressemblance. Memes valeurs que `landing.css`, qui charge en second.
    */
   --ink: #0a0a0a;
   --line: #e4e4e4;
   --muted: #6b6b6b;
-  /* Meme encre pour les actions destructrices : le theme n'a pas de rouge. */
+  /* Meme ink pour les actions destructrices : le theme n'a pas de red. */
   --danger: #0a0a0a;
 
   /**
@@ -220,7 +220,7 @@ body {
    * padding qui elargit la boite du degrade, pas la taille du texte.
    */
   padding-right: 0.1em;
-  /* En encre pure, pas en bleu : le theme est strictement noir et blanc. */
+  /* En ink pure, pas en blue : le theme est strictement noir et blanc. */
   background: linear-gradient(
     180deg,
     rgb(10 10 10 / 0.2) 0%,

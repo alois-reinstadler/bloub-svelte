@@ -10,12 +10,12 @@
   import Settings from '@/components/Settings.svelte'
   import SideRail, { type ViewId } from '@/components/SideRail.svelte'
   import Timeline from '@/components/Timeline.svelte'
-  import { nomDeCycle, t } from '@/i18n'
-  import { copie, copieTexte, cycleVersGif, cycleVersMp4, svgAutonome, telecharge, versGifAnime, versPng, versSvgAnime } from '@/ui/capture'
-  import { ACTION_BY_ID, ANIM_IMAGES, ANIM_PAS, CYCLE_TAILLE, FOND_GIF_DEFAUT, FORMAT_CYCLE_DEFAUT, GIF_IMAGES, GIF_PAS, BLANC, Abandon, couleurDeFond, cycleImages, cyclePas, nomFichier, type ActionId, type EtatExport, type FondGif, type FormatCycle } from '@/ui/export'
-  import { HUMEURS } from '@/lib/internal/gaze'
+  import { cycleName, t } from '@/i18n'
+  import { copyImage, copyText, cycleToGif, cycleToMp4, standaloneSvg, download, toAnimatedGif, toPng, toAnimatedSvg } from '@/ui/capture'
+  import { ACTION_BY_ID, ANIMATION_FRAMES, ANIMATION_STEP, CYCLE_SIZE, DEFAULT_GIF_BACKGROUND, DEFAULT_CYCLE_FORMAT, GIF_IMAGES, GIF_PAS, WHITE, ExportCancelled, backgroundColor, cycleFrames, cycleStep, fileName, type ActionId, type ExportState, type GifBackground, type CycleFormat } from '@/ui/export'
+  import { MOODS } from '@/lib/internal/gaze'
   import { INTRO, INTRO_GAZE, POSE_AT, introDue } from '@/ui/intro'
-  import { ecris, lis, type NomStocke } from '@/ui/stockage'
+  import { readStorage, writeStorage, type StoredName } from '@/ui/storage'
   import { blockAt, blocksWith, defaultCycle, makeBlock, parseCycles, totalDuration, type Cycle } from '@/lib/internal/core/cycles'
   import { DEFAULT_EXPRESSION, EXPRESSION_BY_ID } from '@/lib/internal/core/expressions'
   import { COLOR_BY_ID, DEFAULT_COLOR, DEFAULT_SHAPE, SHAPE_BY_ID } from '@/lib/internal/core/skins'
@@ -37,7 +37,7 @@
     const known = STATES.some((item) => item.id === asked)
     return { state: known ? asked! : 'idle' as StateId, named: known, playing: !params.has('stop'), gallery: params.has('planche'), arrivee: params.has('arrivee') }
   }
-  function stored(name: NomStocke, fallback: string, exists: (value: string) => boolean) { const value = lis(name); return value && exists(value) ? value : fallback }
+  function stored(name: StoredName, fallback: string, exists: (value: string) => boolean) { const value = readStorage(name); return value && exists(value) ? value : fallback }
 
   const initial = readHash()
   let gallery = $state(initial.gallery)
@@ -47,7 +47,7 @@
   const navigation = navigationEntry?.type ?? 'navigate'
   let intro = $state(untrack(() => !embedded && (initial.arrivee || introDue({ named: initial.named, gallery: initial.gallery, rechargement: navigation !== 'navigate', calme: calm }))))
 
-  const restored = parseCycles(lis('cycles'))
+  const restored = parseCycles(readStorage('cycles'))
   let cycles = $state<Cycle[]>(restored.length ? restored : [defaultCycle()])
   let activeId = $state(untrack(() => stored('cycle', cycles[0]!.id, (value) => cycles.some((item) => item.id === value))))
   let cycle = $derived(cycles.find((item) => item.id === activeId) ?? cycles[0]!)
@@ -68,14 +68,14 @@
   let bare = $derived(intro && block < POSE_AT)
   let leftOpen = $derived(!bare && view === 'reglages')
   let rightOpen = $derived(!bare && view !== 'reglages')
-  let shape = $state(stored('forme', DEFAULT_SHAPE, (value) => SHAPE_BY_ID.has(value)))
-  let color = $state(stored('couleur', DEFAULT_COLOR, (value) => COLOR_BY_ID.has(value)))
+  let shape = $state(stored('shape', DEFAULT_SHAPE, (value) => SHAPE_BY_ID.has(value)))
+  let color = $state(stored('color', DEFAULT_COLOR, (value) => COLOR_BY_ID.has(value)))
   let expression = $state(stored('expression', DEFAULT_EXPRESSION, (value) => EXPRESSION_BY_ID.has(value)))
   let shownShape = $derived(view === 'reglages' || bare ? DEFAULT_SHAPE : shape)
   let mood = $state<string | null>(null)
   let shownExpression = $derived(
     journey && journeySection !== 'studio'
-      ? journeySection === 'hero' ? 'curieux' : 'attentif'
+      ? journeySection === 'hero' ? 'curious' : 'attentive'
       : (mood ?? expression)
   )
   let order = $derived(SEQUENCE.map((id) => STATES.find((item) => item.id === id)!))
@@ -83,11 +83,11 @@
   const NOM = 'BLOUB'
 
   let saveTimer: ReturnType<typeof setTimeout>
-  $effect(() => { cycles; clearTimeout(saveTimer); saveTimer = setTimeout(() => ecris('cycles', JSON.stringify(cycles)), 250) })
-  $effect(() => ecris('cycle', activeId))
-  $effect(() => ecris('forme', shape))
-  $effect(() => ecris('couleur', color))
-  $effect(() => ecris('expression', expression))
+  $effect(() => { cycles; clearTimeout(saveTimer); saveTimer = setTimeout(() => writeStorage('cycles', JSON.stringify(cycles)), 250) })
+  $effect(() => writeStorage('cycle', activeId))
+  $effect(() => writeStorage('shape', shape))
+  $effect(() => writeStorage('color', color))
+  $effect(() => writeStorage('expression', expression))
 
   let previousPreview = untrack(() => preview)
   $effect(() => { if (preview !== previousPreview) { previousPreview = preview; playing = preview } })
@@ -109,42 +109,42 @@
   let exportBarHidden = $state(false)
   let exportBarTimer: ReturnType<typeof setTimeout> | undefined
   $effect(() => { if (previousBare && !bare) { exportBarHidden = true; clearTimeout(exportBarTimer); exportBarTimer = setTimeout(() => (exportBarHidden = false), 400) } previousBare = bare })
-  $effect(() => { if (view !== 'reglages') { mood = null; return } let index = 0; const timer = setInterval(() => { mood = HUMEURS[index % HUMEURS.length]!; index++ }, 4200); return () => clearInterval(timer) })
+  $effect(() => { if (view !== 'reglages') { mood = null; return } let index = 0; const timer = setInterval(() => { mood = MOODS[index % MOODS.length]!; index++ }, 4200); return () => clearInterval(timer) })
 
   function addBlock(id: StateId) { cycles = cycles.map((item) => item.id === cycle.id ? { ...item, blocks: blocksWith(item.blocks, id) } : item) }
   function onSeek(time: number) { const { index, elapsed: offset } = blockAt(cycle.blocks, time); bot?.seek(index, offset) }
 
   let cycleDialog = $state(false)
-  let cycleFormat = $state<FormatCycle>(FORMAT_CYCLE_DEFAUT)
-  let cycleBackground = $state<FondGif>(FOND_GIF_DEFAUT)
+  let cycleFormat = $state<CycleFormat>(DEFAULT_CYCLE_FORMAT)
+  let cycleBackground = $state<GifBackground>(DEFAULT_GIF_BACKGROUND)
   let cycleProgress = $state<number | null>(null)
   let cycleError = $state(false)
   let cycleAbort: AbortController | null = null
   async function exportCycle() {
     if (cycleProgress !== null) return
     cycleError = false; const controller = new AbortController(); cycleAbort = controller
-    const blocks = cycle.blocks; const format = cycleFormat; const images = cycleImages(totalDuration(blocks), format); const step = cyclePas(format); const size = CYCLE_TAILLE[format]
+    const blocks = cycle.blocks; const format = cycleFormat; const images = cycleFrames(totalDuration(blocks), format); const step = cycleStep(format); const size = CYCLE_SIZE[format]
     const settings = { shape, color, expression }; const progress = (done: number, total: number) => (cycleProgress = done / total); cycleProgress = 0
-    try { const mp4 = format === 'mp4'; const file = mp4 ? await cycleVersMp4(settings, blocks, size, images, step, BLANC, progress, controller.signal) : await cycleVersGif(settings, blocks, size, images, step, couleurDeFond(cycleBackground), progress, controller.signal); telecharge(file, nomFichier(nomDeCycle(cycle), '', '', mp4 ? 'mp4' : 'gif')); cycleDialog = false }
-    catch (error) { if (!(error instanceof Abandon)) cycleError = true }
+    try { const mp4 = format === 'mp4'; const file = mp4 ? await cycleToMp4(settings, blocks, size, images, step, WHITE, progress, controller.signal) : await cycleToGif(settings, blocks, size, images, step, backgroundColor(cycleBackground), progress, controller.signal); download(file, fileName(cycleName(cycle), '', '', mp4 ? 'mp4' : 'gif')); cycleDialog = false }
+    catch (error) { if (!(error instanceof ExportCancelled)) cycleError = true }
     finally { cycleProgress = null; cycleAbort = null }
   }
   function cancelCycle() { cycleAbort?.abort() }
   $effect(() => { if (cycleDialog) cycleError = false })
 
-  let exportState = $state<EtatExport>('pret')
+  let exportState = $state<ExportState>('pret')
   let confirmation: ReturnType<typeof setTimeout> | undefined
-  let gifBackground = $state<FondGif>(FOND_GIF_DEFAUT)
+  let gifBackground = $state<GifBackground>(DEFAULT_GIF_BACKGROUND)
   let gifDialog = $state(false)
   async function exportAvatar(id: ActionId, confirmed = false) {
     if (exportState === 'occupe') return
     if (!confirmed && ACTION_BY_ID.get(id)?.mode === 'gif') { gifDialog = true; return }
     const action = ACTION_BY_ID.get(id); const svg = bot?.getSvg(); if (!action || !svg) return
-    clearTimeout(confirmation); exportState = 'occupe'; const name = () => nomFichier(shape, expression, color, action.extension, action.suffixe)
+    clearTimeout(confirmation); exportState = 'occupe'; const name = () => fileName(shape, expression, color, action.extension, action.suffixe)
     try {
-      if (action.mode === 'anime') { telecharge(await versSvgAnime({ shape, color, expression }, action.taille, ANIM_IMAGES, ANIM_PAS), name()); exportState = 'exporte' }
-      else if (action.mode === 'gif') { telecharge(await versGifAnime({ shape, color, expression }, action.taille, GIF_IMAGES, GIF_PAS, couleurDeFond(gifBackground)), name()); exportState = 'exporte' }
-      else { const markup = svgAutonome(svg, action.taille); if (action.mode === 'copieImage') { await copie(versPng(markup, action.taille)); exportState = 'copie' } else if (action.mode === 'copieTexte') { await copieTexte(markup); exportState = 'copie' } else { telecharge(action.extension === 'svg' ? new Blob([markup], { type: 'image/svg+xml' }) : await versPng(markup, action.taille), name()); exportState = 'exporte' } }
+      if (action.mode === 'anime') { download(await toAnimatedSvg({ shape, color, expression }, action.taille, ANIMATION_FRAMES, ANIMATION_STEP), name()); exportState = 'exporte' }
+      else if (action.mode === 'gif') { download(await toAnimatedGif({ shape, color, expression }, action.taille, GIF_IMAGES, GIF_PAS, backgroundColor(gifBackground)), name()); exportState = 'exporte' }
+      else { const markup = standaloneSvg(svg, action.taille); if (action.mode === 'copieImage') { await copyImage(toPng(markup, action.taille)); exportState = 'copyImage' } else if (action.mode === 'copyText') { await copyText(markup); exportState = 'copyImage' } else { download(action.extension === 'svg' ? new Blob([markup], { type: 'image/svg+xml' }) : await toPng(markup, action.taille), name()); exportState = 'exporte' } }
     } catch { exportState = 'erreur' }
     confirmation = setTimeout(() => (exportState = 'pret'), 1800)
   }
@@ -152,7 +152,7 @@
   onMount(() => {
     const onCalm = (event: MediaQueryListEvent) => (calm = event.matches)
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') preview = false }
-    const save = () => ecris('cycles', JSON.stringify(cycles))
+    const save = () => writeStorage('cycles', JSON.stringify(cycles))
     const onHash = () => {
       if (location.hash === writtenByUs) { writtenByUs = ''; return }
       const next = readHash(); if (next.arrivee && !initial.arrivee) return location.reload(); gallery = next.gallery; if (next.gallery || !next.named) return

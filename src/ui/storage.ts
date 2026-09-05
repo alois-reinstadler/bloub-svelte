@@ -8,16 +8,17 @@
  * Aucune migration depuis l'ancien prefixe : le renommage a ete fait avant toute
  * mise en ligne, il n'y a pas d'installation a rattraper.
  */
-const PREFIXE = 'bloub:'
+const PREFIX = 'bloub:'
 
 /** Tout ce que l'application persiste. */
-const NOMS = ['cycles', 'cycle', 'forme', 'couleur', 'expression', 'langue'] as const
+const NAMES = ['cycles', 'cycle', 'shape', 'color', 'expression', 'language'] as const
+const LEGACY_NAMES = { shape: 'forme', color: 'couleur', language: 'langue' } as const
 
-export type NomStocke = (typeof NOMS)[number]
+export type StoredName = (typeof NAMES)[number]
 
 /** `cle('cycles')` -> `'bloub:cycles'`. */
-export function cle(nom: NomStocke): string {
-  return `${PREFIXE}${nom}`
+export function storageKey(name: StoredName): string {
+  return `${PREFIX}${name}`
 }
 
 /**
@@ -33,9 +34,12 @@ export function cle(nom: NomStocke): string {
  * On perd la persistance, jamais l'application. C'est le seul arbitrage possible ici : il
  * n'y a rien a sauver de force, uniquement un avatar a retrouver si on peut.
  */
-export function lis(nom: NomStocke): string | null {
+export function readStorage(name: StoredName): string | null {
   try {
-    return localStorage.getItem(cle(nom))
+    const current = localStorage.getItem(storageKey(name))
+    if (current !== null) return current
+    const legacyName = LEGACY_NAMES[name as keyof typeof LEGACY_NAMES]
+    return legacyName ? localStorage.getItem(`${PREFIX}${legacyName}`) : null
   } catch {
     return null
   }
@@ -48,9 +52,9 @@ export function lis(nom: NomStocke): string | null {
  * `QuotaExceededError`. Celle du cycle partait d'un `setTimeout`, donc en rejet non
  * traite — la persistance s'arretait sans que rien ne le dise.
  */
-export function ecris(nom: NomStocke, valeur: string) {
+export function writeStorage(name: StoredName, value: string) {
   try {
-    localStorage.setItem(cle(nom), valeur)
+    localStorage.setItem(storageKey(name), value)
   } catch {
     // stockage refuse ou plein : on continue sans persister
   }

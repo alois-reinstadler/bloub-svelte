@@ -80,7 +80,7 @@ fixed, and the measurement is in the commit that fixes it.
 
 ### Changed
 
-- `RAYON` and `DEMI_VIEWBOX` moved to `src/bot/repere.ts`. They define what the engine
+- `RADIUS` and `HALF_VIEWBOX` moved to `src/lib/internal/core/coordinates.ts`. They define what the engine
   returns, so they could not stay in a `<script setup>` that exports nothing.
 - `MIN_BLOCK` is derived from the longest fade in the catalogue instead of written by
   hand — it only worked because the two happened to match.

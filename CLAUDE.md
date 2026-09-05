@@ -30,7 +30,7 @@ The verified traps that must not be "corrected" are listed in
 One deliberate exception: **`--ink` (`styles.css` and `landing.css`) is the
 interface colour, chosen, not measured** — an ink black (`#0a0a0a`), the site
 being strictly black and white. The video's black is the bot's, in `skins.ts`
-(`encre`, `#0a0a0c`). Retouching one doesn't touch the other.
+(`ink`, `#0a0a0c`). Retouching one doesn't touch the other.
 
 ## Invariants worth knowing before editing
 
@@ -50,7 +50,7 @@ Details and the reasoning behind each are in [docs/](docs/):
   a radial profile, or `profileFromPolygon`.
 - **The eyes are holes in a `<mask>`**, not white shapes on top. That's what makes
   them clip against the silhouette on their own.
-- **The render frame lives in `src/bot/repere.ts`**: `RAYON` (100) and `DEMI_VIEWBOX`
+- **The render frame lives in `src/lib/internal/core/coordinates.ts`**: `RADIUS` (100) and `HALF_VIEWBOX`
   (158) define what `sample()` returns, so they can't sit in a `<script setup>` where
   nothing can import them — `export.ts` used to redeclare one by hand. The Svelte component
   is a client of the engine, not its definition.
@@ -68,7 +68,7 @@ Details and the reasoning behind each are in [docs/](docs/):
   identity and exists in no table. `docs/architecture.md` lists the six variants that were
   measured and rejected; don't re-try them. `skins.test.ts` locks the lot, and it sweeps
   **time as well as combinations** — one instant per combination is what let
-  `capsule` + `effraye` through.
+  `capsule` + `scared` through.
 - **States declare `ArcSpec`; only the engine rasterises.** Don't call `arcRender`
   from `states.ts`.
 - **A state change landing inside a fade blends from the FROZEN composite pose**

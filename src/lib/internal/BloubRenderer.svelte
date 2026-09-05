@@ -13,7 +13,7 @@
     mixHex
   } from './core/skins'
   import { blockAt, defaultCycle, offsetOf, type Block } from './core/cycles'
-  import { DEMI_VIEWBOX, RAYON } from './core/repere'
+  import { HALF_VIEWBOX, RADIUS } from './core/coordinates'
   import { STATE_BY_ID, type StateId } from './core/states'
   import type { LookAtTarget } from '../types'
 
@@ -28,6 +28,7 @@
     follow?: boolean
     lookAt?: LookAtTarget | null
     gaze?: GazeScript | null
+    reaction?: string
     block?: number
     state?: StateId
     playing?: boolean
@@ -47,6 +48,7 @@
     follow = false,
     lookAt = undefined,
     gaze = null,
+    reaction = undefined,
     block = $bindable(0),
     state: currentState = $bindable<StateId>('idle'),
     playing = $bindable(false),
@@ -55,8 +57,8 @@
     class: className = ''
   }: Props = $props()
 
-  const R = RAYON
-  const VB = DEMI_VIEWBOX
+  const R = RADIUS
+  const VB = HALF_VIEWBOX
   let shapeRadii = $derived(SHAPE_BY_ID.get(shape)?.radii ?? null)
   let ink = $derived(COLOR_BY_ID.get(color)?.hex ?? '#0a0a0c')
   let expression = $derived(EXPRESSION_BY_ID.get(expressionId) ?? null)
@@ -345,6 +347,8 @@
   viewBox={`${-VB} ${-VB} ${VB * 2} ${VB * 2}`}
   role="img"
   aria-label={label}
+  data-state={currentState}
+  data-reaction={reaction}
 >
   <defs>
     <mask id={maskId} maskUnits="userSpaceOnUse" x={-VB} y={-VB} width={VB * 2} height={VB * 2}>
@@ -352,6 +356,17 @@
       {#each frame.eyes as eye}
         <path d={eye.d} transform={eye.matrix} opacity={eye.alpha} fill="#000" />
       {/each}
+      {#if frame.mouth}
+        <path
+          d={frame.mouth.d}
+          transform={frame.mouth.transform}
+          opacity={frame.mouth.alpha}
+          fill={frame.mouth.filled ? '#000' : 'none'}
+          stroke={frame.mouth.filled ? 'none' : '#000'}
+          stroke-width={frame.mouth.strokeWidth}
+          stroke-linecap="round"
+        />
+      {/if}
       {#if frame.notch}
         <circle cx={frame.notch.x} cy={frame.notch.y} r={frame.notch.r} fill="#000" />
       {/if}

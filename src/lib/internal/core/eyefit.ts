@@ -6,7 +6,7 @@
  * la marge qui lui reste devant le bord est multipliee par le meme facteur, donc une
  * silhouette etroite dans sa direction le pousse contre le bord jusqu'a ce que le
  * masque l'ouvre vers l'exterieur. La gelule apparaissait comme une encoche dans le
- * corps sur `capsule`, `triangle`, `nuage` et `goutte`.
+ * corps sur `capsule`, `triangle`, `cloud` et `droplet`.
  *
  * Ce module resout le probleme UNE FOIS, au chargement, et rend une table de decalages.
  * Ce choix est l'essentiel du correctif, bien plus que la geometrie qui suit :
@@ -21,11 +21,11 @@
  * par image.
  *
  * Le reste du moteur ne travaille pas comme ca : les poses sont DECLAREES et il ne fait
- * que les interpoler avec des courbes connues. Un decalage tabule rentre dans ce moule.
+ * que les interpolate avec des courbes connues. Un decalage tabule rentre dans ce moule.
  * Il ne bouge pas quand le regard derive ni quand le pointeur bouge, et sur un changement
  * de forme ou d'expression il ne fait qu'aller d'une entree de table a l'autre, sur la
  * courbe de ce morph. Le tremblement devient impossible par construction, au lieu d'etre
- * repousse : interpoler entre deux constantes est monotone, alors que re-resoudre le
+ * repousse : interpolate entre deux constantes est monotone, alors que re-resoudre le
  * probleme sur un regard en cours d'interpolation ne l'est pas.
  *
  * Corollaire agreable : le solveur n'a plus aucune contrainte de continuite, puisqu'il ne
@@ -54,7 +54,7 @@ const R = 100
  *
  * Il faut les couvrir, sinon la correction est juste sur la pose nominale et fausse une
  * seconde plus tard : 7 degres de lacet deplacent l'oeil d'une douzaine d'unites sur une
- * boule de rayon 100. C'est precisement ce qui faisait deborder `capsule` + `effraye`
+ * boule de rayon 100. C'est precisement ce qui faisait deborder `capsule` + `scared`
  * alors qu'une mesure a un seul instant le declarait bon.
  */
 const DERIVE_YAW = 5.5 + 1.6
@@ -79,7 +79,7 @@ interface Visage {
  * depend de la direction : c'est la fonction d'appui de cette ellipse, `r * |A^T u|`.
  *
  * Prendre a la place sa plus grande valeur singuliere serait conservateur mais faux dans
- * la seule direction qui compte, et ca se paie cher : la marge de reference sur le cercle
+ * la seule direction qui compte, et ca se paie cher : la marge de reference sur le circle
  * ressortait NEGATIVE, donc la demande devenait sans dents et 34 combinaisons
  * continuaient de deborder.
  */
@@ -226,7 +226,7 @@ const DICHOTOMIE = 8
  * la main. Les variantes qui bornaient chaque oeil separement ecartaient la paire, et
  * celles qui mettaient le visage a l'echelle rapetissaient les yeux — visiblement.
  *
- * La marge visee est celle du profil D'ORIGINE, pas un degagement strict : sur le cercle
+ * La marge visee est celle du profil D'ORIGINE, pas un degagement strict : sur le circle
  * l'oeil exterieur frole deja le bord, 17,3 unites pour une boule de rayon 100, et c'est
  * voulu, c'est ce qui donne le volume. Elle est plafonnee par ce que la forme offre en son
  * centre, sinon la demande est intenable sur un corps plat.
@@ -274,11 +274,11 @@ function resous(epreuves: Epreuve[]): { x: number; y: number } {
   requis = Math.min(requis, marge(mx, my))
 
   /*
-   * Deja bon : le cas du cercle, et de toute forme assez large. La gelule doit RENTRER
+   * Deja bon : le cas du circle, et de toute forme assez large. La gelule doit RENTRER
    * en plus de n'etre pas plus serree que sur le profil d'origine — sans cette seconde
    * condition, une forme ou rien ne rentre satisfait la premiere de facon degeneree et
    * on abandonnait. `wide` a des gelules de 87 unites de long, `notify` de 50 de
-   * diametre : sur un triangle ou une goutte elles debordent quoi qu'on fasse, et il
+   * diametre : sur un triangle ou une droplet elles debordent quoi qu'on fasse, et il
    * faut alors viser le moins pire, pas renoncer.
    */
   const depart = marge(0, 0)
@@ -327,7 +327,7 @@ function resous(epreuves: Epreuve[]): { x: number; y: number } {
 
   const x = meilleureNorme === Infinity ? secoursX : meilleurX
   const y = meilleureNorme === Infinity ? secoursY : meilleurY
-  // rendu en unites de RAYON DE BOULE : le moteur le remet a son echelle
+  // rendu en unites de RADIUS DE BOULE : le moteur le remet a son echelle
   return { x: +(x / R).toFixed(6), y: +(y / R).toFixed(6) }
 }
 
@@ -336,8 +336,8 @@ function resous(epreuves: Epreuve[]): { x: number; y: number } {
  *
  * UNE entree de table par expression, et non un pire cas commun a toutes. Un pire cas
  * paraissait plus sur — un decalage constant ne peut pas bouger quand l'expression change
- * — mais il est intenable : sur une capsule, `neutre` a les yeux hauts et demande a
- * descendre quand `effraye` les a bas et demande a monter. Aucune translation unique ne
+ * — mais il est intenable : sur une capsule, `neutral` a les yeux hauts et demande a
+ * descendre quand `scared` les a bas et demande a monter. Aucune translation unique ne
  * satisfait les deux, et la mesure le confirme (4 debordements de 4,8 unites).
  *
  * Une entree par expression n'est pas moins fluide pour autant : le moteur interpole
@@ -433,12 +433,12 @@ const DECALAGES = batir()
  * Decalage a appliquer aux deux yeux pour cette forme sur cet etat, en unites de rayon
  * de boule — le moteur le remet a son echelle.
  *
- * Vaut zero des que la forme n'est pas au catalogue, ce qui couvre `null` et le cercle :
- * sur le cercle les deux profils sont le meme, donc la marge est deja celle exigee et la
+ * Vaut zero des que la forme n'est pas au catalogue, ce qui couvre `null` et le circle :
+ * sur le circle les deux profils sont le meme, donc la marge est deja celle exigee et la
  * descente sort au premier tour. La forme relevee sur la video ne bouge donc pas, sans
  * cas particulier.
  */
-export function decalageDesYeux(
+export function eyeOffset(
   radii: number[] | null,
   state: StateId,
   expr: string | null
@@ -452,4 +452,4 @@ export function decalageDesYeux(
 
 /** Pour les tests : de quoi verifier la table sans refaire la geometrie. */
 /** Pour les tests : de quoi chronometrer la construction de la table. */
-export const POUR_TESTS = { batir }
+export const FOR_TESTS = { batir }

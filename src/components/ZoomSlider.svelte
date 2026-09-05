@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { pourcentage, t } from '@/i18n'
+  import { formatPercentage, t } from '@/i18n'
   let { zoom, min, max, onzoom }: { zoom: number; min: number; max: number; onzoom: (value: number) => void } = $props()
-  let percent = $derived(pourcentage(zoom))
+  let percent = $derived(formatPercentage(zoom))
 </script>
 <div class="flex items-center gap-1.5">
   <span class="h-1 w-1 shrink-0 rounded-full bg-[var(--muted)]" aria-hidden="true"></span>

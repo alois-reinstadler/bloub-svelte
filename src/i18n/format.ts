@@ -1,13 +1,13 @@
 /**
  * Mecanique de texte de la couche i18n : substitution et choix de forme.
  *
- * Separee de `index.ts` parce qu'elle est pure — ni dictionnaire, ni langue
+ * Separee de `index.ts` parce qu'elle est pure — ni dictionnaire, ni language
  * courante, ni DOM. C'est la partie ou les regles sont subtiles (le francais
  * compte zero comme un singulier, le chinois n'a qu'une forme), donc celle qui
  * merite d'etre testee sans avoir a simuler un navigateur.
  */
 
-/** Separateur des formes de pluriel dans les dictionnaires. */
+/** Separateur des formes de plural dans les dictionnaires. */
 const SEPARATEUR = ' | '
 
 /**
@@ -15,7 +15,7 @@ const SEPARATEUR = ' | '
  * tel quel : visible a l'ecran, donc reperable, la ou une chaine vide se
  * confondrait avec un texte simplement mal ecrit.
  */
-export function interpoler(texte: string, valeurs?: Record<string, string | number>): string {
+export function interpolate(texte: string, valeurs?: Record<string, string | number>): string {
   if (!valeurs) return texte
   let sortie = texte
   for (const [nom, valeur] of Object.entries(valeurs)) {
@@ -26,14 +26,14 @@ export function interpoler(texte: string, valeurs?: Record<string, string | numb
 
 /**
  * Choisit la forme qui convient a `n` parmi celles du gabarit, separees par
- * ` | ` dans l'ordre singulier puis pluriel.
+ * ` | ` dans l'ordre singulier puis plural.
  *
  * C'est `Intl.PluralRules` qui tranche, et pas un `n === 1` : le francais range
- * zero avec le singulier (« 0 animation »), l'anglais avec le pluriel
+ * zero avec le singulier (« 0 animation »), l'anglais avec le plural
  * (« 0 animations »). Un gabarit d'une seule forme la rend toujours — c'est le
- * cas du chinois, qui n'a pas de pluriel.
+ * cas du chinois, qui n'a pas de plural.
  */
-export function formePlurielle(gabarit: string, n: number, tag: string): string {
+export function pluralForm(gabarit: string, n: number, tag: string): string {
   const formes = gabarit.split(SEPARATEUR)
   if (formes.length < 2) return formes[0]!
   const index = new Intl.PluralRules(tag).select(n) === 'one' ? 0 : 1

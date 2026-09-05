@@ -20,10 +20,10 @@ export const PITCH_MAX = 13
 
 /**
  * Hauteur a laquelle le regard se tient, curseur au centre. CHOISIE : legerement
- * au-dessus de l'equateur, ce qui donne un bot attentif plutot qu'absent.
+ * au-dessus de l'equateur, ce qui donne un bot attentive plutot qu'absent.
  *
  * C'est une valeur ABSOLUE, et c'est tout le point : en relatif, la hauteur des
- * yeux suivait celle de chaque expression, et comme « neutre » regarde a
+ * yeux suivait celle de chaque expression, et comme « neutral » regarde a
  * +28,6deg quand les humeurs sont entre -9 et +9, les yeux tombaient d'un coup
  * au premier changement d'humeur.
  */
@@ -70,23 +70,22 @@ export const TURN_TIME = 1.1
  * humeurs, c'est la FORME des yeux : ronds, plisses, ecarquilles, aplatis. C'est
  * largement suffisant, et c'est ce qui se lit.
  *
- * Ce n'est donc pas une liste de gouts : y ajouter « curieux » (roulis -15deg)
+ * Ce n'est donc pas une liste de gouts : y ajouter « curious » (roulis -15deg)
  * ramenerait le saut.
  */
-export const HUMEURS: readonly ExpressionId[] = [
-  'surpris',
-  'heureux',
-  'hilare',
-  'excite',
-  'fier',
-  'blase'
+export const MOODS: readonly ExpressionId[] = [
+  'surprised',
+  'happy',
+  'laughing',
+  'sad',
+  'scared'
 ]
 
 /* ------------------------------------------------ regards de l'arrivee */
 
 /**
  * Un regard SCRIPTE : evalue a chaque image avec le temps ecoule depuis le debut
- * de l'arrivee, en secondes. Le script porte donc sa propre horloge et peut
+ * de l'arrivee, en seconds. Le script porte donc sa propre horloge et peut
  * enchainer plusieurs mouvements — le composant ne fait que l'evaluer et n'a
  * aucune duree a connaitre.
  *
@@ -124,7 +123,7 @@ export type GazeScript = (t: number) => Look
  */
 export const TOUR_TIME = 1.5
 
-export const tourLook: GazeScript = (t) => ({
+export const spinLook: GazeScript = (t) => ({
   yaw: 0,
   pitch: 0,
   mix: 0,

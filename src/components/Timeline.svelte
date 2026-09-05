@@ -7,7 +7,7 @@
   import { blocksWith, makeBlock, nextCycleId, offsetOf, totalDuration, uniqueName, type Block, type Cycle } from '@/lib/internal/core/cycles'
   import type { StateId } from '@/lib/internal/core/states'
   import { MAX_ZOOM, MIN_ZOOM, mmss } from '@/ui/timeline'
-  import { nomDeCycle, pluriel, t } from '@/i18n'
+  import { cycleName, plural, t } from '@/i18n'
 
   let { elapsed, shape, color, expression, embedded = false, cycles = $bindable(), activeId = $bindable(), block = $bindable(), playing = $bindable(), onseek, onpreview, onexporter }: {
     elapsed: number; shape: string; color: string; expression: string; cycles: Cycle[]; activeId: string; block: number; playing: boolean
@@ -24,11 +24,11 @@
   let nameOpen = $state(false)
   let removing = $state<Cycle | null>(null)
   let confirmOpen = $state(false)
-  let removingDetail = $derived(pluriel('dialog.removeDetail', removing?.blocks.length ?? 0))
+  let removingDetail = $derived(plural('dialog.removeDetail', removing?.blocks.length ?? 0))
   function edit(next: Partial<Cycle>) { cycles = cycles.map((item) => item.id === cycle.id ? { ...item, ...next } : item) }
   function select(id: string) { activeId = id; block = 0 }
   function askCreate() { naming = { mode: 'create' }; nameDraft = uniqueName(t('cycles.newName'), cycles); nameOpen = true }
-  function askRename(id: string) { naming = { mode: 'rename', id }; const target = cycles.find((item) => item.id === id); nameDraft = target ? nomDeCycle(target) : ''; nameOpen = true }
+  function askRename(id: string) { naming = { mode: 'rename', id }; const target = cycles.find((item) => item.id === id); nameDraft = target ? cycleName(target) : ''; nameOpen = true }
   function onNamed(name: string) {
     const request = naming; naming = null; if (!request) return
     if (request.mode === 'create') { const next: Cycle = { id: nextCycleId(cycles), name: uniqueName(name, cycles), blocks: [makeBlock('idle')] }; cycles = [...cycles, next]; select(next.id); return }
@@ -55,5 +55,5 @@
     </div>
   </div>
   <NameDialog bind:open={nameOpen} bind:value={nameDraft} title={naming?.mode === 'rename' ? t('dialog.nameRenameTitle') : t('dialog.nameCreateTitle')} label={t('dialog.nameField')} submitLabel={naming?.mode === 'rename' ? t('dialog.nameRename') : t('dialog.nameCreate')} onsubmit={onNamed}/>
-  <ConfirmDialog bind:open={confirmOpen} title={t('dialog.removeTitle', { name: removing ? nomDeCycle(removing) : '' })} detail={removingDetail} confirmLabel={t('dialog.removeConfirm')} onconfirm={onRemove}/>
+  <ConfirmDialog bind:open={confirmOpen} title={t('dialog.removeTitle', { name: removing ? cycleName(removing) : '' })} detail={removingDetail} confirmLabel={t('dialog.removeConfirm')} onconfirm={onRemove}/>
 </div>

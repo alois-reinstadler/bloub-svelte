@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { gifAnime, svgAnime } from './anime'
+import { animatedGif, animatedSvg } from './animation'
 
 /** SVG minimal ayant la structure de celui de BloubBot : corps + deux yeux. */
 const BASE =
@@ -20,7 +20,7 @@ const MATRICES = [
 ]
 
 describe('svg anime', () => {
-  const sortie = svgAnime(BASE, MATRICES, 3)
+  const sortie = animatedSvg(BASE, MATRICES, 3)
 
   it('remplace le transform de chaque oeil par une classe', () => {
     expect(sortie).toContain('class="oeil0"')
@@ -71,10 +71,10 @@ describe('svg anime', () => {
   })
 
   it('refuse ce qu il ne sait pas animer', () => {
-    expect(() => svgAnime(BASE, [MATRICES[0]!], 3)).toThrow()
-    expect(() => svgAnime('<svg></svg>', MATRICES, 3)).toThrow()
+    expect(() => animatedSvg(BASE, [MATRICES[0]!], 3)).toThrow()
+    expect(() => animatedSvg('<svg></svg>', MATRICES, 3)).toThrow()
     // autant de matrices par image cle que d'yeux dans le masque
-    expect(() => svgAnime(BASE, [['matrix(1,0,0,1,0,0)'], ['matrix(1,0,0,1,1,0)']], 3)).toThrow()
+    expect(() => animatedSvg(BASE, [['matrix(1,0,0,1,0,0)'], ['matrix(1,0,0,1,1,0)']], 3)).toThrow()
   })
 })
 
@@ -93,7 +93,7 @@ function image(cote: number, couleur: [number, number, number], decalage = 0) {
   return px
 }
 
-/** Relit la structure d'un GIF : en-tete, extensions, nombre d'images. */
+/** Relit la structure d'un GIF : en-tete, extensions, formatNumber d'images. */
 function litGif(f: Uint8Array) {
   const txt = (o: number, n: number) => String.fromCharCode(...f.subarray(o, o + n))
   const bits = (f[10]! & 0x07) + 1
@@ -140,7 +140,7 @@ describe('gif anime', () => {
   const suite = [image(16, [10, 10, 12]), image(16, [10, 10, 12], 2), image(16, [249, 249, 249])]
 
   it('produit un GIF89a bien forme et termine', () => {
-    const g = litGif(gifAnime(suite, 16, 16, 50))
+    const g = litGif(animatedGif(suite, 16, 16, 50))
     expect(g.entete).toBe('GIF89a')
     expect(g.largeur).toBe(16)
     expect(g.hauteur).toBe(16)
@@ -149,7 +149,7 @@ describe('gif anime', () => {
   })
 
   it('porte une palette globale', () => {
-    const g = litGif(gifAnime(suite, 16, 16, 50))
+    const g = litGif(animatedGif(suite, 16, 16, 50))
     expect(g.tablePresente).toBe(true)
     // deux teintes + le transparent tiennent dans quatre entrees
     expect(g.couleursTable).toBe(4)
@@ -157,7 +157,7 @@ describe('gif anime', () => {
 
   /* Sans index transparent, le fond serait peint. */
   it('declare l index 0 transparent', () => {
-    expect(litGif(gifAnime(suite, 16, 16, 50)).transparent).toBe(0)
+    expect(litGif(animatedGif(suite, 16, 16, 50)).transparent).toBe(0)
   })
 
   /*
@@ -165,26 +165,26 @@ describe('gif anime', () => {
    * precedente et la boule traine derriere elle.
    */
   it('elimine chaque image en retour au fond', () => {
-    expect(litGif(gifAnime(suite, 16, 16, 50)).elimination).toBe(2)
+    expect(litGif(animatedGif(suite, 16, 16, 50)).elimination).toBe(2)
   })
 
   it('boucle sans fin', () => {
-    expect(litGif(gifAnime(suite, 16, 16, 50)).boucle).toBe(0)
+    expect(litGif(animatedGif(suite, 16, 16, 50)).boucle).toBe(0)
   })
 
   /* Le delai du GIF se compte en centiemes de seconde, pas en millisecondes. */
   it('convertit le delai en centiemes', () => {
-    expect(litGif(suite.length ? gifAnime(suite, 16, 16, 50) : new Uint8Array()).delai).toBe(5)
-    expect(litGif(gifAnime(suite, 16, 16, 100)).delai).toBe(10)
+    expect(litGif(suite.length ? animatedGif(suite, 16, 16, 50) : new Uint8Array()).delai).toBe(5)
+    expect(litGif(animatedGif(suite, 16, 16, 100)).delai).toBe(10)
   })
 
   /* Un delai de 0 ou 1 centieme n'est pas traite pareil par tous les lecteurs. */
   it('ne descend pas sous deux centiemes', () => {
-    expect(litGif(gifAnime(suite, 16, 16, 5)).delai).toBe(2)
+    expect(litGif(animatedGif(suite, 16, 16, 5)).delai).toBe(2)
   })
 
   it('refuse une animation vide', () => {
-    expect(() => gifAnime([], 16, 16, 50)).toThrow()
+    expect(() => animatedGif([], 16, 16, 50)).toThrow()
   })
 
   /**
@@ -195,13 +195,13 @@ describe('gif anime', () => {
   it('n annonce pas de transparence sur des images opaques', () => {
     const cote = 8
     const opaque = new Uint8ClampedArray(cote * cote * 4).fill(255)
-    const g = litGif(gifAnime([opaque, opaque], cote, cote, 50))
+    const g = litGif(animatedGif([opaque, opaque], cote, cote, 50))
     expect(g.transparent).toBeNull()
     expect(g.elimination).toBe(1) // « laisser en place »
   })
 
   it('annonce la transparence des qu une image en a', () => {
-    const g = litGif(gifAnime(suite, 16, 16, 50))
+    const g = litGif(animatedGif(suite, 16, 16, 50))
     expect(g.transparent).toBe(0)
     expect(g.elimination).toBe(2) // « retour au fond »
   })
@@ -214,7 +214,7 @@ describe('gif anime', () => {
       degrade[i * 4 + 2] = (i * 13) % 256
       degrade[i * 4 + 3] = 255
     }
-    const g = litGif(gifAnime([degrade], 64, 64, 50))
+    const g = litGif(animatedGif([degrade], 64, 64, 50))
     expect(g.couleursTable).toBeLessThanOrEqual(256)
     expect(g.images).toBe(1)
   })
@@ -293,7 +293,7 @@ function decodeGif(f: Uint8Array) {
 describe('aller-retour du LZW', () => {
   it('retrouve exactement les pixels d une image simple', () => {
     const px = image(16, [10, 10, 12])
-    const gif = gifAnime([px], 16, 16, 50)
+    const gif = animatedGif([px], 16, 16, 50)
     const [decode] = decodeGif(gif)
     expect(decode).toHaveLength(16 * 16)
     // reconstruit les index attendus : 0 dehors, 1 dedans
@@ -311,7 +311,7 @@ describe('aller-retour du LZW', () => {
       px[i * 4 + 2] = (i * 17) % 200
       px[i * 4 + 3] = 255
     }
-    const [decode] = decodeGif(gifAnime([px], cote, cote, 50))
+    const [decode] = decodeGif(animatedGif([px], cote, cote, 50))
     expect(decode).toHaveLength(cote * cote)
     // aucun index transparent : tout est opaque
     expect(decode!.every((v) => v > 0)).toBe(true)

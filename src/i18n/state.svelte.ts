@@ -1,38 +1,38 @@
-import { ecris, lis } from '@/ui/stockage'
-import { formePlurielle, interpoler } from './format'
-import { choisirLangue, estLangue, type Langue, tagDe } from './langues'
+import { readStorage, writeStorage } from '@/ui/storage'
+import { pluralForm, interpolate } from './format'
+import { chooseLanguage, isLanguage, type Language, tagFor } from './languages'
 import fr from './locales/fr'
 import de from './locales/de'
 import en from './locales/en'
 import zh from './locales/zh'
 
-export { LANGUES, type Langue } from './langues'
+export { LANGUAGES, type Language } from './languages'
 
-const dictionaries: Record<Langue, typeof fr> = { de, fr, en, zh }
+const dictionaries: Record<Language, typeof fr> = { de, fr, en, zh }
 
 type Paths<T, P extends string = ''> = {
   [K in keyof T & string]: T[K] extends string ? `${P}${K}` : Paths<T[K], `${P}${K}.`>
 }[keyof T & string]
 
-export type Cle = Paths<typeof fr>
+export type TranslationKey = Paths<typeof fr>
 
-let current = $state<Langue>(
-  choisirLangue(lis('langue'), navigator.languages ?? [navigator.language])
+let current = $state<Language>(
+  chooseLanguage(readStorage('language'), navigator.languages ?? [navigator.language])
 )
 
-export const langue = {
+export const language = {
   get value() {
     return current
   },
-  set value(value: Langue) {
-    if (!estLangue(value)) return
+  set value(value: Language) {
+    if (!isLanguage(value)) return
     current = value
-    ecris('langue', value)
+    writeStorage('language', value)
   }
 }
 
 let dictionary = $derived(dictionaries[current])
-let tag = $derived(tagDe(current))
+let tag = $derived(tagFor(current))
 
 $effect.root(() => {
   $effect(() => {
@@ -53,40 +53,40 @@ function formatter(key: string, options: Intl.NumberFormatOptions): Intl.NumberF
   return result
 }
 
-export function nombre(value: number, decimals = 0): string {
+export function formatNumber(value: number, decimals = 0): string {
   return formatter(`n${decimals}`, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals
   }).format(value)
 }
 
-export function pourcentage(fraction: number): string {
+export function formatPercentage(fraction: number): string {
   return formatter('%', { style: 'percent', maximumFractionDigits: 0 }).format(fraction)
 }
 
-function raw(key: Cle): string {
+function raw(key: TranslationKey): string {
   const node = key
     .split('.')
     .reduce<unknown>((value, part) => (value as Record<string, unknown>)[part], dictionary)
   return node as string
 }
 
-export function t(key: Cle, values?: Record<string, string | number>): string {
-  return interpoler(raw(key), values)
+export function t(key: TranslationKey, values?: Record<string, string | number>): string {
+  return interpolate(raw(key), values)
 }
 
-export function pluriel(key: Cle, n: number, values?: Record<string, string | number>): string {
-  return interpoler(formePlurielle(raw(key), n, tag), { n, ...values })
+export function plural(key: TranslationKey, n: number, values?: Record<string, string | number>): string {
+  return interpolate(pluralForm(raw(key), n, tag), { n, ...values })
 }
 
-export function nomDeCycle(cycle: { name: string }): string {
+export function cycleName(cycle: { name: string }): string {
   return cycle.name || t('cycles.defaultName')
 }
 
-export function secondes(value: number): string {
-  return t('units.seconds', { n: nombre(value, 1) })
+export function seconds(value: number): string {
+  return t('units.seconds', { n: formatNumber(value, 1) })
 }
 
-export function secondesCourtes(value: number, decimals: number): string {
-  return t('units.secondsShort', { n: nombre(value, decimals) })
+export function shortSeconds(value: number, decimals: number): string {
+  return t('units.secondsShort', { n: formatNumber(value, decimals) })
 }

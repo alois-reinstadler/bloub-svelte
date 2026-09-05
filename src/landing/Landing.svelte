@@ -2,7 +2,7 @@
   import { onMount, tick } from 'svelte'
   import { base } from '$app/paths'
   import App from '../App.svelte'
-  import { creerVoyage, type Voyage } from './journey'
+  import { createJourney, type Journey } from './journey'
 
   const install = 'pnpm add bloub-svelte'
 
@@ -37,7 +37,7 @@
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
     update()
 
-    let voyage: Voyage | null = creerVoyage({
+    let voyage: Journey | null = createJourney({
       heroPin,
       oSlot,
       anneau,
@@ -46,12 +46,12 @@
         arrived = posee
         // Au redecollage, la classe fixe doit etre PEINTE avec la pose
         // d'atterrissage avant que le scrub reprenne la main.
-        if (!posee) tick().then(() => voyage?.reposer())
+        if (!posee) tick().then(() => voyage?.reset())
       }
     })
 
     addEventListener('scroll', onScroll, { passive: true })
-    return () => { removeEventListener('scroll', onScroll); cancelAnimationFrame(frame); voyage?.detruire(); voyage = null }
+    return () => { removeEventListener('scroll', onScroll); cancelAnimationFrame(frame); voyage?.destroy(); voyage = null }
   })
 </script>
 
@@ -77,7 +77,7 @@
           <a class="primary-action" href="#studio">Im Studio gestalten <span aria-hidden="true">↓</span></a>
           <a class="text-action" href="#docs">Erst installieren</a>
         </div>
-        <div class="facts"><span><b>14</b> Zustände</span><span><b>8</b> Formen</span><span><b>0</b> Abhängigkeiten</span></div>
+        <div class="facts"><span><b>8</b> Zustände</span><span><b>11</b> Ausdrücke</span><span><b>0</b> Abhängigkeiten</span></div>
       </div>
     </section>
 
@@ -105,7 +105,8 @@
           </div>
         </article>
 
-        <a class="api-link" href="https://github.com/alois-reinstadler/bloub-svelte#komponente">Vollständige API auf GitHub <span aria-hidden="true">↗</span></a>
+        <a class="api-link" href={`${base}/feedback/`}>Feedback-Labor öffnen <span aria-hidden="true">→</span></a>
+        <a class="api-link api-link--secondary" href="https://github.com/alois-reinstadler/bloub-svelte#komponente">Vollständige API auf GitHub <span aria-hidden="true">↗</span></a>
       </div>
     </section>
 
