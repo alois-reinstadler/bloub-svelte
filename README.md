@@ -15,11 +15,11 @@ Vite läuft standardmäßig auf <http://localhost:5190>.
 
 ```bash
 pnpm check   # Svelte- und TypeScript-Diagnosen
-pnpm test    # 217 Vitest-Tests
+pnpm test    # 233 Vitest-Tests
 pnpm build   # Prüfung plus Produktions-Build
 ```
 
-Die App nutzt Svelte 5 mit Runes, TypeScript, Vite 8 und Tailwind CSS 4. Die gemessene, frameworkfreie Engine aus `src/bot/` bleibt unverändert; die vollständige Vue-Oberfläche wurde in native Svelte-Komponenten portiert.
+Die App nutzt Svelte 5 mit Runes, TypeScript, Vite 8 und Tailwind CSS 4. Die frameworkfreie Engine in `src/lib/internal/core/` berechnet Körper, Augen und Mund deterministisch; die vollständige Vue-Oberfläche wurde in native Svelte-Komponenten portiert.
 
 ## Funktionen
 
@@ -37,8 +37,10 @@ Zwei URL-Fragmente sind für die visuelle Prüfung praktisch:
 
 ## Installation
 
+Das gebaute Paket wird mit der Website auf GitHub Pages bereitgestellt. Eine Veröffentlichung in der Paket-Registry gibt es derzeit nicht. In deinem Svelte-5-Projekt:
+
 ```bash
-pnpm add bloub-svelte
+pnpm add https://alois-reinstadler.github.io/bloub-svelte/bloub-svelte-0.2.0.tgz
 ```
 
 Die Startseite verbindet Landingpage, Installationsanleitung und Studio als durchgehende SvelteKit-Seite. `#docs` springt zur Installation, `#studio` direkt zum Editor.
@@ -69,7 +71,7 @@ Die Startseite verbindet Landingpage, Installationsanleitung und Studio als durc
 
 Die direkten Props bleiben für einfache Darstellungen verfügbar: `lookAt="cursor"` folgt dem Zeiger, `lookAt={element}` verfolgt die sichtbare Mitte und `lookAt={null}` gibt den Blick frei. `follow` bleibt als veralteter Alias kompatibel.
 
-Props: `size`, `shape`, `color`, `expression`, `paper`, `frozenAt`, `cycle`, `lookAt`, `gaze`, `controller` und `motion`. Bindbare Werte: `block`, `state`, `playing` und `elapsed`. Alle öffentlichen Typen und Optionslisten werden vom Paket exportiert.
+Props: `size`, `shape`, `color`, `expression`, `paper`, `frozenAt`, `cycle`, `lookAt`, `gaze`, `status`, `controller` und `motion`. Bindbare Werte: `block`, `state`, `playing` und `elapsed`. Alle öffentlichen Typen und Optionslisten werden vom Paket exportiert.
 
 ## Architektur und Messwerte
 

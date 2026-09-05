@@ -54,11 +54,8 @@ export const TURN = 26
  */
 export const SPIN = 360
 
-/**
- * Duree du tour. Un peu plus courte que le bloc d'entree (`swirl`) : les yeux
- * doivent etre poses a gauche avant que les anneaux ne s'effacent.
- */
-export const TURN_TIME = 1.1
+/** Settle ordinary attention in 350 ms; explicit entrance scripts own their timing. */
+export const TURN_TIME = 0.35
 
 /**
  * Humeurs que le bot traverse pendant qu'il suit le curseur.
@@ -142,25 +139,16 @@ export interface Aim {
   pointer: boolean
 }
 
-/**
- * Cible de regard.
- *
- * `tour` mene tout : il fait monter l'emprise sur la pose (`mix`) et fondre le
- * tour parcouru (`spin`) en meme temps. A 0 la pose de l'etat commande seule ; a
- * 1 la tete est posee a gauche et suit le curseur.
- *
- * Rien ici ne compense l'expression affichee : c'est le moteur qui melange,
- * parce que lui seul connait la pose a l'instant t. Le faire ici obligerait a
- * lire le lacet d'ARRIVEE de l'expression pendant que le moteur, lui, morphe
- * encore — et les yeux sautaient a chaque changement d'humeur.
+/** Everyday attention turns directly toward the target. Only spinLook spins.
+ * The engine blends from the displayed pose, including interrupted turns.
  */
 export function lookTarget({ nx, ny, tour, pointer }: Aim): Look {
   return {
-    yaw: -TURN + nx * YAW_MAX,
+    yaw: nx * YAW_MAX,
     // tangage positif = regard vers le haut, alors que le y de l'ecran descend
     pitch: PITCH - ny * PITCH_MAX,
     mix: tour,
-    spin: SPIN * (1 - tour),
+    spin: 0,
     // Sans pointeur la tete reste tournee vers le panneau, mais on lui rend sa
     // derive : sinon le bot fixe un point mort, et arriver au clavier ou au
     // tactile donnait un avatar completement immobile.

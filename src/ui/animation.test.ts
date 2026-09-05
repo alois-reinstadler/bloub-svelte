@@ -70,6 +70,18 @@ describe('svg anime', () => {
     expect(sortie.length).toBeLessThan(4000)
   })
 
+  it('animates the mouth geometry and gives all three features the same timing', () => {
+    const base = BASE.replace('</mask>', '<path d="M0 0C1 2 3 4 5 6Z" transform="matrix(1,0,0,1,0,30)"/></mask>')
+    const matrices = MATRICES.map(frame => [...frame, 'matrix(1,0,0,1,0,30)'])
+    const paths = MATRICES.map((_, index) => ['M0 0Z', 'M0 0Z', `M0 0C1 2 3 4 5 ${index + 6}Z`])
+    const output = animatedSvg(base, matrices, 3, paths)
+    expect(output).toContain('.oeil0,.oeil1,.oeil2{transform-box:view-box')
+    expect(output).toContain('@keyframes oeil2{0%{transform:matrix(1,0,0,1,0,30);d:path("M0 0C1 2 3 4 5 6Z")}')
+    expect(output).toContain('d:path("M0 0C1 2 3 4 5 8Z")')
+    expect(output).toContain('@media (prefers-reduced-motion:reduce){.oeil0,.oeil1,.oeil2{animation-play-state:paused}}')
+    expect(() => animatedSvg(base, matrices, 3, paths.slice(1))).toThrow()
+  })
+
   it('refuse ce qu il ne sait pas animer', () => {
     expect(() => animatedSvg(BASE, [MATRICES[0]!], 3)).toThrow()
     expect(() => animatedSvg('<svg></svg>', MATRICES, 3)).toThrow()

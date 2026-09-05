@@ -372,23 +372,12 @@ export async function openCycle(
   }
 }
 
-/**
- * Les matrices des yeux d'une image, lues sur le masque.
- *
- * Les yeux sont les seules formes du masque a porter un `transform` — le corps
- * n'en a pas — donc l'ordre du document suffit a les identifier.
- */
-function matricesDesYeux(svg: SVGSVGElement) {
+/** Read projected face transforms in mask order: eyes followed by mouth. */
+function faceMatrices(svg: SVGSVGElement) {
   return [...svg.querySelectorAll('mask [transform]')].map((e) => e.getAttribute('transform')!)
 }
 
-/**
- * Assemble l'animation du bot en un SVG anime.
- *
- * Le corps est celui de la premiere image et n'est pas anime : au repos la
- * silhouette ne se deplace que de 1,17 unite sur un rayon de 100, soit environ un
- * pixel et demi. Tout le mouvement est dans les yeux.
- */
+/** Capture both transforms and curved paths; the body retains its first frame. */
 export async function toAnimatedSvg(
   reglages: BotSettings,
   taille: number,
@@ -396,11 +385,13 @@ export async function toAnimatedSvg(
   pas: number
 ): Promise<Blob> {
   let base = ''
+  const paths: string[][] = []
   const matrices = await renderBotSequence(reglages, taille, formatNumber, pas, (svg, i) => {
     if (i === 0) base = standaloneSvg(svg, taille)
-    return matricesDesYeux(svg)
+    paths.push([...svg.querySelectorAll('mask [transform]')].map(path => path.getAttribute('d')!))
+    return faceMatrices(svg)
   })
-  const markup = animatedSvg(base, matrices, +((formatNumber - 1) * pas).toFixed(3))
+  const markup = animatedSvg(base, matrices, +((formatNumber - 1) * pas).toFixed(3), paths)
   return new Blob([markup], { type: 'image/svg+xml' })
 }
 

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte'
+  import type { ActivityId } from './core/activity'
   import { NOTIF_BLUE } from './core/decor'
   import { BotEngine, type BotFrame } from './core/engine'
   import { clamp, easings } from './core/math'
@@ -28,6 +29,8 @@
     follow?: boolean
     lookAt?: LookAtTarget | null
     gaze?: GazeScript | null
+    activity?: ActivityId
+    reducedMotion?: boolean
     reaction?: string
     block?: number
     state?: StateId
@@ -48,6 +51,8 @@
     follow = false,
     lookAt = undefined,
     gaze = null,
+    activity = 'rest',
+    reducedMotion = false,
     reaction = undefined,
     block = $bindable(0),
     state: currentState = $bindable<StateId>('idle'),
@@ -64,7 +69,7 @@
   let expression = $derived(EXPRESSION_BY_ID.get(expressionId) ?? null)
 
   const engine = untrack(() => new BotEngine(R, currentState, shapeRadii, expression))
-  let frame = $state<BotFrame>(untrack(() => engine.sample(frozenAt ?? 0)))
+  let frame = $state<BotFrame>(untrack(() => engine.sample(frozenAt ?? 0, reducedMotion)))
   const uid = $props.id()
   const maskId = `bot-mask-${uid}`
 
@@ -114,7 +119,7 @@
       else engine.setState(item.state, offsetOf(cycle, index))
       lastBlock = index
     }
-    frame = engine.sample(time)
+    frame = engine.sample(time, reducedMotion)
   }
 
   export function getSvg() {
@@ -122,7 +127,7 @@
   }
 
   export function redrawAt(time: number) {
-    frame = engine.sample(time)
+    frame = engine.sample(time, reducedMotion)
   }
 
   let pointer: { x: number; y: number } | null = null
@@ -220,11 +225,11 @@
 
     if (activeLookAt) aim(activeLookAt)
     else if (gaze) scriptedGaze(gaze)
-    frame = engine.sample(clock)
+    frame = engine.sample(clock, reducedMotion)
   }
 
   function redrawFrozen() {
-    if (frozenAt !== undefined) frame = engine.sample(frozenAt)
+    if (frozenAt !== undefined) frame = engine.sample(frozenAt, reducedMotion)
   }
 
   let previousBlock = block
@@ -264,6 +269,11 @@
     const index = Math.min(block, blocks.length - 1)
     if (index !== block) goToBlock(index)
     else nextAt = playing ? blockStart + blocks[index]!.duration : Infinity
+  })
+
+  $effect(() => {
+    engine.setActivity(activity, clock)
+    redrawFrozen()
   })
 
   let previousRadii = untrack(() => shapeRadii)
@@ -348,6 +358,7 @@
   role="img"
   aria-label={label}
   data-state={currentState}
+  data-activity={activity}
   data-reaction={reaction}
 >
   <defs>

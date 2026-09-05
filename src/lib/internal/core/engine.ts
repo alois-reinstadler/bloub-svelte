@@ -1,7 +1,8 @@
+import { ACTIVITIES, blendActivity, type ActivityId, type ActivityPose } from './activity'
 import { arcRender, type ArcRender, type DotRender } from './decor'
-import { blendExpression, type BotExpression, type MouthCfg } from './expressions'
+import { blendExpression, blendMouth, EXPRESSION_BY_ID, type BotExpression } from './expressions'
 import { eyeOffset } from './eyefit'
-import { blinkScale, eyePoses, liveliness } from './face'
+import { blinkScale, eyePoses, facialFeaturePose, liveliness } from './face'
 import { clamp, easings, lerp, r2 } from './math'
 import {
   blend,
@@ -98,27 +99,6 @@ const lerpEye = (a: Pose['eyes'][number], b: Pose['eyes'][number], t: number) =>
   tilt: lerp(a.tilt ?? 0, b.tilt ?? 0, t)
 })
 
-function blendMouth(a: MouthCfg | null, b: MouthCfg | null, t: number): MouthCfg | null {
-  if (!a && !b) return null
-  const source = a ?? { ...b!, alpha: 0 }
-  const target = b ?? { ...a!, alpha: 0 }
-  if (source.kind !== target.kind) {
-    return t < 0.5
-      ? { ...source, alpha: source.alpha * (1 - t * 2) }
-      : { ...target, alpha: target.alpha * (t * 2 - 1) }
-  }
-  return {
-    kind: target.kind,
-    x: lerp(source.x, target.x, t),
-    y: lerp(source.y, target.y, t),
-    width: lerp(source.width, target.width, t),
-    height: lerp(source.height, target.height, t),
-    curve: lerp(source.curve, target.curve, t),
-    thickness: lerp(source.thickness, target.thickness, t),
-    alpha: lerp(source.alpha, target.alpha, t)
-  }
-}
-
 /** Interpolation de deux poses. Le decor se croise en opacite, pas en geometrie. */
 function blendPose(a: Pose, b: Pose, t: number): Pose {
   const out = 1 - t
@@ -160,6 +140,22 @@ export class BotEngine {
   /** rayon de la boule au repos, en unites de viewBox */
   readonly scale: number
 
+  private activity: ActivityId = 'rest'
+  private activityFrom: ActivityPose = ACTIVITIES.rest
+  private activityAt = -10
+
+  setActivity(activity: ActivityId, now: number) {
+    if (activity === this.activity) return
+    this.activityFrom = this.activityAtTime(now)
+    this.activity = activity
+    this.activityAt = now
+  }
+
+  private activityAtTime(now: number): ActivityPose {
+    return blendActivity(this.activityFrom, ACTIVITIES[this.activity],
+      easings.easeOutQuint(clamp((now - this.activityAt) / 0.6)))
+  }
+
   private cur: StateId
   private prev: StateId | null = null
   /**
@@ -177,6 +173,7 @@ export class BotEngine {
   private expr: BotExpression | null = null
   private exprPrev: BotExpression | null = null
   private exprAt = -10
+  private expressionFitFrom = new Map<string | null, number>([[null, 1]])
   private look: Look = NO_LOOK
   private lookPrev: Look = NO_LOOK
   private lookAt = -10
@@ -211,10 +208,22 @@ export class BotEngine {
    * glisse vers la nouvelle valeur au lieu de sauter.
    */
   setExpression(expression: BotExpression | null, now = 0) {
-    if (expression === this.expr) return
-    this.exprPrev = this.expr
-    this.expr = expression
+    const target = expression ?? EXPRESSION_BY_ID.get('neutral')!
+    if (target === (this.expr ?? EXPRESSION_BY_ID.get('neutral')!)) return
+    this.expressionFitFrom = this.expressionFitWeights(now)
+    this.exprPrev = this.exprAtTime(now) ?? EXPRESSION_BY_ID.get('neutral')!
+    this.expr = target
     this.exprAt = now
+  }
+
+  /** Preserve the table blend as well as the facial geometry on interruption. */
+  private expressionFitWeights(now: number): Map<string | null, number> {
+    const t = easings.easeOutQuint(clamp((now - this.exprAt) / BotEngine.SHAPE_MORPH))
+    const target = this.expr?.id ?? null
+    if (t >= 1) return new Map([[target, 1]])
+    const weights = new Map([...this.expressionFitFrom].map(([id, weight]) => [id, weight * (1 - t)]))
+    weights.set(target, (weights.get(target) ?? 0) + t)
+    return weights
   }
 
   /** Expression effective a l'instant `now`, morph en cours compris. */
@@ -347,13 +356,17 @@ export class BotEngine {
     }
 
     // axe de l'expression, pour chacune des deux formes en presence
-    const parForme = (radii: number[] | null) =>
-      surAxe(
-        this.exprAt,
-        BotEngine.SHAPE_MORPH,
-        eyeOffset(radii, state, this.exprPrev?.id ?? null),
-        eyeOffset(radii, state, this.expr?.id ?? null)
-      )
+    const weights = this.expressionFitWeights(now)
+    const parForme = (radii: number[] | null) => {
+      let x = 0
+      let y = 0
+      for (const [id, weight] of weights) {
+        const offset = eyeOffset(radii, state, id)
+        x += offset.x * weight
+        y += offset.y * weight
+      }
+      return { x, y }
+    }
 
     // puis axe de la forme
     return surAxe(
@@ -452,7 +465,7 @@ export class BotEngine {
     if (STATE_BY_ID.get(id)?.blinkIn) this.blinkAt = now
   }
 
-  sample(now: number): BotFrame {
+  sample(now: number, reducedMotion = false): BotFrame {
     const R = this.scale
     const def = STATE_BY_ID.get(this.cur)!
     const shape = this.shapeAtTime(now)
@@ -491,7 +504,20 @@ export class BotEngine {
     // --- vie au repos -----------------------------------------------------
     const alive = pose.eyeAlpha > 0.01
     const look = this.lookAtTime(now)
-    const life = liveliness(now, { wander: alive ? look.wander : 0, blink: alive })
+    // The fit table was solved for the authored expression gaze. When an
+    // external target replaces that gaze, its correction must release with it;
+    // otherwise it can push the entire face toward the opposite silhouette edge.
+    decalage = { x: decalage.x * (1 - look.mix), y: decalage.y * (1 - look.mix) }
+    const activity = this.activityAtTime(now)
+    const life = liveliness(now, {
+      wander: !reducedMotion && alive ? look.wander * activity.wander : 0,
+      blink: !reducedMotion && alive,
+      float: !reducedMotion
+    })
+    life.lid = lerp(1, life.lid, activity.blink)
+    life.driftX *= activity.float
+    life.driftY *= activity.float
+    life.breath = lerp(1, life.breath, activity.float)
 
     const gaze = {
       // Les deux visees REMPLACENT celles de la pose au lieu de s'y ajouter (voir
@@ -508,7 +534,7 @@ export class BotEngine {
     // clignement declenche par le changement d'etat, en plus du calendrier
     const forced = clamp((now - this.blinkAt) / 0.2)
     const forcedLid = forced < 1 ? Math.abs(forced * 2 - 1) : 1
-    const lid = Math.min(life.lid, forcedLid)
+    const lid = reducedMotion ? 1 : Math.min(life.lid, forcedLid)
 
     const offX = pose.offX + life.driftX
     const offY = pose.offY + life.driftY
@@ -561,25 +587,35 @@ export class BotEngine {
     const mouth = (() => {
       const cfg = pose.mouth
       if (!cfg || cfg.alpha <= 0.01) return null
-      const x = (cfg.x + offX) * R
-      const y = (cfg.y + offY) * R
-      if (cfg.kind === 'open') {
+      const feature = facialFeaturePose(gaze, R, cfg.x, cfg.y)
+      if (feature.depth <= 0.02) return null
+      const fit = bodyRadius(feature.x, feature.y)
+      const x = feature.x * fit + (offX + decalage.x) * R
+      const y = feature.y * fit + (offY + decalage.y) * R
+      const transform = `matrix(${r2(feature.a)},${r2(feature.b)},${r2(feature.c)},${r2(feature.d)},${r2(x)},${r2(y)})`
+      const alpha = cfg.alpha * pose.eyeAlpha * clamp(feature.depth / 0.12)
+      // Sample one continuous outline onto the sphere, rather than leaving a
+      // wide mouth on a flat tangent plane (which cuts the silhouette at pitch).
+      // Express the curved result in the anchor's tangent frame for SVG/export.
+      const determinant = feature.a * feature.d - feature.b * feature.c
+      const points = Array.from({ length: 64 }, (_, index) => {
+        const angle = index / 64 * Math.PI * 2
+        const u = cfg.width / 2 * Math.cos(angle)
+        const v = cfg.height / 2 * Math.sin(angle) + cfg.curve * Math.sin(angle) ** 2
+        const point = feature.point(u, v)
+        const dx = (point.x - feature.x) * Math.min(1, fit)
+        const dy = (point.y - feature.y) * Math.min(1, fit)
         return {
-          d: capsulePath(cfg.width * R, cfg.height * R),
-          transform: `translate(${r2(x)} ${r2(y)})`,
-          filled: true,
-          strokeWidth: 0,
-          alpha: cfg.alpha * pose.eyeAlpha
+          x: (feature.d * dx - feature.c * dy) / determinant,
+          y: (feature.a * dy - feature.b * dx) / determinant
         }
-      }
-      const half = (cfg.width * R) / 2
-      const bend = cfg.curve * R * 2
+      })
       return {
-        d: `M${r2(-half)} 0Q0 ${r2(bend)} ${r2(half)} 0`,
-        transform: `translate(${r2(x)} ${r2(y)})`,
-        filled: false,
-        strokeWidth: cfg.thickness * R,
-        alpha: cfg.alpha * pose.eyeAlpha
+        d: closedPath(points),
+        transform,
+        filled: true,
+        strokeWidth: 0,
+        alpha
       }
     })()
 
@@ -587,6 +623,20 @@ export class BotEngine {
     const dots = pose.dots
       .filter((p) => p.opacity > 0.01 && p.r > 0.0005)
       .map((p) => ({ ...p, x: (p.x + offX) * R, y: (p.y + offY) * R, r: p.r * R }))
+
+    // Work is ongoing, but the character stays present. Constant-size dots
+    // exchange emphasis smoothly; no bouncing, disappearing face, or deadline.
+    if (activity.working > 0.001) {
+      for (let i = 0; i < 3; i++) {
+        const emphasis = reducedMotion ? 0.5 : (1 + Math.cos(now * Math.PI / 1.2 - i * Math.PI * 2 / 3)) / 2
+        dots.push({
+          x: (i - 1) * 0.16 * R,
+          y: 1.24 * R,
+          r: 0.035 * R,
+          opacity: activity.working * (0.25 + 0.65 * emphasis)
+        })
+      }
+    }
 
     // la pastille est posee sur le contour : elle suit donc la forme aussi
     const nFit = pose.notif ? bodyRadius(pose.notif.x, pose.notif.y) : 1

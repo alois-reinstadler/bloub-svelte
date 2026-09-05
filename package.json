@@ -41,7 +41,7 @@
   "scripts": {
     "dev": "vite",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "build": "pnpm check && pnpm build:lib && pnpm build:site",
+    "build": "pnpm check && pnpm build:lib && pnpm build:site && pnpm pack --out site/bloub-svelte-%v.tgz",
     "build:lib": "svelte-package",
     "build:site": "vite build",
     "package": "pnpm build:lib && publint",

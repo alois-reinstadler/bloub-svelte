@@ -36,6 +36,9 @@ Blick automatisch frei.
 - `lookAt(element)` verfolgt fortlaufend die sichtbare Mitte des Elements.
 - `releaseAttention()` kehrt zum Blick des aktuellen Ausdrucks zurück.
 
+Aufmerksamkeit dreht den Kopf direkt zum Ziel, ohne Eingangsdrehung oder feste
+Ausrichtung auf das Studio. Ein unterbrochener Blick setzt an der sichtbaren Pose an.
+
 ## Anwendungszustände
 
 `setStatus()` beschreibt länger anhaltende Situationen:
@@ -43,10 +46,21 @@ Blick automatisch frei.
 | Status | Einsatz |
 |---|---|
 | `idle` | Anwendung ist bereit |
-| `waiting` | wartet auf eine Eingabe oder Entscheidung |
-| `loading` | eine Operation läuft |
+| `waiting` | wartet geduldig auf Eingabe: ruhiger Blick, sanfte Atmung, gelegentliches Blinzeln |
+| `loading` | Gesicht bleibt sichtbar; drei kleine Punkte zeigen eine laufende Operation |
 | `empty` | ein leerer Zustand braucht eine Handlung |
-| `disabled` | Bereich oder Funktion ist inaktiv |
+| `disabled` | ruhendes Gesicht ohne Blickverfolgung oder automatische Bewegung |
+
+Für einfache Oberflächen reicht eine deklarative Prop:
+
+```svelte
+<Bloub status="waiting" lookAt={emailInput} />
+<Bloub status="loading" motion="auto" />
+```
+
+Ein übergebener `controller` hat Vorrang vor `status`. Während `loading` und
+`disabled` pausiert die Aufmerksamkeit; der Controller merkt sich das Ziel für
+die Rückkehr. Die acht Kataloganimationen bleiben über `state` und `cycle` verfügbar.
 
 ## Reaktionen
 
@@ -68,10 +82,13 @@ deshalb keinen laufenden Fehler überdecken, und eine wiederholt feuernde
 Validierung lässt Bloub nicht ununterbrochen zittern. `force: true` ist für
 bewusste Ausnahmen verfügbar.
 
-Nach einer Reaktion nimmt Bloub sein vorheriges Blickziel und den länger
-laufenden Status wieder auf. Mit `motion="reduced"` lässt sich die körperliche
+Nach einer Reaktion nimmt Bloub sein gespeichertes Blickziel und den aktuellen
+Anwendungsstatus wieder auf – auch wenn dieser sich während der Reaktion ändert. Mit `motion="reduced"` lässt sich die körperliche
 Bewegung immer abschalten; `motion="auto"` respektiert standardmäßig
-`prefers-reduced-motion`.
+`prefers-reduced-motion`. Bei diesen Anwendungszuständen pausieren dann auch die
+Blickdrift, Atmung, Blinzeln und Punktpulsation. Ausdruck, gezielte Aufmerksamkeit
+und drei statische Arbeitspunkte bleiben erkennbar. Eine Änderung der Präferenz
+stoppt auch eine bereits laufende Reaktionsgeste.
 
 Bloub ergänzt Rückmeldungen, ersetzt sie aber nicht. Fehlermeldungen brauchen
 weiter Text und `aria-invalid`, laufende Aktionen weiter einen zugänglichen

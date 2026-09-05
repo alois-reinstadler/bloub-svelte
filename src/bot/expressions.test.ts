@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { BotEngine } from '@/lib/internal/core/engine'
 import { EXPRESSIONS, EXPRESSION_BY_ID, blendExpression } from '@/lib/internal/core/expressions'
+import { facialFeaturePose } from '@/lib/internal/core/face'
 import { radiusAtAngle } from '@/lib/internal/core/shape'
-import { SHAPE_BY_ID } from '@/lib/internal/core/skins'
+import { SHAPES, SHAPE_BY_ID } from '@/lib/internal/core/skins'
 
 const circle = () => SHAPE_BY_ID.get('circle')!.radii
 
@@ -16,6 +17,12 @@ function rendu(matrix: string, w: number, h: number) {
     hauteur: Math.hypot(c!, d!) * h,
     axe: (Math.atan2(d!, c!) * 180) / Math.PI - 90
   }
+}
+
+function matrix(transform: string) {
+  return /matrix\(([^)]+)\)/.exec(transform)![1]!.split(',').map(Number) as [
+    number, number, number, number, number, number
+  ]
 }
 
 describe('catalogue des expressions', () => {
@@ -83,6 +90,58 @@ describe('catalogue des expressions', () => {
     expect(laughing.mouth!.width).toBeGreaterThan(happy.mouth!.width)
     expect(new BotEngine(100, 'idle', circle(), laughing).sample(1).mouth?.filled).toBe(true)
   })
+
+  it('projette la bouche avec le regard au lieu de la laisser fixe', () => {
+    const laughing = EXPRESSION_BY_ID.get('laughing')!
+    const frameAt = (yaw: number, pitch: number) => {
+      const engine = new BotEngine(100, 'idle', circle(), laughing)
+      engine.setLook({ yaw, pitch, mix: 1, spin: 0, wander: 0 }, 0, 0.01)
+      return engine.sample(1)
+    }
+
+    const left = frameAt(-30, 0)
+    const right = frameAt(30, 0)
+    const up = frameAt(0, 24)
+    const down = frameAt(0, -24)
+    const mouthX = (frame: ReturnType<typeof frameAt>) => matrix(frame.mouth!.transform)[4]
+    const mouthY = (frame: ReturnType<typeof frameAt>) => matrix(frame.mouth!.transform)[5]
+    const eyesX = (frame: ReturnType<typeof frameAt>) =>
+      frame.eyes.reduce((sum, eye) => sum + matrix(eye.matrix)[4], 0) / frame.eyes.length
+
+    expect(mouthX(right)).toBeGreaterThan(mouthX(left))
+    expect(eyesX(right)).toBeGreaterThan(eyesX(left))
+    expect(mouthY(up)).toBeLessThan(mouthY(down))
+    expect(matrix(left.mouth!.transform).slice(0, 4)).not.toEqual(
+      matrix(right.mouth!.transform).slice(0, 4)
+    )
+  })
+
+  it('keeps the mouth attachment independent of the expression head pose', () => {
+    const expression = EXPRESSION_BY_ID.get('laughing')!
+    const render = (pitch: number) => {
+      const engine = new BotEngine(100, 'idle', circle(), {
+        ...expression, gaze: { yaw: 0, pitch, roll: 0 }
+      })
+      engine.setLook({ yaw: 25, pitch: 10, mix: 1, spin: 0, wander: 0 }, 0, 0)
+      return engine.sample(1).mouth
+    }
+    expect(render(-20)).toEqual(render(20))
+  })
+
+  it('projects orthonormal tangents and a curved surface through yaw, pitch and roll', () => {
+    for (const yaw of [-65, 0, 65]) for (const pitch of [-28, 0, 28]) {
+      const pose = facialFeaturePose({ yaw, pitch, roll: 17 }, 100, 0.04, 0.45)
+      expect(pose.a * pose.d - pose.b * pose.c).toBeCloseTo(pose.depth, 10)
+      expect(Math.hypot(pose.a, pose.b)).toBeLessThanOrEqual(1.000001)
+      expect(Math.hypot(pose.c, pose.d)).toBeLessThanOrEqual(1.000001)
+      expect(pose.point(0, 0)).toEqual({ x: pose.x, y: pose.y, depth: pose.depth })
+      for (const u of [-0.35, 0, 0.35]) for (const v of [-0.2, 0.3]) {
+        const p = pose.point(u, v)
+        expect(Math.hypot(p.x / 100, p.y / 100, p.depth)).toBeCloseTo(1, 10)
+      }
+    }
+  })
+
 })
 
 describe('changement d expression', () => {
@@ -140,5 +199,52 @@ describe('changement d expression', () => {
     expect(m.eyes[0]!.tilt).toBeCloseTo(((a.eyes[0]!.tilt ?? 0) + (b.eyes[0]!.tilt ?? 0)) / 2, 5)
     expect(m.split).toBeCloseTo((a.split + b.split) / 2, 5)
     expect(m.gaze.pitch).toBeCloseTo((a.gaze.pitch + b.gaze.pitch) / 2, 5)
+  })
+})
+
+
+describe('mouth transitions', () => {
+  it('keeps every pair of visible mouths opaque and continuous through the midpoint', () => {
+    for (const a of EXPRESSIONS.filter(e => e.mouth)) {
+      for (const b of EXPRESSIONS.filter(e => e.mouth)) {
+        const frames = [0.4999, 0.5, 0.5001].map(t => blendExpression(a, b, t).mouth!)
+        for (const mouth of frames) expect(mouth.alpha).toBe(1)
+        for (const key of ['x', 'y', 'width', 'height', 'curve'] as const) {
+          expect(Math.abs(frames[0]![key] - frames[2]![key])).toBeLessThan(0.001)
+        }
+      }
+    }
+  })
+
+  it('retargets an unfinished morph from the displayed mouth, including removal', () => {
+    const engine = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('happy')!)
+    engine.setExpression(EXPRESSION_BY_ID.get('laughing')!, 1)
+    const before = engine.sample(1.08)
+    engine.setExpression(EXPRESSION_BY_ID.get('sad')!, 1.08)
+    expect(engine.sample(1.08)).toEqual(before)
+    const middle = engine.sample(1.15)
+    engine.sample(9)
+    expect(engine.sample(1.15)).toEqual(middle)
+    engine.setExpression(null, 1.15)
+    expect(engine.sample(1.15)).toEqual(middle)
+    expect(engine.sample(2).mouth).toBeNull()
+  })
+
+  it('preserves the shared face-fit offset when a custom-shape morph is interrupted', () => {
+    for (const shape of SHAPES) {
+      const engine = new BotEngine(100, 'idle', shape.radii, EXPRESSION_BY_ID.get('confused')!)
+      engine.setExpression(EXPRESSION_BY_ID.get('scared')!, 1)
+      const before = engine.sample(1.06)
+      engine.setExpression(EXPRESSION_BY_ID.get('laughing')!, 1.06)
+      expect(engine.sample(1.06), shape.id).toEqual(before)
+    }
+  })
+
+  it('fades in from a default engine without jumping to a complete mouth', () => {
+    const engine = new BotEngine(100, 'idle', circle())
+    engine.setExpression(EXPRESSION_BY_ID.get('laughing')!, 1)
+    expect(engine.sample(1).mouth).toBeNull()
+    expect(engine.sample(1.02).mouth!.alpha).toBeLessThan(1)
+    expect(engine.sample(2).mouth!.alpha).toBe(1)
   })
 })

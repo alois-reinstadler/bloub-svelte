@@ -38,6 +38,20 @@ export interface EyePose {
   depth: number
 }
 
+export interface FacialFeaturePose {
+  x: number
+  y: number
+  /** Tangent matrix projected into screen space: [a b c d]. */
+  a: number
+  b: number
+  c: number
+  d: number
+  /** Surface normal depth: values at or below zero face away from the viewer. */
+  depth: number
+  /** Project a point on the curved surface around the anchor (radius units). */
+  point: (u: number, v: number) => { x: number; y: number; depth: number }
+}
+
 export interface HeadGaze {
   /** lacet, degres, positif = regarde a droite */
   yaw: number
@@ -59,22 +73,25 @@ function spin(u: Vec3, v: Vec3, angle: number): [Vec3, Vec3] {
   ]
 }
 
+/** Head-local forward/right/down basis after yaw, pitch and roll. */
+function headBasis(gaze: HeadGaze): [Vec3, Vec3, Vec3] {
+  let forward: Vec3 = [0, 0, 1]
+  let right: Vec3 = [1, 0, 0]
+  let down: Vec3 = [0, 1, 0]
+
+  ;[forward, right] = spin(forward, right, deg(gaze.yaw))
+  ;[down, forward] = spin(down, forward, deg(gaze.pitch))
+  ;[right, down] = spin(right, down, deg(gaze.roll))
+  return [forward, right, down]
+}
+
 /**
  * Repere de la tete puis des deux yeux.
  * Repere ecran : x a droite, y vers le bas, z vers le spectateur.
  * L'indice 0 est l'oeil interieur, l'indice 1 l'oeil exterieur.
  */
 export function eyePoses(gaze: HeadGaze, scale: number, split = EYE_SPLIT): [EyePose, EyePose] {
-  let f: Vec3 = [0, 0, 1]
-  let right: Vec3 = [1, 0, 0]
-  let down: Vec3 = [0, 1, 0]
-
-  // lacet : forward bascule vers right
-  ;[f, right] = spin(f, right, deg(gaze.yaw))
-  // tangage : forward bascule vers le haut (donc a l'oppose de down)
-  ;[down, f] = spin(down, f, deg(gaze.pitch))
-  // roulis : la tete penche dans son propre plan
-  ;[right, down] = spin(right, down, deg(gaze.roll))
+  const [f, right, down] = headBasis(gaze)
 
   const build = (side: number): EyePose => {
     const [ef, er] = spin(f, right, deg(split * side))
@@ -90,6 +107,38 @@ export function eyePoses(gaze: HeadGaze, scale: number, split = EYE_SPLIT): [Eye
   }
 
   return [build(-1), build(1)]
+}
+
+/** A mouth anchor and orthonormal tangents in the same head space as the eyes.
+ * x/y are sine coordinates (longitude/latitude), independent of expression gaze.
+ * Never invert the expression pose: gaze overrides must not move the attachment.
+ */
+export function facialFeaturePose(
+  gaze: HeadGaze,
+  scale: number,
+  x: number,
+  y: number
+): FacialFeaturePose {
+  const [forward, right, down] = headBasis(gaze)
+  const [longitude, horizontal] = spin(forward, right, Math.asin(clamp(x, -1, 1)))
+  const [normal, vertical] = spin(longitude, down, Math.asin(clamp(y, -1, 1)))
+  return {
+    x: normal[0] * scale,
+    y: normal[1] * scale,
+    a: horizontal[0],
+    b: horizontal[1],
+    c: vertical[0],
+    d: vertical[1],
+    depth: normal[2],
+    point: (u, v) => {
+      const length = Math.hypot(1, u, v)
+      return {
+        x: (normal[0] + horizontal[0] * u + vertical[0] * v) / length * scale,
+        y: (normal[1] + horizontal[1] * u + vertical[1] * v) / length * scale,
+        depth: (normal[2] + horizontal[2] * u + vertical[2] * v) / length
+      }
+    }
+  }
 }
 
 /**

@@ -62,6 +62,7 @@ describe('lookAt public prop', () => {
         nextFrame = null
         callback!((from + i) * 16)
         await tick()
+        expect(svg.querySelectorAll('mask path[fill="#000"]')).toHaveLength(2)
       }
     }
     const eyes = () => [...svg.querySelectorAll('mask path[fill="#000"]')].map((eye) => eye.getAttribute('transform'))
@@ -79,4 +80,27 @@ describe('lookAt public prop', () => {
     await advance(120, 80)
     expect(eyes()).not.toEqual(lookingLeft)
   })
+  it('renders declarative working status with a stable reduced-motion face', async () => {
+    let nextFrame: FrameCallback | null = null
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameCallback) => { nextFrame = callback; return 1 })
+    vi.stubGlobal('cancelAnimationFrame', () => undefined)
+    const host = document.createElement('div')
+    document.body.append(host)
+    component = mount(Bloub, { target: host, props: { status: 'loading', motion: 'reduced' } })
+    await tick()
+    const advance = async (from: number) => {
+      for (let i = 1; i <= 80; i++) {
+        nextFrame!((from + i) * 16)
+        await tick()
+      }
+    }
+    await advance(0)
+    const svg = host.querySelector('svg')!
+    expect(svg.dataset.activity).toBe('working')
+    expect(svg.querySelectorAll('circle')).toHaveLength(3)
+    const before = svg.innerHTML
+    await advance(80)
+    expect(svg.innerHTML).toBe(before)
+  })
+
 })

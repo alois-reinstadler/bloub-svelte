@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount, tick, untrack } from 'svelte'
   import Renderer from './internal/BloubRenderer.svelte'
-  import type { BloubMotion } from './bloub.state.svelte'
+  import { statusPresentation, type BloubMotion } from './bloub.state.svelte'
   import type { BloubProps, StateId } from './types'
 
   let {
@@ -17,6 +17,7 @@
     lookAt = undefined,
     gaze = null,
     controller = undefined,
+    status = undefined,
     motion = 'auto',
     block = $bindable(0),
     state: stateProp = $bindable<StateId>('idle'),
@@ -28,43 +29,45 @@
   let renderer: Renderer
   let renderState = $state<StateId>(untrack(() => controller?.presentation.state ?? stateProp))
   let renderPlaying = $state(untrack(() => (controller ? false : playing)))
-  let presentation = $derived(controller?.presentation)
+  let presentation = $derived(controller?.presentation ?? (status ? statusPresentation(status) : undefined))
   let renderExpression = $derived(presentation?.expression ?? expression)
-  let renderLookAt = $derived(controller ? (presentation?.lookAt ?? null) : lookAt)
+  let renderLookAt = $derived(controller ? (presentation?.lookAt ?? null)
+    : status === 'loading' || status === 'disabled' ? null : lookAt)
   let renderCycle = $derived(
-    controller
+    presentation
       ? [{ state: presentation?.state ?? 'idle', duration: 86_400 }]
       : cycle
   )
 
   $effect(() => {
-    const next = controller?.presentation.state ?? stateProp
+    const next = presentation?.state ?? stateProp
     if (renderState !== next) renderState = next
   })
 
   $effect(() => {
-    if (!controller && stateProp !== renderState) stateProp = renderState
+    if (!presentation && stateProp !== renderState) stateProp = renderState
   })
 
   $effect(() => {
-    const next = controller ? false : playing
+    const next = presentation ? false : playing
     if (renderPlaying !== next) renderPlaying = next
   })
 
   $effect(() => {
-    if (!controller && playing !== renderPlaying) playing = renderPlaying
+    if (!presentation && playing !== renderPlaying) playing = renderPlaying
   })
 
   let reducedMotion = $state(false)
+  const reduceMotion = $derived(motion === 'reduced' || (motion === 'auto' && reducedMotion))
   let reactionAnimation: Animation | null = null
 
   const reactionFrames: Record<Exclude<BloubMotion, null>, Keyframe[]> = {
     shake: [
       { transform: 'translateX(0) rotate(0)' },
-      { transform: 'translateX(-4%) rotate(-3deg)', offset: 0.18 },
-      { transform: 'translateX(4%) rotate(3deg)', offset: 0.36 },
-      { transform: 'translateX(-3%) rotate(-2deg)', offset: 0.54 },
-      { transform: 'translateX(2%) rotate(1deg)', offset: 0.72 },
+      { transform: 'translateX(-2%) rotate(-1.5deg)', offset: 0.18 },
+      { transform: 'translateX(2%) rotate(1.5deg)', offset: 0.36 },
+      { transform: 'translateX(-1%) rotate(-0.75deg)', offset: 0.54 },
+      { transform: 'translateX(0.5%) rotate(0.4deg)', offset: 0.72 },
       { transform: 'translateX(0) rotate(0)' }
     ],
     nod: [
@@ -75,14 +78,14 @@
     ],
     pulse: [
       { transform: 'scale(1)' },
-      { transform: 'scale(1.055)', offset: 0.35 },
-      { transform: 'scale(0.985)', offset: 0.7 },
+      { transform: 'scale(1.03)', offset: 0.35 },
+      { transform: 'scale(0.995)', offset: 0.7 },
       { transform: 'scale(1)' }
     ],
     tilt: [
       { transform: 'rotate(0)' },
-      { transform: 'rotate(-7deg)', offset: 0.42 },
-      { transform: 'rotate(-7deg)', offset: 0.68 },
+      { transform: 'rotate(-5deg)', offset: 0.42 },
+      { transform: 'rotate(-5deg)', offset: 0.68 },
       { transform: 'rotate(0)' }
     ],
     bounce: [
@@ -105,8 +108,9 @@
   function playReaction(kind: Exclude<BloubMotion, null>, duration: number) {
     const svg = renderer?.getSvg()
     if (!svg?.animate) return
+    const from = getComputedStyle(svg).transform
     reactionAnimation?.cancel()
-    reactionAnimation = svg.animate(reactionFrames[kind], {
+    reactionAnimation = svg.animate([{ transform: from }, ...reactionFrames[kind].slice(1)], {
       duration,
       easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
     })
@@ -114,18 +118,26 @@
 
   $effect(() => {
     const active = controller?.reaction
-    if (!active) return
+    if (!active || reduceMotion) {
+      const svg = renderer?.getSvg()
+      const from = svg && reactionAnimation ? getComputedStyle(svg).transform : 'none'
+      reactionAnimation?.cancel()
+      reactionAnimation = !reduceMotion && svg && from !== 'none'
+        ? svg.animate([{ transform: from }, { transform: 'none' }], { duration: 180, easing: 'ease-out' })
+        : null
+      return
+    }
     const { id, motion: kind, duration } = active
     if (!kind) return
     tick().then(() => {
       if (controller?.reaction?.id !== id) return
-      if (motion === 'reduced' || (motion === 'auto' && reducedMotion)) return
+      if (reduceMotion) return
       playReaction(kind, duration)
     })
   })
 
   onMount(() => {
-    if (motion !== 'auto' || !window.matchMedia) return
+    if (!window.matchMedia) return
     const query = window.matchMedia('(prefers-reduced-motion: reduce)')
     const update = () => (reducedMotion = query.matches)
     update()
@@ -164,7 +176,9 @@
   cycle={renderCycle}
   {follow}
   lookAt={renderLookAt}
-  {gaze}
+  gaze={reduceMotion ? null : gaze}
+  activity={presentation?.activity ?? 'rest'}
+  reducedMotion={reduceMotion}
   reaction={controller?.reaction?.type}
   bind:block
   bind:state={renderState}

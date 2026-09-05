@@ -15,7 +15,7 @@ describe('BloubState', () => {
     const bloub = new BloubState()
 
     bloub.setStatus('loading')
-    expect(bloub.presentation).toMatchObject({ state: 'thinking', lookAt: null })
+    expect(bloub.presentation).toMatchObject({ state: 'idle', activity: 'working', expression: 'attentive', lookAt: null })
 
     bloub.setStatus('empty')
     expect(bloub.presentation).toMatchObject({ state: 'idle', expression: 'curious' })
@@ -63,6 +63,39 @@ describe('BloubState', () => {
 
     expect(bloub.react('success', { force: true })).toBe(true)
     expect(bloub.reaction?.type).toBe('success')
+  })
+
+  it('keeps the laughing face visible while celebrating', () => {
+    const bloub = new BloubState()
+
+    expect(bloub.react('celebrate')).toBe(true)
+    expect(bloub.presentation).toMatchObject({
+      state: 'idle',
+      expression: 'laughing',
+      motion: 'bounce'
+    })
+    for (const elapsed of [100, 600, 600, 599]) {
+      vi.advanceTimersByTime(elapsed)
+      expect(bloub.presentation).toMatchObject({ state: 'idle', expression: 'laughing' })
+    }
+    vi.advanceTimersByTime(1)
+    expect(bloub.reaction).toBeNull()
+  })
+
+  it('resumes the latest persistent status and attention after a reaction', () => {
+    const bloub = new BloubState()
+    const target = { isConnected: true } as Element
+    bloub.lookAt(target)
+    bloub.setStatus('loading')
+    bloub.react('success')
+    expect(bloub.presentation.activity).toBe('rest')
+    bloub.setStatus('waiting')
+    vi.advanceTimersByTime(1300)
+    expect(bloub.presentation).toMatchObject({ activity: 'waiting', lookAt: target })
+    bloub.setStatus('disabled')
+    expect(bloub.presentation).toMatchObject({ activity: 'disabled', lookAt: null })
+    bloub.setStatus('waiting')
+    expect(bloub.presentation.lookAt).toBe(target)
   })
 
   it('limits accidental reaction repetition and can be reset', () => {

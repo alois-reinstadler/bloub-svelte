@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { BotEngine } from '@/lib/internal/core/engine'
 import { radiusAtAngle } from '@/lib/internal/core/shape'
-import { EXPRESSION_BY_ID } from '@/lib/internal/core/expressions'
+import { EXPRESSIONS, EXPRESSION_BY_ID } from '@/lib/internal/core/expressions'
 import { REST_GAZE } from '@/lib/internal/core/face'
-import { SHAPE_BY_ID } from '@/lib/internal/core/skins'
+import { SHAPES, SHAPE_BY_ID } from '@/lib/internal/core/skins'
 import { SEQUENCE, STATES, type StateId } from '@/lib/internal/core/states'
 
 /** Points d'ancrage d'un path genere par closedPath (on ignore les controles). */
@@ -535,5 +535,35 @@ describe('changement d etat pendant un fondu', () => {
     // aucune image vide, et le "!" d'`alert` bouge encore pendant qu'il se fond
     expect(images.every((p) => p.length > 0)).toBe(true)
     expect(new Set(images.slice(-12)).size).toBeGreaterThan(1)
+  })
+})
+
+
+describe('curved mouth containment', () => {
+  it('keeps mouth outlines inside every custom body across extreme gaze directions', () => {
+    const inside = (x: number, y: number, polygon: Array<[number, number]>) => {
+      let hit = false
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const [xi, yi] = polygon[i]!
+        const [xj, yj] = polygon[j]!
+        if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) hit = !hit
+      }
+      return hit
+    }
+    for (const shape of SHAPES) for (const expression of EXPRESSIONS.filter(e => e.mouth)) {
+      for (const [yaw, pitch, mix = 1] of [[0, 0], [-42, 10], [42, 10], [0, 28], [0, -28], [expression.gaze.yaw, expression.gaze.pitch, 0]]) {
+        const engine = new BotEngine(100, 'idle', shape.radii, expression)
+        engine.setLook({ yaw: yaw!, pitch: pitch!, mix, spin: 0, wander: 0 }, 0, 0)
+        const frame = engine.sample(1)
+        const mouth = frame.mouth!
+        const [a, b, c, d, tx, ty] = mouth.transform.slice(7, -1).split(',').map(Number)
+        const polygon = anchors(frame.bodyPath)
+        expect(anchors(mouth.d)).toHaveLength(65)
+        for (const [x, y] of anchors(mouth.d)) {
+          expect(inside(a! * x + c! * y + tx!, b! * x + d! * y + ty!, polygon),
+            `${shape.id}/${expression.id}/${yaw}/${pitch}: ${a! * x + c! * y + tx!}, ${b! * x + d! * y + ty!}`).toBe(true)
+        }
+      }
+    }
   })
 })

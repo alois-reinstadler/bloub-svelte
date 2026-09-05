@@ -1,5 +1,5 @@
 import type { GazeScript as InternalGazeScript } from './internal/gaze'
-import type { BloubState } from './bloub.state.svelte'
+import type { BloubState, BloubStatus } from './bloub.state.svelte'
 
 export const SHAPES = [
   { id: 'circle', label: 'Kreis' },
@@ -82,7 +82,9 @@ export interface BloubProps {
   gaze?: GazeScript | null
   /** Semantic behavior controller. When present it owns state, expression and attention. */
   controller?: BloubState
-  /** Whether physical reaction motion should follow the operating-system preference. */
+  /** Persistent application state; the controller takes precedence when supplied. */
+  status?: BloubStatus
+  /** Whether character motion should follow the operating-system preference. */
   motion?: MotionPreference
   block?: number
   state?: StateId

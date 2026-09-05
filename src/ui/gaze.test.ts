@@ -6,7 +6,6 @@ import { STATE_BY_ID } from '@/lib/internal/core/states'
 import {
   MOODS,
   lookTarget,
-  PITCH,
   SPIN,
   TOUR_TIME,
   spinLook,
@@ -26,8 +25,8 @@ describe('cible de regard', () => {
     const cible = lookTarget(vise({ tour: 0, pointer: false }))
     // emprise nulle : peu importe la direction visee, la pose commande seule...
     expect(cible.mix).toBe(0)
-    // ...et un tour entier reste a parcourir, qui est le meme angle que zero
-    expect(cible.spin).toBe(SPIN)
+    // Ordinary attention never adds a spin.
+    expect(cible.spin).toBe(0)
 
     // ce qui compte n'est pas la valeur des champs mais l'image rendue :
     // au depart, elle doit etre celle d'un bot qu'on ne pilote pas du tout
@@ -37,9 +36,9 @@ describe('cible de regard', () => {
     expect(debut.sample(1).eyes[0]!.matrix).toBe(nu.sample(1).eyes[0]!.matrix)
   })
 
-  it('tourne la tete vers la gauche, du cote du panneau', () => {
+  it('looks straight ahead when the target is centred', () => {
     // lacet negatif = le bot regarde a gauche
-    expect(lookTarget(vise()).yaw).toBe(-TURN)
+    expect(lookTarget(vise()).yaw).toBe(0)
   })
 
   it('suit le curseur dans le bon sens sur les deux axes', () => {
@@ -53,8 +52,8 @@ describe('cible de regard', () => {
     expect(lookTarget(vise({ ny: 1 })).pitch).toBeLessThan(0)
   })
 
-  it('fond le tour a mesure que l arrivee se fait', () => {
-    expect(lookTarget(vise({ tour: 0.5 })).spin).toBe(SPIN / 2)
+  it('never spins at any acquisition phase', () => {
+    expect(lookTarget(vise({ tour: 0.5 })).spin).toBe(0)
     expect(lookTarget(vise({ tour: 1 })).spin).toBe(0)
   })
 
@@ -115,30 +114,15 @@ describe('les deux yeux restent visibles', () => {
   })
 })
 
-describe('le tour sur soi-meme', () => {
-  it('fait passer les yeux derriere la boule, puis les ramene a gauche', () => {
-    /**
-     * C'est voulu, et c'est ce qui fait le tourbillon : au milieu du tour les yeux
-     * sont de l'autre cote de la sphere, donc le moteur les retire de l'image. Ce
-     * test est la pour qu'on ne « corrige » pas cette disparition en croyant a un
-     * bug — et pour verifier qu'ils reviennent bien, au bon endroit.
-     */
-    const image = (tour: number) => {
-      const moteur = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('neutral')!)
-      moteur.setLook(lookTarget(vise({ tour })), 0)
-      return moteur.sample(1)
+describe('ordinary attention never spins', () => {
+  it('keeps both eyes visible throughout acquisition and reacquisition', () => {
+    for (const expression of EXPRESSIONS) {
+      for (const tour of [0, 0.1, 0.25, 0.5, 0.75, 1]) {
+        const engine = new BotEngine(100, 'idle', circle(), expression)
+        engine.setLook(lookTarget(vise({ tour, nx: -1 })), 0)
+        expect(engine.sample(1).eyes, `${expression.id}/${tour}`).toHaveLength(2)
+      }
     }
-    expect(image(0).eyes).toHaveLength(2)
-    // a mi-parcours, la face est a l'oppose du spectateur
-    expect(image(0.5).eyes).toHaveLength(0)
-    expect(image(1).eyes).toHaveLength(2)
-
-    // ...et un tour complet repose les yeux exactement ou un simple demi-tour
-    // les aurait mis : c'est ce qui rend l'atterrissage juste sans reglage
-    const complet = image(1).eyes[0]!.matrix
-    const sansTour = new BotEngine(100, 'idle', circle(), EXPRESSION_BY_ID.get('neutral')!)
-    sansTour.setLook({ yaw: -TURN, pitch: PITCH, mix: 1, spin: 0, wander: 0 }, 0)
-    expect(complet).toBe(sansTour.sample(1).eyes[0]!.matrix)
   })
 })
 

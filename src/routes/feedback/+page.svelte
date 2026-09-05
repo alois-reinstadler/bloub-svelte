@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte'
   import { base } from '$app/paths'
-  import { Bloub, BloubState, type BloubStatus } from '@/lib'
+  import { Bloub, BloubState, type BloubStatus, type MotionPreference } from '@/lib'
   import '../../landing/landing.css'
 
   const bloub = new BloubState()
@@ -13,14 +13,23 @@
   let message = $state('Bloub folgt deinem Cursor.')
   let emailError = $state('')
   let sending = $state(false)
+  let motion = $state<MotionPreference>('auto')
 
   const statuses: { id: BloubStatus; label: string }[] = [
     { id: 'idle', label: 'Bereit' },
-    { id: 'waiting', label: 'Wartet' },
-    { id: 'loading', label: 'Lädt' },
+    { id: 'waiting', label: 'Wartet auf Eingabe' },
+    { id: 'loading', label: 'Arbeitet' },
     { id: 'empty', label: 'Leer' },
     { id: 'disabled', label: 'Inaktiv' }
   ]
+
+  const statusDescriptions: Record<BloubStatus, string> = {
+    idle: 'Bereit. Bloub folgt deiner Aufmerksamkeit.',
+    waiting: 'Bloub wartet geduldig auf deine Eingabe. Kein Zeitdruck.',
+    loading: 'Die Anwendung arbeitet. Die Punkte zeigen laufende Aktivität.',
+    empty: 'Hier ist noch nichts. Bloub schaut neugierig.',
+    disabled: 'Gerade nicht verfügbar. Bloub ruht.'
+  }
 
   function focus(target: Element) {
     bloub.lookAt(target)
@@ -57,7 +66,7 @@
   function setStatus(status: BloubStatus) {
     bloub.dismissReaction()
     bloub.setStatus(status)
-    message = `Anwendungsstatus: ${statuses.find((item) => item.id === status)?.label ?? status}`
+    message = statusDescriptions[status]
   }
 
   onDestroy(() => bloub.destroy())
@@ -79,7 +88,7 @@
       <p class="eyebrow">Native Svelte API</p>
       <h1 id="lab-title">Bloub versteht,<br /><em>was gerade passiert.</em></h1>
       <div class="avatar">
-        <Bloub controller={bloub} size={360} label="Bloub reagiert auf die Demo" />
+        <Bloub controller={bloub} {motion} size={360} label="Bloub reagiert auf die Demo" />
       </div>
       <p class="message" aria-live="polite">{message}</p>
     </div>
@@ -117,16 +126,28 @@
       <article>
         <p class="number">02</p>
         <h2>Anwendungszustände</h2>
-        <p>Lang laufende Zustände bleiben aktiv, bis die Anwendung sie ändert.</p>
+        <p>Warten auf Eingabe bleibt ruhig. Während die Anwendung arbeitet, zeigen drei sanfte Punkte die Aktivität.</p>
         <div class="button-grid">
           {#each statuses as status}
-            <button type="button" onclick={() => setStatus(status.id)}>{status.label}</button>
+            <button type="button" aria-pressed={bloub.status === status.id} onclick={() => setStatus(status.id)}>{status.label}</button>
           {/each}
         </div>
       </article>
 
       <article>
         <p class="number">03</p>
+        <h2>Bewegung</h2>
+        <label for="motion-preference">Bewegungsmodus</label>
+        <select id="motion-preference" bind:value={motion}>
+          <option value="auto">Systemeinstellung verwenden</option>
+          <option value="full">Volle Bewegung</option>
+          <option value="reduced">Reduzierte Bewegung</option>
+        </select>
+        <p>Reduziert bleiben Ausdrücke und Status sichtbar; Atmung, Blinzeln und Reaktionsgesten pausieren.</p>
+      </article>
+
+      <article>
+        <p class="number">04</p>
         <h2>Semantische Reaktionen</h2>
         <p>Die Anwendung meldet Bedeutung; Bloub entscheidet über Ausdruck und Bewegung.</p>
         <div class="button-grid reactions">
@@ -176,6 +197,8 @@
   input:focus { border-color: #0a0a0a; box-shadow: 0 0 0 3px rgb(10 10 10 / 0.08); }
   input[aria-invalid='true'] { border-color: #0a0a0a; border-style: dashed; }
   button { min-height: 42px; padding: 0 16px; border: 1.5px solid #0a0a0a; border-radius: 999px; color: #0a0a0a; background: #fff; cursor: pointer; font-size: 12px; font-weight: 700; }
+  select { width: 100%; margin-top: 10px; padding: 12px; border: 1px solid #d6d6d6; border-radius: 12px; background: #fff; color: inherit; font: inherit; }
+  button[aria-pressed="true"] { background: #0a0a0a; color: #fff; }
   button:hover { color: #fff; background: #0a0a0a; }
   button:focus-visible { outline: 3px solid rgb(10 10 10 / 0.2); outline-offset: 2px; }
   button:disabled { cursor: wait; opacity: 0.5; }

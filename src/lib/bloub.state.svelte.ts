@@ -1,3 +1,4 @@
+import type { ActivityId } from './internal/core/activity'
 import type { ExpressionId, LookAtTarget, StateId } from './types'
 
 export const BLOUB_STATUSES = ['idle', 'waiting', 'loading', 'empty', 'disabled'] as const
@@ -35,6 +36,7 @@ export interface ActiveBloubReaction {
 }
 
 export interface BloubPresentation {
+  readonly activity: ActivityId
   readonly state: StateId
   readonly expression?: ExpressionId
   readonly lookAt: LookAtTarget | null
@@ -46,6 +48,7 @@ export interface BloubPresentation {
 interface VisualState {
   state: StateId
   expression?: ExpressionId
+  activity?: ActivityId
 }
 
 interface ReactionDefinition extends VisualState {
@@ -57,10 +60,19 @@ interface ReactionDefinition extends VisualState {
 
 const STATUS: Record<BloubStatus, VisualState> = {
   idle: { state: 'idle' },
-  waiting: { state: 'idle', expression: 'attentive' },
-  loading: { state: 'thinking' },
+  waiting: { state: 'idle', expression: 'attentive', activity: 'waiting' },
+  loading: { state: 'idle', expression: 'attentive', activity: 'working' },
   empty: { state: 'idle', expression: 'curious' },
-  disabled: { state: 'idle', expression: 'sleepy' }
+  disabled: { state: 'idle', expression: 'sleepy', activity: 'disabled' }
+}
+
+/** Shared by declarative status props and the event controller. */
+export function statusPresentation(status: BloubStatus): BloubPresentation {
+  const visual = STATUS[status]
+  return {
+    ...visual, activity: visual.activity ?? 'rest', lookAt: null,
+    motion: null, reactionId: null, reactionDuration: 0
+  }
 }
 
 const REACTION: Record<BloubReaction, ReactionDefinition> = {
@@ -105,7 +117,7 @@ const REACTION: Record<BloubReaction, ReactionDefinition> = {
     priority: 2
   },
   celebrate: {
-    state: 'burst',
+    state: 'idle',
     expression: 'laughing',
     duration: 1900,
     cooldown: 900,
@@ -155,11 +167,12 @@ export class BloubState {
     const active = this.currentReaction
     const visual = active ? REACTION[active.type] : STATUS[this.status]
     return {
+      activity: active ? 'rest' : visual.activity ?? 'rest',
       state: visual.state,
       expression: visual.expression,
       // An explicit reaction temporarily owns attention. If it has no target,
       // Bloub performs the reaction straight ahead and resumes attention after.
-      lookAt: active ? active.target : this.attention,
+      lookAt: active ? active.target : this.status === 'disabled' || this.status === 'loading' ? null : this.attention,
       motion: active?.motion ?? null,
       reactionId: active?.id ?? null,
       reactionDuration: active?.duration ?? 0

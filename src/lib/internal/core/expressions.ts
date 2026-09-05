@@ -37,6 +37,7 @@ export type ExpressionId =
 
 export interface MouthCfg {
   kind: 'arc' | 'open'
+  /** Head-local sine coordinates, independent of expression gaze. */
   x: number
   y: number
   width: number
@@ -64,7 +65,7 @@ const pair = (w: number, h: number, tilt = 0, open = 1): [EyeCfg, EyeCfg] => [
 ]
 
 const arc = (width: number, y: number, curve: number, thickness = 0.065, x = 0): MouthCfg => ({
-  kind: 'arc', x, y, width, height: 0, curve, thickness, alpha: 1
+  kind: 'arc', x, y, width, height: thickness, curve, thickness, alpha: 1
 })
 
 const openMouth = (width: number, height: number, y: number, x = 0): MouthCfg => ({
@@ -92,7 +93,7 @@ export const EXPRESSIONS: BotExpression[] = [
     gaze: { yaw: 1, pitch: -5, roll: 0 },
     split: 20,
     eyes: pair(0.43, 0.58),
-    mouth: openMouth(0.22, 0.3, 0.38)
+    mouth: openMouth(0.22, 0.28, 0.55)
   },
   {
     // yeux plissés en arc : les hauts convergent légèrement
@@ -100,14 +101,14 @@ export const EXPRESSIONS: BotExpression[] = [
     gaze: { yaw: 5, pitch: 9, roll: 0 },
     split: 17,
     eyes: pair(0.32, 0.14, 18),
-    mouth: arc(0.48, 0.28, 0.13)
+    mouth: arc(0.48, 0.40, 0.12)
   },
   {
     id: 'laughing',
     gaze: { yaw: 2, pitch: 10, roll: 0 },
     split: 19,
     eyes: pair(0.38, 0.1, 24),
-    mouth: openMouth(0.58, 0.38, 0.34)
+    mouth: { ...openMouth(0.62, 0.32, 0.43), curve: 0.16 }
   },
   {
     // l'inverse : les hauts divergent, et le regard tombe
@@ -115,14 +116,14 @@ export const EXPRESSIONS: BotExpression[] = [
     gaze: { yaw: 1, pitch: -16, roll: 0 },
     split: 16,
     eyes: pair(0.24, 0.42, -32),
-    mouth: arc(0.32, 0.49, -0.1, 0.055)
+    mouth: arc(0.32, 0.53, -0.08, 0.055)
   },
   {
     id: 'scared',
     gaze: { yaw: 2, pitch: -20, roll: 0 },
     split: 20.5,
     eyes: pair(0.4, 0.65),
-    mouth: openMouth(0.24, 0.38, 0.39)
+    mouth: openMouth(0.23, 0.32, 0.59)
   },
   {
     // un œil franchement plus fermé que l'autre
@@ -140,7 +141,7 @@ export const EXPRESSIONS: BotExpression[] = [
     gaze: { yaw: -14, pitch: 3, roll: 8 },
     split: 16.5,
     eyes: [eye(0.2, 0.48, -22), eye(0.31, 0.14, 18)],
-    mouth: arc(0.3, 0.41, -0.04, 0.055, 0.08)
+    mouth: arc(0.3, 0.41, -0.04, 0.055, 0.06)
   },
   {
     // la tête penche : c'est le roulis qui porte la curiosité
@@ -148,7 +149,7 @@ export const EXPRESSIONS: BotExpression[] = [
     gaze: { yaw: 16, pitch: -9, roll: -15 },
     split: 16.5,
     eyes: [eye(0.27, 0.5, -10), eye(0.19, 0.35, -10)],
-    mouth: arc(0.26, 0.38, 0.055, 0.05, 0.03)
+    mouth: arc(0.26, 0.48, 0.055, 0.05, 0.03)
   },
   {
     // paupières à moitié tombées : on passe par `open`, donc l'écrasement
@@ -173,24 +174,7 @@ const lerpEyeCfg = (a: EyeCfg, b: EyeCfg, t: number): EyeCfg => ({
 
 /** Interpolation de deux expressions : le changement se fait en glissant. */
 export function blendExpression(a: BotExpression, b: BotExpression, t: number): BotExpression {
-  const mouth = (() => {
-    if (!a.mouth && !b.mouth) return null
-    const source = a.mouth ?? { ...b.mouth!, alpha: 0 }
-    const target = b.mouth ?? { ...a.mouth!, alpha: 0 }
-    if (source.kind !== target.kind) return t < 0.5
-      ? { ...source, alpha: source.alpha * (1 - t * 2) }
-      : { ...target, alpha: target.alpha * (t * 2 - 1) }
-    return {
-      kind: target.kind,
-      x: lerp(source.x, target.x, t),
-      y: lerp(source.y, target.y, t),
-      width: lerp(source.width, target.width, t),
-      height: lerp(source.height, target.height, t),
-      curve: lerp(source.curve, target.curve, t),
-      thickness: lerp(source.thickness, target.thickness, t),
-      alpha: lerp(source.alpha, target.alpha, t)
-    }
-  })()
+  const mouth = blendMouth(a.mouth, b.mouth, t)
   return {
     id: b.id,
     gaze: {
@@ -201,5 +185,22 @@ export function blendExpression(a: BotExpression, b: BotExpression, t: number): 
     split: lerp(a.split, b.split, t),
     eyes: [lerpEyeCfg(a.eyes[0], b.eyes[0], t), lerpEyeCfg(a.eyes[1], b.eyes[1], t)],
     mouth
+  }
+}
+
+/** One outline topology for smiles and openings; no invisible midpoint. */
+export function blendMouth(a: MouthCfg | null, b: MouthCfg | null, t: number): MouthCfg | null {
+  if (!a && !b) return null
+  const source = a ?? { ...b!, alpha: 0 }
+  const target = b ?? { ...a!, alpha: 0 }
+  return {
+    kind: t < 0.5 ? source.kind : target.kind,
+    x: lerp(source.x, target.x, t),
+    y: lerp(source.y, target.y, t),
+    width: lerp(source.width, target.width, t),
+    height: lerp(source.height, target.height, t),
+    curve: lerp(source.curve, target.curve, t),
+    thickness: lerp(source.thickness, target.thickness, t),
+    alpha: lerp(source.alpha, target.alpha, t)
   }
 }
