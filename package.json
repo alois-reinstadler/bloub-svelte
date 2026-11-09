@@ -2,7 +2,7 @@
   "name": "bloub-svelte",
   "version": "0.2.0",
   "type": "module",
-  "description": "Svelte 5 port of the SVG recreation of the x.ai bot avatar.",
+  "description": "Attributed Svelte 5 port of Bloub with SVG animation, gaze and semantic state controls.",
   "license": "MIT",
   "author": "Jérémy Perret",
   "repository": {
@@ -23,7 +23,9 @@
   "files": [
     "dist",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md",
+    "RELEASE.md"
   ],
   "sideEffects": false,
   "publishConfig": {

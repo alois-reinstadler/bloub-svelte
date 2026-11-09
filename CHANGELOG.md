@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — release preparation
+
+- Document the supported release boundary, upstream attribution and remaining qualification decisions.
+- Include release notes and attribution in the package file allowlist.
+
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 

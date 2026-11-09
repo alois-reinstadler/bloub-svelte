@@ -1,8 +1,23 @@
 # bloub — Svelte 5
 
+> Release candidate: see [release scope, limitations and owner checklist](RELEASE.md). This branch prepares a candidate; it does not certify publication readiness.
+
 Eine ausdrucksstarke Svelte-5-Portierung von [jeremy-prt/bloub](https://github.com/jeremy-prt/bloub): ein SVG-Avatar mit acht klar unterscheidbaren Bewegungszuständen, elf Gesichtsausdrücken und zwei unabhängig animierten Augen. Ohne Animationsbibliothek.
 
 ![Der Avatar durchläuft Ruhe, Zwinkern, Umlauf und Explosion](docs/demo.gif)
+
+## English quickstart and scope
+
+Build a local archive with `pnpm install --frozen-lockfile`, then `pnpm package`
+and `pnpm pack`. Install that archive in a Svelte 5 application. Import `Bloub`
+and `BloubState` from `bloub-svelte`, pass the controller to the component, and
+call `setStatus('loading')` or `react('success')` for application feedback.
+The component/controller example below shows the full wiring.
+
+This is a port of a Vue upstream, with eight motion states and eleven expressions;
+it does not include all fourteen states and sixteen expressions now documented
+upstream. The MIT code notice and the separate visual-identity limitation apply.
+See [release preparation](RELEASE.md) before choosing this avatar for public branding.
 
 ## Lokal starten
 
